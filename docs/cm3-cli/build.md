@@ -6,6 +6,8 @@ Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Boa
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
+The first external dispatch was rejected before runner allocation; see
+`preflight-status.md` for exact API evidence and the resume condition.
 
 ## Current runnable stage
 
