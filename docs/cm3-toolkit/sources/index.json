@@ -1,0 +1,35 @@
+{
+  "contract_version": 1,
+  "target": "radxa-cm3-rpi-cm4-io",
+  "phase_b_task": "t_bacce4a4",
+  "repository": "blockdyor/radxa-cm3-debian-cli",
+  "base_branch": "dev/cm3-debian-cli",
+  "base_sha": "dba5cba3eafb948a22787560bea56da2b9f8f163",
+  "snapshot_status": "UNTESTED; no gate/hardware PASS established",
+  "sources": [
+    {
+      "path": "docs/cm3-toolkit/sources/hardware-matrix.tsv",
+      "sha256": "24c30e0964dcec3326c723ad8f8b84c39104ff7a8688f33a7e997b2ef2098232",
+      "bytes": 8637,
+      "source_ref": "t_f48601a3/hardware-matrix.tsv",
+      "original_source_sha256": "24c30e0964dcec3326c723ad8f8b84c39104ff7a8688f33a7e997b2ef2098232",
+      "recovered_from": "t_1cd5a3ef/INTERNAL-cm3-phase-b-evidence-handoff.zip:internal/hardware-matrix.tsv"
+    },
+    {
+      "path": "docs/cm3-toolkit/sources/gates-consolidated-verbatim.txt",
+      "sha256": "8265b939c8b7877b900e8f0b43d72fbc192cbd2198d847feae90656d3fe8a094",
+      "bytes": 3007,
+      "source_ref": "t_3a15869c/cm3-debian-cli-proposal.txt",
+      "original_source_sha256": "09a8e9cdcd812f35d2e78bb19ae63efc73169319a5746c8fde37da7fee8e1be2",
+      "recovered_from": "t_1cd5a3ef/INTERNAL-cm3-phase-b-evidence-handoff.zip:internal/gates-consolidated-verbatim.txt"
+    },
+    {
+      "path": "docs/cm3-toolkit/sources/gates-validation-verbatim.txt",
+      "sha256": "101775854cf704a09bc11277a740fce567d097c3ba74f9b0fb9cc5c8dcbb6c75",
+      "bytes": 4685,
+      "source_ref": "t_f48601a3/validation-plan.txt",
+      "original_source_sha256": "6630f87cc930c86273ab0b6c2b941bd81843008d19b95347cfe8a89a37a7a6b6",
+      "recovered_from": "t_1cd5a3ef/INTERNAL-cm3-phase-b-evidence-handoff.zip:internal/gates-validation-verbatim.txt"
+    }
+  ]
+}

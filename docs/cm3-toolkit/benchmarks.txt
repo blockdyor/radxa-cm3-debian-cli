@@ -1,0 +1,222 @@
+CM3 bounded benchmark procedures and comparisons
+
+Status and scope
+These are opt-in test tools, not evidence that a CM3, image, board, or gate passed.
+Hardware remains UNTESTED; G0-G7 remain NOT EVALUATED. No development test
+reboots hardware, installs packages, starts a server, stops services, tunes the
+kernel, builds an image, or runs a real hardware benchmark. The common.py API is
+owned/delivered by the collector component; place it beside bench.py/report.py.
+Python 3 standard library and Linux are required. No dependencies are installed.
+
+Default and fixture commands (from repository root)
+  python3 tools/cm3-toolkit/bench.py cpu
+  python3 tools/cm3-toolkit/bench.py storage
+These emit JSON plans, not measurements. Only explicit --output writes a result;
+the shared emitter creates a new regular 0600 file and never clobbers a path.
+
+  python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --fixture-root tests/cm3-toolkit/fixtures/bench --conditions tests/cm3-toolkit/fixtures/bench/conditions.json
+  python3 -m unittest discover -s tests/cm3-toolkit -p 'test_*.py'
+
+Fixture-root execution reads ONLY the named procedure JSON and the supplied
+conditions, never live /proc, sensors, storage or network. Storage/peer opt-ins
+must still be present but their targets are not touched in fixture mode. Every
+fixture result retains synthetic=true and fixture_id=bench-v1 regardless of flags.
+All numeric files under fixtures/bench are invented parser fixtures, NOT CM3
+observations. The fixture scope_ref is explicitly not hardware authorization.
+
+Later hardware execution: prerequisites, not authorization
+A responsible operator must separately approve target identity, exact procedure,
+time/memory/write/network budgets, storage directory, peer, thermal zone, abort
+ceiling and observation/recovery arrangements. A scope_ref must point to that
+approval. Flags do not constitute approval. Do not copy the synthetic scope_ref
+into a hardware run. Run one procedure at a time on the reviewed test image.
+Do not run this against a production host. Review unknown conditions before
+execution and retain every failure, exclusion and repetition, not only good runs.
+Do not place credentials or identifying values in conditions or raw results.
+
+Create an operator-owned conditions JSON with these required execution fields:
+  scope_ref: approval record reference (not a secret or absolute private path)
+  protocol_id: fixed identifier for this procedure/version
+  role: baseline or candidate
+  repetition: positive integer
+Optional metadata keys, unknown values emitted as null with not-supplied reasons:
+  image_hash, source_lock, debian, kernel, dtb, bootloader, firmware,
+  module_revision, carrier_revision, ram_sku,
+  cooling, orientation, fan_control, ambient_degc, power, meter_uncertainty,
+  storage, filesystem, fill, cache_state, network, logger_overhead,
+  warmup, exclusions, failures, cpu_policy, zram.
+Use opaque nonidentifying labels and hashes. Nested descriptions may record PSU
+rating, storage class/medium, link speed, direction and streams, source/package
+locks and logger version/overhead. For no exclusions/failures use empty lists;
+null means unknown, not no failures. Image hash/build ID should come from the
+reviewed Phase B manifest, not an assumed path. Versions of Python and the
+benchmark protocol are recorded automatically; network also records installed
+ping and iperf3 versions. No hostnames, IP/MAC addresses, machine-id, private keys,
+serials or WWNs should be submitted. Metadata is bounded to 64 KiB, eight nesting
+levels and short values; sensitive key names, obvious addresses/absolute paths
+and unknown top-level keys are rejected. This is not a general-purpose secret
+scanner: the operator must still review descriptive text before sharing it.
+
+Thermal and memory conditions
+CPU and memory additionally require thermal_zone (integer sysfs zone index),
+thermal_abort_degc (approved finite degC ceiling, 1..120), and
+thermal_observer_ref (reviewed external observation/abort arrangement).
+The ceiling is operator-supplied, NOT a hardware rating recommended by this tool.
+Validate the selected zone, units, cooling and observer before approving it.
+The tool samples thermal_zoneN/temp in millidegC, divides by 1000, checks plausible
+range -50..150 degC, and aborts if it reaches the reviewed ceiling or stops reading
+valid data. Polling is about 0.5 seconds, not a hardware safety interlock. All
+successful raw thermal samples include elapsed monotonic seconds. A missing
+sensor blocks the dependent procedure. No thermal trip or governor writes occur.
+Optional memory_reserve_bytes may INCREASE the default reserve of 25% total RAM;
+it cannot reduce it. MemAvailable must be valid before allocation and is checked
+again while the memory procedure runs; loss of reserve stops the child. Use an
+external observer/recovery strategy for an unresponsive kernel. Userspace
+sampling cannot protect a failed kernel or an uninterruptible I/O operation.
+
+Exact invocation templates for a separately approved run
+Replace the operator paths/peer below with individually reviewed values. These
+commands are documentation only; they were NOT run on CM3 during development.
+Each --output must name a new file in an existing operator-owned directory.
+
+  python3 tools/cm3-toolkit/bench.py idle --execute --duration-s 5 --conditions /approved/results/idle-conditions.json --output /approved/results/idle-r1.json
+  python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --duration-s 10 --conditions /approved/results/cpu-conditions.json --output /approved/results/cpu-r1.json
+  python3 tools/cm3-toolkit/bench.py memory --execute --allow-load --duration-s 10 --memory-mib 64 --conditions /approved/results/memory-conditions.json --output /approved/results/memory-r1.json
+  python3 tools/cm3-toolkit/bench.py storage --execute --allow-load --allow-write --approved-dir /approved/scratch --file-mib 16 --duration-s 10 --conditions /approved/results/storage-conditions.json --output /approved/results/storage-r1.json
+  python3 tools/cm3-toolkit/bench.py network --execute --allow-load --allow-network --peer 192.0.2.1 --duration-s 10 --conditions /approved/results/network-conditions.json --output /approved/results/network-r1.json
+
+192.0.2.1 is a documentation-only placeholder, not a default/public test target.
+The network operator must arrange an already-running authorized iperf3 server
+and permission for ICMP on the literal unicast peer. No server is started. DNS,
+scanning, guessed credentials, multicast, loopback and link-local peers are not
+used. ping and iperf3 must already exist; missing tools produce unavailable.
+No automatic fallback workloads are attempted. Record peer as an opaque alias,
+link, transmit direction and one stream in conditions, never its address.
+Network sends one ICMP echo and at most 1 MiB iperf3 application payload, with
+one stream paced at 10 Mbit/s; control packets and retransmissions add wire bytes.
+Timeouts bound wall time, not a promise about total link-layer bytes. Record
+traffic background, MTU, server/tool versions and logging conditions. Raw results
+retain throughput, payload count and latency without ping/iperf address output.
+
+Procedure definitions and limits
+idle: default 5 seconds, maximum 60. Two /proc/stat aggregate snapshots (first
+eight CPU counters, without double-counting guest) and /proc/meminfo snapshots.
+Busy percent is aggregate elapsed ticks minus idle+iowait, not per-process CPU.
+Available-memory samples are bytes, not an inference of usable application RAM.
+No deliberate workload is launched; the logger itself contributes overhead.
+
+cpu: default 10 seconds, maximum 60. Exactly ONE Python worker repeatedly hashes
+64 KiB with SHA-256. Counts completed operations and monotonic elapsed time;
+operations/s is specific to this algorithm/Python crypto implementation, not a
+general CPU rating or an all-core saturation score. Worker count is explicitly
+capped at one; no background workers or retries. Record Python, crypto build and
+CPU policy in the protocol/source lock; preserve cooling/thermal observations.
+
+Optional sustained CPU: add --sustained --duration-s 600 (up to 3600) AND set
+protocol_id=cm3-cpu-sustained/v1 plus a separate sustained_scope_ref approval.
+All other CPU prerequisites remain. This is a distinct single-worker protocol,
+not the eight-hour soak and not automatic G6 qualification. Short runs cannot
+claim sustained qualification. The sustained protocol is never selected implicitly.
+
+memory: default 10 seconds, maximum 60. One child allocates and touches each
+4 KiB page of a bytearray, then samples positive scheduling wake lateness around
+10 ms sleeps. The request is capped at min(requested, 256 MiB, 25% MemAvailable,
+MemAvailable minus reviewed reserve). Total RAM and available RAM must be valid.
+Actual allocation and wake lateness samples are retained. This is a bounded mild
+pressure/scheduling experiment, not an OOM test, memory correctness test, full
+thrash test, or application latency claim. The initialized buffer is compressible;
+record existing swap/zram conditions and do not treat it as worst-case pressure.
+
+storage: default 10-second deadline, maximum 60. Budget 1..64 MiB per invocation,
+default 16 MiB, written once in 64 KiB blocks with fsync after each write. Raw
+per-write+fsync latency, write duration, read duration and bytes are retained.
+Readback is explicitly CACHE-AFFECTED, not a cold-media bandwidth claim. No cache
+flush/drop, block-device test, rewrite loop, format or pre-existing-file reuse.
+Filesystem must report valid capacity and keep >=25% total capacity free after
+the entire byte budget. New random dedicated file: O_EXCL/O_NOFOLLOW, mode 0600,
+directory-fd operations, owned regular file, identity-checked cleanup. Reject
+relative/root/parent-traversal directories, symlink ancestors, /dev, /proc, /sys,
+/etc, /boot, special files and existing names. Caller may not specify a test
+filename in the CLI. Use a dedicated trusted directory with no concurrent writers;
+identity checks cannot make an adversarial rename race safe in a shared writable
+directory. Only the owned file is removed; an unrelated replacement is preserved.
+Metadata/fsync/journal/device write amplification is outside the application-byte
+budget; do not infer physical NAND writes. Keep unrelated disk activity excluded
+by separately reviewed test conditions, never by stopping services automatically.
+
+Child cleanup: new process group, no shell, stdin closed; each captured stream is
+capped at 1 MiB. Commands have finite deadlines; CPU/memory/storage child deadline
+is procedure duration+2 seconds, with up to 2 seconds reap grace. Network calls
+share the duration budget with bounded cleanup. Exceptions, timeouts, SIGINT and
+SIGTERM terminate/reap the group; storage cleanup executes on unwind. No retry.
+SIGKILL/power loss cannot run Python cleanup: an operator may need to inspect an
+owned leftover after such an interruption. Uninterruptible kernel I/O cannot be
+made safe by a userspace timeout; disclose/retain that failure rather than hang a
+production host. No automatic deletion on a later invocation is performed.
+
+Boot-to-SSH: external observer protocol, no probing or reboot by this script
+Use a separately approved external observer with ONE monotonic clock. The
+operator records start_s at a documented power-assertion edge or reset-release
+edge; do not silently mix cold boot with warm reboot. Record edge sensing/error
+and board power conditions. The observer waits for a PREPROVISIONED SSH account
+and trusted pinned host key, then ends at successful authenticated execution of
+an agreed trivial command (e.g. true), not TCP-connect or a port banner. No
+password guesses, host-key bypass or interactive login time is acceptable.
+Authentication setup and observer polling are external responsibilities; never
+put the key/account/address in this JSON. Record only the auth method and policy.
+Record observer polling period, missed samples, connection/authentication/command
+delays, start-edge error and timestamp resolution in uncertainty_s; this is a
+reported uncertainty bound, not a derived guarantee. Unknown uncertainty blocks
+a timing result. Do not use the target's post-boot clock as the start clock.
+
+Add boot_events to conditions with:
+  clock: external-monotonic
+  observer_ref: nonidentifying observer/protocol artifact reference
+  start_s, end_s: finite observer monotonic timestamps (elapsed <=3600 seconds)
+  uncertainty_s: reviewed finite nonnegative bound
+  start_event, end_event: exact event descriptions
+  authentication, host_key_policy: reviewed method descriptions, not credentials
+Then import observations, without touching hardware:
+  python3 tools/cm3-toolkit/bench.py boot-ssh --execute --conditions /approved/results/boot-conditions.json --output /approved/results/boot-r1.json
+The envelope time is the import duration; boot-ssh.elapsed is the external boot
+interval, and boot-ssh.uncertainty is the observer uncertainty. Keep those distinct.
+
+Raw evidence and comparison
+Every result stores conditions, authorization reference, protocol/repetition/role,
+UTC start/end, monotonic import/procedure duration, records and errors. Raw parsed
+values are embedded as procedure.raw with SHA256 of sorted-key JSON serialization;
+no hidden artifact files or private stdout are written. Preserve original JSON,
+not just the human summary. Thermal/run failures are explicit; no failed run is
+a passing result. Exit codes: 0 valid plan or complete measurement, 2 invalid
+input/authorization/output, 3 unavailable, 4 execution/parser/timeout, 130 interrupt.
+
+  python3 tools/cm3-toolkit/report.py --baseline /approved/results/baseline.json --candidate /approved/results/candidate.json --output /approved/results/comparison.json
+
+Report reads at most 10 MiB per validated envelope, rejects unsafe input paths and
+raw-artifact references, never runs a workload, and retains incomplete metrics,
+input errors, failures and exclusions. comparison.summary is the human report;
+stdout otherwise remains one JSON object. Matching protocol, roles, units,
+resource bounds, tool versions, known controlled conditions and image identities
+are prerequisites for descriptive deltas. Unknown/mismatched essential conditions
+produce INCONCLUSIVE and suppress deltas. Comparison is deliberately conservative:
+it can decline to quantify a change when kernel/source locks or conditions differ;
+reviewers must not silently relax controls to obtain a favorable percentage.
+One pair is descriptive only, never statistical benefit or G4 PASS. If either input
+is synthetic the derived provenance retains both run IDs and fixture IDs, and
+the human summary begins exactly:
+SYNTHETIC FIXTURE OUTPUT - NOT CM3 EVIDENCE
+A toggled synthetic boolean with fixture origin/ID/source still present is rejected.
+JSON provenance is not a cryptographic attestation against an operator rewriting
+all fields; reviewed chain of custody remains necessary.
+
+Kernel references consulted 2026-10-25 (no tuning introduced)
+https://docs.kernel.org/admin-guide/pm/cpufreq.html
+CPUFreq policies can cover multiple CPUs. Governor/driver labels and available
+OPPs are context, not measured frequency or watts. Preserve the existing CPU
+policy in conditions/collector output; do not write governors or frequency limits.
+https://docs.kernel.org/admin-guide/blockdev/zram.html
+zram compresses memory-backed block-device contents and exports sysfs statistics.
+Its compression and memory settings affect pressure experiments. Record existing
+configuration/stats through approved inspection, distinguish logical bytes from
+actual memory, and never reset zram, initialize a disk or change compression here.
+Missing attributes mean unavailable, not a presumed disabled feature or benefit.

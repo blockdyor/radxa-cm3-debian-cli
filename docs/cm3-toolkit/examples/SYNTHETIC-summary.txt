@@ -1,0 +1,7 @@
+SYNTHETIC FIXTURE OUTPUT - NOT CM3 EVIDENCE
+Hardware: UNTESTED. Gates G0-G7: NOT EVALUATED.
+Single-run descriptive comparison only; no statistical benefit or G4 PASS.
+Conclusion: INCONCLUSIVE
+cpu.thermal: descriptive values retained
+cpu.throughput: descriptive values retained
+Controls: failures/exclusions unknown or present; image identities unknown; unknown or mismatched ambient_degc; unknown or mismatched bootloader; unknown or mismatched cache_state; unknown or mismatched carrier_revision; unknown or mismatched cooling; unknown or mismatched cpu_policy; unknown or mismatched debian; unknown or mismatched dtb; unknown or mismatched fan_control; unknown or mismatched filesystem; unknown or mismatched fill; unknown or mismatched firmware; unknown or mismatched kernel; unknown or mismatched logger_overhead; unknown or mismatched meter_uncertainty; unknown or mismatched module_revision; unknown or mismatched network; unknown or mismatched orientation; unknown or mismatched power; unknown or mismatched ram_sku; unknown or mismatched source_lock; unknown or mismatched storage; unknown or mismatched thermal_abort_degc; unknown or mismatched thermal_observer_ref; unknown or mismatched thermal_zone; unknown or mismatched warmup; unknown or mismatched zram

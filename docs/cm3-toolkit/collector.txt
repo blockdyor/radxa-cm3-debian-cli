@@ -1,0 +1,132 @@
+CM3 read-only collector
+
+Scope
+  Python 3 standard library, direct CLI, no packages or root required. Intended
+  for Debian ARM64 CLI on radxa-cm3-rpi-cm4-io; never assumes the running host
+  matches this product. Development validation uses synthetic fixtures only.
+  This collector is not a benchmark, hardware qualification, or gate verdict.
+
+Invocation from the repository root
+  python3 tools/cm3-toolkit/collect.py
+  python3 tools/cm3-toolkit/collect.py --output /EXISTING/SELECTED/DIR/inspection.json
+  python3 tools/cm3-toolkit/collect.py --fixture-root /SELECTED/SYNTHETIC/ROOT
+
+  Stdout contains one cm3-toolkit/v1 JSON envelope unless --output is supplied.
+  Output is never saved implicitly. The selected parent directory must already
+  exist. A new regular file is created mode 0600, without following symlinks or
+  replacing existing files. Ancestor symlinks, '..', special/existing targets,
+  and /dev, /proc, /sys output locations are rejected. Failed writes may leave
+  a partial newly-created file; choose a new name after investigating errors.
+  No subprocess, service action, package install, tuning, or workload is used.
+
+Exit status
+  0: inspection complete without unavailable/error fields.
+  2: invalid arguments, unusable fixture root, rejected output, or output I/O.
+  3: valid partial inspection with explicitly unavailable fields.
+  4: an unexpected source I/O error; partial JSON is still returned.
+  Optional identity/carrier/image-hash fields are commonly unavailable, so
+  status 3 is expected, including with the supplied synthetic fixture.
+  Per-record null values and reason strings distinguish missing, unsupported,
+  inaccessible, malformed, and io-error. Never interpret exit 3 as measurements
+  being zero, nor an exit 0 as hardware PASS. Errors never include private paths.
+
+Sources and projections
+  /etc/os-release: ID, VERSION_ID, VERSION_CODENAME, BUILD_ID, IMAGE_ID,
+    IMAGE_VERSION only. Not sourced as shell code; other fields discarded.
+    Missing image hash is unsupported: the installed root cannot reconstruct
+    a distributable image hash. Obtain it separately from the reviewed image
+    manifest; no build-output location is assumed or searched.
+  /proc/sys/kernel/{ostype,osrelease}: kernel type and release, not the build
+    hostname/compiler banner. No uname invocation or /proc/version reading.
+  /proc/device-tree/{model,compatible}: generic board/DT identity, not serials.
+    A recognized module alone does not prove the carrier. target_match is true
+    only if the exact product-compatible string radxa,cm3-rpi-cm4-io is observed;
+    a radxa,cm3-prefixed module without that string is unavailable/unsupported;
+    a different DT identity explicitly yields false. Even true is only a DT
+    string match, not physical verification. Carrier revision and RAM SKU are
+    unsupported; no serial-based inference or automatic platform detection.
+  /proc/meminfo: MemTotal, MemAvailable, SwapTotal, SwapFree only, units KiB.
+    Linux's kB labels here mean 1024 bytes; no other meminfo fields are emitted.
+  /sys/devices/system/cpu/cpufreq/policyN: scaling_governor,
+    scaling_available_governors, scaling_available_frequencies, cpuinfo_min_freq,
+    cpuinfo_max_freq. Frequencies retain kHz, not inferred achieved clocks.
+    Drivers without enumerated frequencies leave that field missing.
+  /sys/class/thermal/thermal_zoneN/{type,temp}: temperature = raw millidegrees
+    Celsius / 1000, output degC. Type labels are not temperature measurements.
+    Missing directories, missing sensors and malformed readings stay explicit.
+  /sys/block/{mmcblkN,sdX,nvmeNnN}: size, ro, removable, queue/rotational,
+    queue/logical_block_size, queue/scheduler. Size is the documented count of
+    512-byte sectors regardless of the logical block size; output bytes.
+    No block device is opened. No mounted-directory or filesystem path is read;
+    filesystem type, fill, media identity and cache state need separate approved
+    benchmark conditions. No model/medium is guessed from a device name.
+  /sys/block/zramN/{disksize,comp_algorithm}: configured bytes/algorithm only.
+  /proc/sys/vm/{swappiness,overcommit_memory} and /sys/kernel/security/lsm:
+    bounded configuration inspection only; none of these controls is changed.
+
+Privacy and bounds
+  No credentials, keys, machine-id, hostname, CPU serials, device serial/WWN,
+  DT serial-number, MAC/IP address, kernel command line, mount paths, arbitrary
+  configuration files, user environment or home files. All reads pass through
+  SystemReader's static path/pattern allowlist. Directory enumeration is limited
+  to 1024 entries in three specific sysfs groups, followed by name filtering.
+  Every file read is bounded to 64 KiB plus one overflow byte, regular files
+  only, opened read-only/nonblocking. No recursive filesystem traversal.
+  Expected live sysfs links into /sys/devices, DT links into
+  /sys/firmware/devicetree/base, and /etc/os-release -> /usr/lib/os-release are
+  supported. Resolved paths are reopened using directory descriptors and
+  O_NOFOLLOW for each component. Unreviewed alternate links are inaccessible.
+  Fixture links are restricted to the corresponding paths inside fixture root;
+  fixture reads never fall back to live files, even for absent source directories.
+  Mutable kernel interfaces are snapshots, not an atomic system-wide capture.
+
+Shared result API (common.py)
+  make_result(kind, *, synthetic, fixture_id=None, conditions=None)
+  add_record(result, name, status, *, value=None, unit=None, source=None, reason=None)
+  validate_result(result)
+  emit_result(result, output=None)
+
+  make_result creates metadata only (opaque random run token, no host identifier),
+  records/sources/errors empty, all authorization flags false, tool_revision null.
+  Unknown tool revision is not inferred from a different repository checkout.
+  No automatic Git command or system probe occurs. Collector timing covers
+  inspection overhead only, never a benchmark or boot timing.
+
+  Validation rejects unknown kinds/statuses/origins/clocks/units, missing keys,
+  wrong JSON types, duplicate record names, nonfinite values, inconsistent value/
+  status pairs, missing synthetic provenance, or unbounded execution metadata.
+  Executed envelopes require scope_ref, protocol_id, role baseline/candidate,
+  positive integer repetition, requested duration_s <=60, UTC start/end and
+  measured elapsed <=duration_s+5. A sustained run additionally requires
+  sustained=true, cm3-cpu-sustained/v1 and sustained_scope_ref, cap 3600 seconds.
+  If supplied, memory_mib <=256 and file_mib <=64. Benchmark-specific conditions,
+  measurements, capacity checks and authority remain benchmark owner's duty;
+  a valid envelope never grants authorization. Source hashes are null rather
+  than hashing entire files that may contain unselected data.
+
+Synthetic fixture validation
+  python3 -m unittest discover -s tests/cm3-toolkit -p 'test_*.py' -v
+
+  tests/cm3-toolkit/fixtures/collector/basic.json is a source-tree template, not
+  a raw-result envelope. Keys are fixed relative system-source paths; values
+  are synthetic file text, including NUL-terminated DT identity. Tests materialize
+  it in a temporary isolated directory and remove that directory afterwards.
+  The tests exercise the callable CLI as well as collection and validation.
+
+  For a manual fixture CLI run, choose an existing empty fixture directory and
+  materialize the trusted supplied template (replace the final path):
+    python3 -c 'import json, pathlib, sys; root=pathlib.Path(sys.argv[1]); data=json.loads(pathlib.Path("tests/cm3-toolkit/fixtures/collector/basic.json").read_text()); [( (root/p).parent.mkdir(parents=True,exist_ok=True), (root/p).write_text(v)) for p,v in data.items()]' /SELECTED/EMPTY/FIXTURE/DIR
+    python3 tools/cm3-toolkit/collect.py --fixture-root /SELECTED/EMPTY/FIXTURE/DIR
+
+  Every fixture result has provenance.synthetic=true, origin=fixture and
+  fixture_id=collector-fixture-v1. No CLI flag can turn fixture output into live
+  evidence. Timestamp and elapsed metadata describe the collector invocation,
+  not a CM3 test. Do not submit this output as measured CM3 evidence.
+
+Limits
+  This component does not validate latest-stable package selection, bootloader/
+  firmware image manifests, physical hardware, performance, reliability, or
+  G0-G7. It does not read arbitrary builder manifests or expose caller paths.
+  Kernel driver reads have bounded size/count, but a broken kernel/sysfs driver
+  may stall its read; there is no subprocess deadline for the inspection-only
+  collector. Unit coverage does not replace a separately approved target run.
