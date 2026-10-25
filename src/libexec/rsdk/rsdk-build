@@ -307,6 +307,11 @@ main() {
 
 	SUITE="${2:-$(jq -er --arg product "$PRODUCT" '.[] | select(.product == $product).supported_suite[0]' "$SCRIPT_DIR/../../share/rsdk/configs/products.json")}"
 	EDITION="${3:-$(jq -er --arg product "$PRODUCT" '.[] | select(.product == $product).supported_edition[0]' "$SCRIPT_DIR/../../share/rsdk/configs/products.json")}"
+	# Do not fall through to upstream's unsigned/missing-feed path during preflight.
+	if [[ ${RSDK_OPTION_PRODUCT_OVERRIDE:-$PRODUCT} == "radxa-cm3-rpi-cm4-io" && $SUITE == "trixie" && $EDITION == "cli" ]]; then
+		echo "CM3 Trixie CLI image assembly is disabled until signed package/configuration preflight passes. See docs/cm3-cli/build.md." >&2
+		return 1
+	fi
 	local OUTPUT="$PWD/out/${PRODUCT}_${SUITE}_${EDITION}"
 	mkdir -p "$OUTPUT"
 	echo "Building ${PRODUCT} ${SUITE} ${EDITION}..."

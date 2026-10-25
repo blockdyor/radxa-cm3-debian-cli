@@ -29,6 +29,7 @@ permissions:
 
 jobs:
   check-mdbook:
+    if: github.repository == 'RadxaOS-SDK/rsdk'
     runs-on: ubuntu-latest
     outputs:
       has_book: ${{ steps.check.outputs.has_book }}
@@ -47,7 +48,7 @@ jobs:
 
   build-doc:
     needs: check-mdbook
-    if: needs.check-mdbook.outputs.has_book == 'true'
+    if: github.repository == 'RadxaOS-SDK/rsdk' && needs.check-mdbook.outputs.has_book == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

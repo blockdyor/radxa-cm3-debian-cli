@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "phase": "cm3-trixie-cli-experiment",
+  "maximum_full_image_attempts": 3,
+  "maximum_concurrent_full_images": 1,
+  "full_image_attempts": [],
+  "status": "Image stage not implemented or enabled. Reserve an entry before any future image assembly; this file is not an automatic counter."
+}

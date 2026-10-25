@@ -1,0 +1,132 @@
+# Package provenance and maintenance boundary
+
+EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
+
+Machine-readable authority: `project/cm3-cli/source-lock.json`. All recipe and
+gitlink inputs use full commit IDs. The SDK base is
+`RadxaOS-SDK/rsdk@dba5cba3eafb948a22787560bea56da2b9f8f163`; the executing fork
+commit is asserted against the manual workflow's `expected_sha`.
+
+## Selected rebuilds
+
+- `radxa-pkg/linux-rk2410-nocsf@aa0ba4b96cd6ebb7aea36a488f2cbfdf702fea8b`,
+  kernel gitlink `radxa/kernel@fd366906451692033f1ba273e77e7e2f936c78db`.
+  Version `6.1.84-18+cm3cli1`; retain exact-board image/header aliases and matching
+  ARM64 payloads. Kernel payload includes modules and DTBs; required exact file is
+  `rk3566-radxa-cm3-rpi-cm4-io.dtb`. No vendor libc/UAPI package or other board
+  alias is selected. Apply both recipe config patches via dpkg-source; preserve
+  `rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config`.
+  Build-Depends come from its locked control file (debhelper/devscripts/lintian,
+  dh-exec, flex/bison/bc, ncurses/OpenSSL/YAML development libraries, cpio/kmod).
+  Add crossbuild-essential-arm64, required ARM64 libraries, libelf/dwarves and
+  QEMU; its HOSTCC is intentionally ARM64, not silently changed to native x86.
+  Runtime hooks need module/initramfs/boot utilities even when payload control
+  declares no Depends. Overlay DKMS requires matching headers and target tools.
+- `radxa-pkg/u-boot-rk2601@28cee0b81ceff7986220665c4567222c5aaec790`,
+  gitlinks `radxa/u-boot@d9ab7ec6029573ac538b6707a0dffd0a5d049e77` and
+  `radxa/rkbin@f3e6dd6372377faee13b29d0ce35eb08049356ef`.
+  Version `2017.09-71+cm3cli1`; only the generic payload and exact-board alias
+  enter the whitelist. Compile only `radxa-cm3-rpi-cm4-io-rk3566_defconfig` through
+  its recipe target; other board aliases are discarded. Preserve RK3566 DDR,
+  USB helper and BL31 inputs (audited selections v1.25/v1.17/v1.46); archive
+  hashes and notices before distributing any payload. Native AMD64 build needs
+  the recipe's 32-bit runtime libraries plus ARM/aarch64 cross tools, Python,
+  setuptools, SWIG, pyelftools, GnuTLS, ncurses, dtc, dos2unix, xxd, bc and
+  debhelper/devscripts/lintian/dh-exec/flex/bison. `file`/`readelf` inspect
+  `boot_merger` before execution. No loader setup script runs against any media
+  in the source probe. Package installation must not become automatic flashing.
+- `radxa-pkg/radxa-overlays@a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6`,
+  release source 0.2.25, rebuilt as `0.2.25+cm3cli1`.
+  Build uses its declared debhelper/devscripts/dh-exec/dh-sequence-dkms/fakeroot/
+  lintian. Target needs DKMS, compiler/make/dtc and matching headers; it builds a
+  real dummy module as well as DTBOs. Do not install recommended rsetup or enable
+  overlays by default. CLI board support must own extlinux overlay integration.
+- `radxa-pkg/radxa-bootutils@d822e09153486083b2ee491ac70d384746dd65c3`,
+  `0.2.6+cm3cli1`: retain Rockchip decompression behavior. Declared build tools
+  include debhelper/devscripts/lintian/dh-exec/pandoc/shellcheck; runtime declares
+  `file` and also needs Bash/coreutils/gzip/kernel-hook environment. Its overlay
+  install hook uses the running device tree and systemd-boot; the future CLI
+  package must guard/replace it for deterministic cross-built extlinux updates.
+- `radxa-pkg/radxa-udev@f729fd128fcabd84b5f301335016e5e2b3347423`,
+  `0.1.4+cm3cli1`: retain reviewed GPIO/SPI/PWM group permissions, not universal
+  group membership. Build needs debhelper/devscripts/lintian. Audit group
+  creation and device access on the exact board before any hardware claim.
+
+The source probe installs and checks actual declared Build-Depends, refuses
+unexpected gitlinks, builds with two jobs and records each local recipe diff.
+It does not use upstream's default `DPKG_FLAGS=-d`. Local suffixes distinguish
+rebuilds; they are not upstream security-version bumps. Kernel aliases and
+payload flavor derive from the same suffixed version. A successful job records
+all nine whitelisted package versions/architectures/hashes; this is not the final
+Essential-inclusive target manifest or a signed install/configuration result.
+
+## Deliberate exclusions and retained functions
+
+The missing Trixie path requires seven BSP/overlay binaries from three source
+projects; it is not solved by replacing a single URL. Kernel and loader lineage
+above is the compatibility candidate, not generic Debian kernel, legacy 5.10,
+latest-named U-Boot, CM3 IO, CM3J, RK3568, or a Bookworm userspace substitution.
+
+`radxa-system-config@263af2c8c241430e994ffd18bbb8ddfbebf36434` is a configuration
+reference, not an installed umbrella. A future `cm3-cli-board-support` package
+must own serial, exact DTB/extlinux/initramfs/module and secure provisioning
+functions. No empty Provides package may fake satisfaction of the board task.
+Do not copy generic sysctl/governor tuning, default accounts, arbitrary on-boot
+commands, or desktop/media/NPU umbrellas. The module's Ethernet is gmac1/RTL8211F;
+PCIe r8125 is conditional on an actual added NIC, not a board requirement.
+
+Preserve the original 33 userspace seeds, replacing only the standalone ttyFIQ0
+config selection with the reviewed board-support package. Add AppArmor policy,
+Debian firmware-brcm80211/firmware-realtek and deliberate DKMS tools. Preserve
+Essential/APT/dpkg/glibc/systemd/udev, networking, SSH, time, nftables, storage and
+recovery behavior. Do not strip target compilers while retaining DKMS. Regenerate
+the complete installed manifest; historical 184-package metadata solving is not
+that manifest. No broad Radxa firmware/diversion bundle is selected; additional
+radio calibration or Bluetooth blobs require chip/file/license evidence.
+
+## Sources, licensing and reproducibility
+
+Preserve upstream LICENSE and every package copyright/notice. Corresponding
+kernel/U-Boot sources, patches, generated configs and build scripts must accompany
+any later public binary delivery. rkbin and radio blobs need per-file license
+review; wrapper GPL text is not a blanket blob redistribution grant. No wholly
+FOSS, secure-boot or source-to-binary equivalence claim is made.
+
+The first source probe pins OCI manifests and Git sources but resolves fresh
+signed Trixie build dependencies. It records installed source/package versions,
+APT InRelease files and generated `.buildinfo`/`.changes`. These enable auditing;
+they do NOT by themselves freeze the entire build-input closure. Pin the observed
+compiler/tools and authenticated package snapshots before image qualification.
+Two independent clean builds and binary comparison are required for a bitwise
+reproducibility claim. Do not suppress signature/expiry errors to recreate an
+old snapshot.
+
+Reference-image bytes are not reused. Historical `rsdk-r2` has an empty builder
+revision and a reported self-entry mismatch in its aggregate SHA512 list. Four
+small metadata assets were independently consistent in the source audit, but
+that is not a whole-release PASS or proof of image tampering. The full reference
+image was not independently hashed here. Avoiding its binaries removes the need
+to trust them for this rebuild; it does not retroactively repair the defect.
+
+## Updates
+
+Routine Debian updates must use authenticated Trixie/update/security sources.
+Vendor kernel/U-Boot/rkbin/overlay/config maintenance is the project's explicit
+responsibility, not Debian security coverage. A named CVE/backport owner and
+support horizon remain unassigned; stable-release claims are blocked.
+
+Review source/backport/license diffs; rebuild kernel + DTBs + headers + aliases +
+overlays as one tested update unit. Review U-Boot + rkbin + exact-carrier loader
+as another. Increment local packaging versions monotonically, retain known-good
+boot inputs and retest install/upgrade/reboot/rescue before promotion. Never
+silently switch lineage, downgrade, reboot unattended, write SPI or scan disks.
+
+The planned no-server experiment uses an ephemeral job-only APT signing key and
+signed whitelist repository bundle. Trust a future bundle/key only after verifying
+its GitHub attestation against the exact repository, signer workflow, approved
+signer digest and source digest; then use a temporary scoped `signed-by` APT
+source and remove it after authenticated import. This round-trip is NOT yet
+implemented or verified. If attestation fails/unavailable, stop; obtain an approved
+persistent signing-key mechanism instead of falling back to unsigned packages.
+No private key or enrollment secret may enter an artifact. There is no claimed
+existing maintained online BSP feed.
