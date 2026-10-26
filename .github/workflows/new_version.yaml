@@ -1,5 +1,6 @@
 jobs:
   release:
+    if: github.repository == 'RadxaOS-SDK/rsdk'
     permissions:
       contents: "write"
     runs-on: "ubuntu-latest"

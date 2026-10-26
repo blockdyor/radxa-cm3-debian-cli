@@ -1,62 +1,89 @@
-name: Build images
+name: CM3 package source preflight
 
 on:
-  merge_group:
-  pull_request:
-    paths-ignore:
-      - '**.md'
-      - .gitignore
-      - 'docs/**'
-      - 'theme/**'
-      - 'po/**'
-      - book.toml
-      - .github/workflows/docs.yaml
-  push:
-    branches-ignore:
-      - 'dependabot/**'
-    paths-ignore:
-      - '**.md'
-      - .gitignore
-      - 'docs/**'
-      - 'theme/**'
-      - 'po/**'
-      - book.toml
-      - .github/workflows/docs.yaml
-  schedule:
-    - cron: '0 0 * * SUN'
   workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Full approved development commit (must match the selected ref)
+        required: true
+        type: string
+      hypothesis:
+        description: Initial probe or specific failure/fix being tested (not an image attempt)
+        required: true
+        type: string
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: cm3-phase-b-exclusive
+  cancel-in-progress: false
 
 jobs:
-  query:
-    runs-on: ubuntu-latest
-    outputs:
-      products: ${{ steps.query.outputs.products }}
+  packages:
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      HYPOTHESIS: ${{ inputs.hypothesis }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Query available board configs
-        id: query
-        run: |
-          echo "products=$(jq -c '. | map(.product)' src/share/rsdk/configs/products.json)" >> $GITHUB_OUTPUT
-  build-images:
-    needs: [ query ]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      max-parallel: 10
-      matrix:
-        os: [ ubuntu-latest, ubuntu-24.04-arm ]
-        products: ${{ fromJSON(needs.query.outputs.products) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Build ${{ matrix.products }}
-        uses: ./.github/actions/build
+      - name: Checkout approved fork revision once
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          product: ${{ matrix.products }}
-          test-repo: true
-          artifacts: ${{ matrix.os == 'ubuntu-latest' }}
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Check revision, lock and local tests
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          python3 -m unittest discover -s tests/cm3-cli -v
+          python3 scripts/cm3-source-preflight.py --check-lock
+      - name: Qualify this ephemeral external runner
+        run: |
+          set -euo pipefail
+          mkdir -p preflight-work/evidence
+          {
+            printf 'commit=%s\nhypothesis=%s\n' "$EXPECTED_SHA" "$HYPOTHESIS"
+            uname -a
+            nproc
+            free -h
+            df -B1 .
+            docker version
+          } > preflight-work/evidence/runner.txt
+          test "$(uname -m)" = x86_64
+          test "$(nproc)" -ge 2
+          test "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -ge 7000000
+          test "$(df --output=avail -B1 . | tail -n 1)" -ge 25769803776
+      - name: Source-build the five pinned package projects (no image)
+        run: |
+          set -euo pipefail
+          builder="$(jq -er .builder_image project/cm3-cli/source-lock.json)"
+          binfmt="$(jq -er .binfmt_image project/cm3-cli/source-lock.json)"
+          docker run --privileged --rm "$binfmt" --install arm64
+          mkdir -p package-work
+          docker run --rm --platform linux/amd64 \
+            -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY \
+            -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
+            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates; exec python3 /src/scripts/cm3-source-preflight.py --workdir /work' \
+            2>&1 | tee preflight-work/source-build.log
+      - name: Retain allowlisted diagnostic evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-source-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            preflight-work/evidence/runner.txt
+            preflight-work/source-build.log
+            package-work/evidence/*.json
+            package-work/evidence/*.tsv
+            package-work/evidence/*.sources
+            package-work/evidence/*InRelease
+            package-work/evidence/*.diff
+            package-work/evidence/*.config
+            package-work/evidence/*.buildinfo
+            package-work/evidence/*.changes

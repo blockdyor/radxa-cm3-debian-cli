@@ -6,6 +6,7 @@ permissions: {}
 
 jobs:
   update-test:
+    if: github.repository == 'RadxaOS-SDK/rsdk'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
