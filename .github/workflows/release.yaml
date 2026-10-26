@@ -1,5 +1,6 @@
 jobs:
   build:
+    if: github.repository == 'RadxaOS-SDK/rsdk'
     outputs:
       distro: "${{ steps.distro_check.outputs.distro }}"
     runs-on: "ubuntu-latest"
@@ -64,7 +65,7 @@ jobs:
         fi
       shell: "bash"
   release:
-    if: "${{ github.event_name != 'pull_request' && needs.build.outputs.distro != 'UNRELEASED' }}"
+    if: "${{ github.repository == 'RadxaOS-SDK/rsdk' && github.event_name != 'pull_request' && needs.build.outputs.distro != 'UNRELEASED' }}"
     needs: "build"
     permissions:
       contents: "write"
