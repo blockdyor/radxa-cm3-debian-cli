@@ -49,8 +49,12 @@
       "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40698441411",
       "run_attempt": 1,
       "hypothesis": "Attempt 5/6: signed whitelist APT tamper rejection and clean ARM64 install DKMS extlinux fixture",
-      "result": "IN PROGRESS: checkout, local policy, cumulative admission and resource qualification passed; source compile and signed ARM64 probe outcome pending"
+      "result": "FAIL: source build PASS, nine-package signed repository gpgv PASS; ARM64 bootstrap exits 25 because no-Recommends omitted mmdebstrap runtime dependency arch-test; target install/DKMS not reached",
+      "completed_at": "2026-10-28T14:41:01Z",
+      "artifact_id": 12824379107,
+      "artifact_sha256": "ed64568e61a6adfea2274ae735eebe06b08a071ca552d181bcc6766b6cc9a1ef",
+      "retained_payloads": "Diagnostics only; no debs or recoverable compiled output"
     }
   ],
-  "status": "Five source attempts reserved/used: three failures, one source-build PASS, fifth in progress; one remains of cumulative six. Source PASS is not complete package preflight. All workers must reserve on the existing implementation card before dispatch. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency; reruns forbidden. Image stage not implemented or enabled; zero full-image attempts."
+  "status": "Five package attempts used: four workflow failures, one source-only workflow PASS. Both attempts 4 and 5 compiled all nine packages; attempt 5 failed before ARM64 bootstrap. One changed attempt remains of cumulative six; seventh prohibited. Source PASS is not complete package preflight. All workers must reserve on the existing implementation card before dispatch. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency; reruns forbidden. Image stage not implemented or enabled; zero full-image attempts."
 }

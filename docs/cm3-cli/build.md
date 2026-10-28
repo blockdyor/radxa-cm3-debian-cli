@@ -9,9 +9,11 @@ The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. The cumulative package limit is SIX; attempts
-1–5 are reserved/used and one remains. Attempt 5 is now running the changed
-signed ARM64 probe; do not duplicate it. A further evidence-based changed
-implementation probe may use attempt 6 only. See
+1–5 are used and one remains. Attempt 5 rebuilt all nine packages and verified
+the ephemeral repository signature, then failed before ARM64 bootstrap because
+`arch-test` was not installed. Do not rerun it. Only the evidence-based changed
+attempt 6 remains authorized; it explicitly installs that dependency and checks
+ARM64 execution before compilation. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
 ## Historical package-only invocation (do not repeat unchanged)

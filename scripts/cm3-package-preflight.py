@@ -322,7 +322,7 @@ def main():
     try:
         packages = inspect_inputs(work, lock)
         command('apt-get', 'install', '--no-install-recommends', '-y', 'apt-utils', 'gnupg',
-                'gpgv', 'mmdebstrap', 'debian-archive-keyring', 'mount')
+                'gpgv', 'mmdebstrap', 'arch-test', 'debian-archive-keyring', 'mount')
         # Private key lives outside /work and all upload paths, and is always deleted.
         with tempfile.TemporaryDirectory(prefix='cm3-key-') as keydir:
             Path(keydir).chmod(0o700)

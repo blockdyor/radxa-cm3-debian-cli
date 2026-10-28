@@ -72,7 +72,7 @@ jobs:
           docker run --privileged --rm --platform linux/amd64 \
             -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY -e GITHUB_RUN_ID -e GITHUB_SHA \
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
-            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates; python3 /src/scripts/cm3-source-preflight.py --workdir /work; exec python3 /src/scripts/cm3-package-preflight.py --workdir /work' \
+            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates arch-test; arch-test arm64; python3 /src/scripts/cm3-source-preflight.py --workdir /work; exec python3 /src/scripts/cm3-package-preflight.py --workdir /work' \
             2>&1 | tee preflight-work/source-build.log
       - name: Retain allowlisted diagnostic evidence only
         if: always()

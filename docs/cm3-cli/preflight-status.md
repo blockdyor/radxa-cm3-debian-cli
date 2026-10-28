@@ -122,23 +122,37 @@ the successful disposable runner is finished. No compiled package recovery is
 claimed. A changed next-stage implementation that needs them must use a counted
 attempt, not rerun this successful revision or hide a full rebuild as a test.
 
-## Package attempt 5 (in progress; no result inferred)
+## Package attempt 5 (source passed, ARM64 bootstrap failed)
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40698441411
 Checked-out commit: `293971c1a011ef3cd69343827cf36e1bb91a064f`, run attempt 1.
-Started 2026-10-28T13:39:30Z. Exact checkout, local tests, cumulative admission
-and runner qualification passed. Compilation/ARM64 probe outcome is pending;
-there is no claimed signed-install/DKMS PASS or final artifact yet.
+Started 2026-10-28T13:39:30Z; completed FAILURE at 2026-10-28T14:41:01Z.
+Exact checkout, local tests, cumulative admission and runner qualification passed.
+Source `result.json` is PASS (3663.35 seconds), with all nine selected packages.
+The ephemeral repository's `gpgv` signature verification passed. The separate
+`arm64-result.json` is FAIL (3.42 seconds): mmdebstrap exits 25 with
+`install arch-test for foreign architecture support`. Explicit no-Recommends
+installation omitted that runtime dependency. No target bootstrap, APT tamper
+negative, installation, DKMS or boot-fixture check ran; none is a claimed PASS.
+
+Diagnostic artifact ID `12824379107`, retention through 2026-11-11T14:40:57Z.
+SHA256 `ed64568e61a6adfea2274ae735eebe06b08a071ca552d181bcc6766b6cc9a1ef`
+matches the downloaded bytes and API digest; all 35 ZIP members pass CRC checks.
+No compiled package binaries were retained. The final changed candidate adds
+the missing explicit `arch-test` dependency without enabling Recommends and
+checks actual ARM64 execution before expensive source compilation. Local policy
+regression fails before the correction and passes after it; actual foreign
+bootstrap remains an external-run check, not a local production-host test.
 
 ## Admission and remaining work
 
 The fifth-attempt implementation adds a signed whitelist/Essential-inclusive
 ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full
-image or a competing workflow. Its external result is NOT yet established.
+image or a competing workflow. Its source PASS and bootstrap failure are above.
 See `build.md` for exact scope and remaining gates.
 
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
-attempts 1–5 are reserved/used (three failures, then source PASS, fifth pending);
+attempts 1–5 are used (four workflow failures, one source-only workflow PASS);
 one remains.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,

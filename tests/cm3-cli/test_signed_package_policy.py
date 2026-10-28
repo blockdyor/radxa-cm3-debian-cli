@@ -1,3 +1,4 @@
+import ast
 import copy
 import hashlib
 import importlib.util
@@ -65,6 +66,24 @@ class SignedPackagePolicyTests(unittest.TestCase):
         for name in ['gcc', 'make', 'dkms', 'device-tree-compiler', 'apparmor',
                      'firmware-brcm80211', 'firmware-realtek']:
             self.assertIn(name, preflight.TOOLS)
+
+    def test_foreign_bootstrap_dependency_is_explicit_without_recommends(self):
+        tree = ast.parse((ROOT / 'scripts/cm3-package-preflight.py').read_text())
+        installs = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'command':
+                args = [value.value for value in node.args if isinstance(value, ast.Constant)]
+                if args[:2] == ['apt-get', 'install']:
+                    installs.append(args)
+        self.assertEqual(len(installs), 1)
+        self.assertIn('--no-install-recommends', installs[0])
+        self.assertIn('arch-test', installs[0])
+        workflow = (ROOT / '.github/workflows/build.yaml').read_text()
+        container_command = workflow.split("sh -ec '", 1)[1].split("' \\", 1)[0]
+        self.assertIn('apt-get install -y --no-install-recommends python3', container_command)
+        self.assertIn('python3 ca-certificates arch-test;', container_command)
+        self.assertLess(container_command.index('arch-test arm64;'),
+                        container_command.index('python3 /src/scripts/cm3-source-preflight.py'))
 
     def test_probe_is_not_image_or_update_trust_pass(self):
         text = (ROOT / 'scripts/cm3-package-preflight.py').read_text()
