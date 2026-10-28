@@ -124,6 +124,12 @@ attempt, not rerun this successful revision or hide a full rebuild as a test.
 
 ## Admission and remaining work
 
+The next changed implementation adds a signed whitelist/Essential-inclusive
+ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full
+image or a competing workflow. Its external result is NOT yet established.
+See `build.md` for exact scope and remaining gates. No new source attempt is
+claimed here until its reservation and actual run are recorded.
+
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
 attempts 1–4 are consumed (three failures, then source PASS); two remain.
 A read-only Actions admission step reconciles full

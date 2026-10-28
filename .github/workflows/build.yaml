@@ -62,17 +62,17 @@ jobs:
           test "$(nproc)" -ge 2
           test "$(awk '/MemTotal/ {print $2}' /proc/meminfo)" -ge 7000000
           test "$(df --output=avail -B1 . | tail -n 1)" -ge 25769803776
-      - name: Source-build the five pinned package projects (no image)
+      - name: Source-build and test signed ARM64 package configuration (no image)
         run: |
           set -euo pipefail
           builder="$(jq -er .builder_image project/cm3-cli/source-lock.json)"
           binfmt="$(jq -er .binfmt_image project/cm3-cli/source-lock.json)"
           docker run --privileged --rm "$binfmt" --install arm64
           mkdir -p package-work
-          docker run --rm --platform linux/amd64 \
+          docker run --privileged --rm --platform linux/amd64 \
             -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY -e GITHUB_RUN_ID -e GITHUB_SHA \
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
-            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates; exec python3 /src/scripts/cm3-source-preflight.py --workdir /work' \
+            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates; python3 /src/scripts/cm3-source-preflight.py --workdir /work; exec python3 /src/scripts/cm3-package-preflight.py --workdir /work' \
             2>&1 | tee preflight-work/source-build.log
       - name: Retain allowlisted diagnostic evidence only
         if: always()
@@ -93,3 +93,9 @@ jobs:
             package-work/evidence/*.config
             package-work/evidence/*.buildinfo
             package-work/evidence/*.changes
+            package-work/evidence/tampered-apt-update.txt
+            package-work/evidence/target-packages.tsv
+            package-work/evidence/target-origins.txt
+            package-work/evidence/dkms-status.txt
+            package-work/evidence/header-helper-elf.txt
+            package-work/evidence/extlinux-fixture.conf

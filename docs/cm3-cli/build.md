@@ -57,6 +57,46 @@ source trees, private signing material, enrollment keys, or a disk image. Review
 logs for publication-sensitive content before republishing elsewhere. Source
 checkout and package output directories are ignored by Git.
 
+## Changed next-stage package probe
+
+The next reviewed development revision extends this SAME admitted manual job
+with `scripts/cm3-package-preflight.py`, after successful compilation. Since
+attempt 4 retained no payloads and no cache, this necessarily recompiles and
+consumes a new cumulative package attempt; it is not a rerun of attempt 4.
+Reserve the changed exact SHA before dispatch, with the existing input names:
+
+    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
+      --ref dev/cm3-debian-cli -f expected_sha=REVIEWED_FULL_COMMIT \
+      -f hypothesis='Attempt 5/6: signed whitelist APT tamper rejection and clean ARM64 install DKMS extlinux fixture'
+
+This stage creates an ephemeral Ed25519 job-only key outside retained output,
+signs a nine-package whitelist APT repository, verifies it, then bootstraps a
+new Essential-inclusive ARM64 minbase directory from authenticated Debian
+Trixie/update/security repositories. It adds the BSP through scoped signed-by,
+requires signature failure on deliberately tampered metadata, installs the
+32 retained seeds plus explicit firmware/AppArmor/DKMS/compiler dependencies,
+tests native ARM64 header helpers through actual DKMS dummy-module/DTBO builds,
+and checks exact DTB/loader files, gzip initramfs, serial/AppArmor boot arguments
+and idempotent extlinux generation in a fixture. It exercises BSP reinstallation,
+ordinary Debian upgrade, overlay removal/reinstallation and dpkg audit; records
+the complete final package/source manifest and candidate origins; then removes
+the build-only APT source/key. Loader setup is hashed, NEVER executed.
+
+Only the disposable external container is privileged for mmdebstrap and isolated
+proc/sys/tmpfs-dev mounts, with guaranteed unmount cleanup. It receives no GitHub
+token, host block-device bind, signing secret or production connection. The job
+still has read-only token permissions, shared exclusive concurrency, two compile
+jobs and a 180-minute total bound. Keys, target directory and signed package
+payloads are NOT uploaded. Diagnostic-only retention is unchanged.
+
+Even a PASS here is NOT the full package gate: deterministic configuration is
+a probe fixture, not `cm3-cli-board-support`; no target kernel boots in chroot,
+so active LSM/first boot/enrollment/update recovery are untested. Reinstalling
+the same version is NOT distinct-version BSP upgrade validation. Attested update
+trust, secure CLI integration and input-snapshot/license closure remain pending.
+Image assembly stays disabled. Read `arm64-result.json` separately from source
+`result.json`; neither may be inferred from the other or a workflow name.
+
 Local, unprivileged checks (Python/Bash; compiler regressions additionally use
 GCC14/make and an ARM64 compiler when installed, otherwise explicitly skip):
 
