@@ -18,7 +18,7 @@ From an authenticated external control host with `gh` access:
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli \
       -f expected_sha="$SHA" \
-      -f hypothesis='Retry: initialize U-Boot cached soc/current without suppressing warnings'
+      -f hypothesis='Final package retry: order kernel configuration before compile and use ARM64 helper hardening flags'
 
 Use a clean checkout of the exact pushed development commit. The workflow rejects
 a ref/SHA mismatch, checks the lock and tests, records actual runner resources,

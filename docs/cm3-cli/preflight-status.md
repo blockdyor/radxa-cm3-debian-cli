@@ -37,10 +37,26 @@ Nested gitlink diffs are now recorded as well as recipe diffs so the exact
 source patch is retained. Local patch-context/duplicate-application tests are
 not a replacement for the actual external compile.
 
+## Package attempt 2 of 3 (failed)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40655341359
+Checked-out commit: `1c362bcc603b35291d0c30f0b30d577ac308af5d`, run attempt 1.
+U-Boot, overlays, bootutils and udev built; their actual `.changes`/`.buildinfo`
+and the nested U-Boot source diff are in the diagnostic artifact. Kernel build
+failed: parallel recipe prerequisites launched `build-defconfig` and `build-all`
+together, so compilation saw no `.config`. Kernel clean probes also rejected
+AMD64 `-fcf-protection=full` passed to the recipe's ARM64 `HOSTCC`.
+
+The final retry adds the missing `build-all: build-defconfig` dependency and
+selects Debian's ARM64 C/C++/link hardening flags explicitly for ARM64 helpers.
+It does not turn off hardening or change the kernel configuration/source pin.
+A local real `make -j2` fixture checks the ordering; actual cross compilation
+remains an external check, not inferred from that fixture.
+
 ## Admission and remaining work
 
 Package-only budget: initial attempt plus at most two evidence-based retries,
-three total across operators/workflow reruns. The initial attempt is consumed;
+three total across operators/workflow reruns. Two attempts are consumed;
 no unchanged failing rerun is permitted. Before dispatch, reserve the next
 attempt in the shared operational ledger and record its exact commit/hypothesis;
 a concurrent or duplicate probe is prohibited. `attempts.json` records observed

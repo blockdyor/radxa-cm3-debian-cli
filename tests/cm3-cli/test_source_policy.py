@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('preflight', ROOT / 'scripts/cm3-source-preflight.py')
@@ -107,6 +108,28 @@ class SourcePolicyTests(unittest.TestCase):
         for line in workflow.splitlines():
             if 'uses:' in line:
                 self.assertRegex(line, r'@[0-9a-f]{40}(?:\s|$)')
+
+    def test_kernel_configuration_precedes_parallel_compile_and_arm64_flags(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / '.github/local').mkdir(parents=True)
+            (root / 'Makefile.extra').write_text('DPKG_FLAGS ?= -d\nJOBS=-j$(shell nproc)\n')
+            (root / '.github/local/Makefile.local').write_text(
+                'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config\n')
+            with patch.object(preflight, 'run', return_value='-O2\n') as command:
+                preflight.prepare_kernel_recipe(root, root)
+            self.assertEqual(command.call_count, 4)
+            for call in command.call_args_list:
+                self.assertEqual(call.args[:3], ('env', 'DEB_HOST_ARCH=arm64', 'dpkg-buildflags'))
+            (root / 'Makefile').write_text(
+                'include .github/local/Makefile.local\n'
+                '.PHONY: build build-all build-defconfig\n'
+                'build: build-defconfig build-all\n'
+                'build-defconfig:\n\tsleep 0.1; touch configured\n'
+                'build-all:\n\ttest -f configured\n')
+            subprocess.run(['make', '-j2', 'build'], cwd=root, check=True, capture_output=True)
+            self.assertEqual(json.loads((root / 'kernel-helper-flags.json').read_text())['CFLAGS'], '-O2')
+            self.assertNotIn('DPKG_FLAGS ?= -d', (root / 'Makefile.extra').read_text())
 
     def test_image_entrypoint_is_explicitly_held(self):
         script = (ROOT / 'src/libexec/rsdk/rsdk-build').read_text()

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -100,6 +101,27 @@ def local_patch(recipe, name, before, after):
     path.write_text(text.replace(before, after))
 
 
+def prepare_kernel_recipe(source, evidence):
+    local_patch(source, 'Makefile.extra', 'DPKG_FLAGS ?= -d', 'DPKG_FLAGS ?=')
+    local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
+    # HOSTCC intentionally produces ARM64 header helpers, not native AMD64 tools.
+    flags = {name: run('env', 'DEB_HOST_ARCH=arm64', 'dpkg-buildflags', '--get', name,
+                       capture=True).strip()
+             for name in ['CFLAGS', 'CPPFLAGS', 'CXXFLAGS', 'LDFLAGS']}
+    definitions = ' '.join(name + '=' + shlex.quote(value) for name, value in {
+        'HOSTCFLAGS': flags['CFLAGS'] + ' ' + flags['CPPFLAGS'],
+        'HOSTCXXFLAGS': flags['CXXFLAGS'] + ' ' + flags['CPPFLAGS'],
+        'HOSTLDFLAGS': flags['LDFLAGS'],
+    }.items())
+    local_patch(source, '.github/local/Makefile.local',
+                'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config',
+                'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config\n'
+                'CUSTOM_MAKE_DEFINITIONS := ' + definitions + '\n'
+                '# Do not race configuration against compilation under make -j2.\n'
+                'build-all: build-defconfig')
+    (evidence / 'kernel-helper-flags.json').write_text(json.dumps(flags, indent=2) + '\n')
+
+
 def build_recipe(recipe, lock, work, evidence):
     source = work / recipe['name']
     checkout(recipe, source)
@@ -113,8 +135,7 @@ def build_recipe(recipe, lock, work, evidence):
         '--force-distribution', 'Exact-carrier experimental rebuild; source pins in source-lock.json.',
         cwd=source)
     if recipe['name'] == 'linux-rk2410-nocsf':
-        local_patch(source, 'Makefile.extra', 'DPKG_FLAGS ?= -d', 'DPKG_FLAGS ?=')
-        local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
+        prepare_kernel_recipe(source, evidence)
         # dpkg-source applies the two recorded config patches before dh_auto_build.
         run('dpkg-source', '--before-build', '.', cwd=source)
         for name in ['radxa.config', 'radxa_custom.config']:

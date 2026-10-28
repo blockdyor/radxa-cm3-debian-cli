@@ -13,6 +13,14 @@
       "run_attempt": 1,
       "hypothesis": "Initial pinned Trixie source-package feasibility probe after guarded workflow registration",
       "result": "FAIL: U-Boot soc/current maybe-uninitialized; kernel not reached"
+    },
+    {
+      "number": 2,
+      "commit": "1c362bcc603b35291d0c30f0b30d577ac308af5d",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40655341359",
+      "run_attempt": 1,
+      "hypothesis": "Initialize U-Boot cached soc/current without suppressing warnings",
+      "result": "FAIL: U-Boot built; kernel configuration/compilation race and AMD64 helper flags sent to ARM64 HOSTCC"
     }
   ],
   "status": "Image stage not implemented or enabled. Reserve an entry before any future image assembly; this file is not an automatic counter."
