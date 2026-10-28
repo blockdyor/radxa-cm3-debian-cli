@@ -1,57 +1,54 @@
-# External preflight dispatch result
+# External package preflight status
 
-Inspected 2026-10-25 UTC. Source probe revision:
-`f910df4b4e129d790a042402ac5e0e091de4b911` on `dev/cm3-debian-cli`.
-Draft PR: https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
+EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
-Status: BLOCKED BEFORE RUNNER ALLOCATION. No source package compilation,
-complete signed package preflight or full-image attempt occurred. No artifact,
-run URL or release exists for this attempted dispatch.
+Inspected 2026-10-28 UTC. Draft implementation PR:
+https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-The actual command was:
+## Workflow repair (completed, not a package pass)
 
-    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
-      --ref dev/cm3-debian-cli \
-      -f expected_sha=f910df4b4e129d790a042402ac5e0e091de4b911 \
-      -f hypothesis='Initial pinned Trixie source-package feasibility probe'
+The historical HTTP 404 occurred despite a workflow blob existing on main:
+Actions had no registered workflows. The precise GitHub-side cause was not
+established. Focused bootstrap PR #3 promoted the reviewed manual package-only
+workflow and guarded inherited automatic build/documentation/release jobs:
+https://github.com/blockdyor/radxa-cm3-debian-cli/pull/3
 
-GitHub returned HTTP 404: `workflow build.yaml not found on the default branch`.
-A targeted `PUT actions/workflows/build.yaml/enable` also returned 404. Subsequent
-readback established all of the following, not merely an inferred missing file:
+Merged main commit: `133907e883a44a60d911fa8236b1e7e248be0d7d`.
+Registered workflow: `396827381`, `build.yaml`, active. No account/repository
+security policy or spending setting was relaxed. PR #1 was not merged.
+Reversal: review a revert of bootstrap merge `133907e883a44a60d911fa8236b1e7e248be0d7d`
+only after disabling the manual workflow and preserving inherited fork guards;
+a blind revert would restore inherited automatic triggers and is unsafe.
 
-- Authenticated repository permission includes push/admin.
-- Repository Actions permissions reports `enabled: true`.
-- The default-branch contents API returns `.github/workflows/build.yaml`, blob
-  `a84ee8695cf8c18b552bd442837e0255825f332a` (inherited upstream workflow).
-- Actions workflow registry returns `total_count: 0`, `workflows: []`.
-- Specific workflow lookup returns 404; runs return `total_count: 0`.
-- PR #1 is OPEN and draft, base `main`, head `dev/cm3-debian-cli` at the probe SHA.
+## Package attempt 1 of 3 (failed)
 
-Thus write access and file existence are verified, but a dispatchable workflow
-registration is not. The precise GitHub-side cause is unknown. Do not describe
-this as a compiler failure, a paid-runner requirement, or passed preflight.
-Anonymous browser inspection also showed no workflows; no authenticated GitHub
-browser session was available. No repository security/spending setting, default
-branch, main-branch source or production state was changed.
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40294636804
+Checked-out commit: `f531731036391073441cb4a3b770a5eb233ea807`, run attempt 1.
+External runner: standard GitHub-hosted `ubuntu-24.04`. Checkout, policy checks
+and resource qualification passed. U-Boot failed under GCC's retained
+`-Werror=maybe-uninitialized`: `drivers/power/charge_animation.c:791` reported
+`soc` and `current` potentially uninitialized. Kernel compilation was not reached.
+The uploaded diagnostic artifact is `cm3-source-preflight-40294636804-1`.
 
-## Minimum resume condition
+The next source revision initializes only those two cached values to zero;
+the existing mandatory first successful gauge poll and error checks remain.
+It neither disables diagnostics nor changes source lineage/configuration.
+Nested gitlink diffs are now recorded as well as recipe diffs so the exact
+source patch is retained. Local patch-context/duplicate-application tests are
+not a replacement for the actual external compile.
 
-An owner must make the reviewed manual workflow dispatchable in this fork, or
-supply an authorized authenticated browser session for inspecting the fork's
-workflow activation. If a default-branch registration/bootstrap commit is
-required, approve that narrowly reviewed main-branch change first; this task is
-scoped to the dedicated development branch and did not silently make it.
+## Admission and remaining work
 
-Do NOT blanket-enable inherited all-board/scheduled image builds or release
-publication from the unchanged upstream main branch. Do not merge the entire
-unfinished CLI experiment merely to register a workflow. Any bootstrap must
-preserve manual-only execution, the fixed exclusive concurrency group, exact-SHA
-assertion and no image/release stage. Once the workflow registry returns an actual
-workflow ID, run the documented source-only probe against the then-approved
-pushed development SHA, not a stale SHA.
+Package-only budget: initial attempt plus at most two evidence-based retries,
+three total across operators/workflow reruns. The initial attempt is consumed;
+no unchanged failing rerun is permitted. Before dispatch, reserve the next
+attempt in the shared operational ledger and record its exact commit/hypothesis;
+a concurrent or duplicate probe is prohibited. `attempts.json` records observed
+runs, not an automatic atomic admission service.
 
-After source success, finish the full signed ARM64 configuration/DKMS/update
-preflight and secure CLI/boot implementation listed in `build.md`. Image assembly
-remains explicitly disabled. All G0–G7 dispositions and all 28 UNTESTED hardware
-rows remain unchanged. The three full-image attempts are still unused in the
-inspected repository; check live phase-wide records again before any later run.
+A successful source compile is NOT full package preflight. Signed repository,
+clean ARM64 configuration/update, real DKMS module and DTBO builds, exact boot
+integration, secure enrollment and attested update verification remain pending.
+Image assembly is disabled; no full-image attempt has run in the inspected
+repository. Check the phase-wide ledger before any future image stage. Both
+original gate definitions and all 28 UNTESTED hardware rows remain unchanged.

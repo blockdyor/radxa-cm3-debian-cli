@@ -4,5 +4,16 @@
   "maximum_full_image_attempts": 3,
   "maximum_concurrent_full_images": 1,
   "full_image_attempts": [],
+  "maximum_package_attempts": 3,
+  "package_attempts": [
+    {
+      "number": 1,
+      "commit": "f531731036391073441cb4a3b770a5eb233ea807",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40294636804",
+      "run_attempt": 1,
+      "hypothesis": "Initial pinned Trixie source-package feasibility probe after guarded workflow registration",
+      "result": "FAIL: U-Boot soc/current maybe-uninitialized; kernel not reached"
+    }
+  ],
   "status": "Image stage not implemented or enabled. Reserve an entry before any future image assembly; this file is not an automatic counter."
 }

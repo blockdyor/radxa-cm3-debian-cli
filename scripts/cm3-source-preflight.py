@@ -121,6 +121,11 @@ def build_recipe(recipe, lock, work, evidence):
             if not (source / 'src/arch/arm64/configs' / name).is_file():
                 raise ValueError('required kernel configuration patch not applied')
     if recipe['name'] == 'u-boot-rk2601':
+        # The first successful fuel-gauge poll still gates display/boot decisions.
+        # Explicit zero defaults let GCC 14 prove the cached diagnostic values safe.
+        local_patch(source, 'src/drivers/power/charge_animation.c',
+                    '\tint soc, voltage, current, key_state;',
+                    '\tint soc = 0, voltage, current = 0, key_state;')
         path = source / '.github/local/Makefile.local'
         text = path.read_text()
         _, separator, rest = text.partition('PACKING_VARIANTS :=')
@@ -132,6 +137,9 @@ def build_recipe(recipe, lock, work, evidence):
         run('readelf', '-l', source / 'rkbin/tools/boot_merger')
     (evidence / (recipe['name'] + '-local.diff')).write_text(
         run('git', '-C', source, 'diff', '--binary', capture=True))
+    for name in recipe.get('gitlinks', {}):
+        (evidence / (recipe['name'] + '-' + name + '-local.diff')).write_text(
+            run('git', '-C', source / name, 'diff', '--binary', capture=True))
     run('dpkg-buildpackage', '--no-sign', '-b', '-j2', cwd=source)
     if recipe['name'] == 'linux-rk2410-nocsf':
         shutil.copyfile(source / 'src/.config', evidence / 'kernel.config')

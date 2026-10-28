@@ -6,8 +6,9 @@ Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Boa
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
-The first external dispatch was rejected before runner allocation; see
-`preflight-status.md` for exact API evidence and the resume condition.
+The workflow registration was repaired through focused bootstrap PR #3. The
+initial package run failed compiling U-Boot; see `preflight-status.md` for
+actual evidence and the bounded changed-source retry.
 
 ## Current runnable stage
 
@@ -17,7 +18,7 @@ From an authenticated external control host with `gh` access:
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli \
       -f expected_sha="$SHA" \
-      -f hypothesis='Initial pinned Trixie source-package feasibility probe'
+      -f hypothesis='Retry: initialize U-Boot cached soc/current without suppressing warnings'
 
 Use a clean checkout of the exact pushed development commit. The workflow rejects
 a ref/SHA mismatch, checks the lock and tests, records actual runner resources,
@@ -33,6 +34,9 @@ package-probe admission checks require x86_64, 2 CPUs, 7 GB RAM and 24 GiB free
 workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
+Package-only admission is limited to three total attempts (initial plus two
+evidence-based retries), separate from the full-image budget. Reserve a shared
+ledger entry before dispatch; do not use workflow reruns to reset this count.
 
 The artifact `cm3-source-preflight-RUN_ID-RUN_ATTEMPT` retains allowlisted
 source-build diagnostics for 14 days. It does not upload `.deb` files, firmware,

@@ -75,6 +75,23 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('restricted to the external AMD64 CI container', result.stderr)
 
+    def test_loader_initialization_patch_is_narrow_and_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / 'src/drivers/power/charge_animation.c'
+            target.parent.mkdir(parents=True)
+            before = '\tint soc, voltage, current, key_state;'
+            after = '\tint soc = 0, voltage, current = 0, key_state;'
+            target.write_text('static void fixture(void) {\n' + before + '\n}\n')
+            preflight.local_patch(root, 'src/drivers/power/charge_animation.c', before, after)
+            self.assertIn(after, target.read_text())
+            with self.assertRaises(ValueError):
+                preflight.local_patch(root, 'src/drivers/power/charge_animation.c', before, after)
+        script = (ROOT / 'scripts/cm3-source-preflight.py').read_text()
+        self.assertIn("source / name, 'diff', '--binary'", script)
+        self.assertNotIn('-Wno-', script)
+        self.assertNotIn('KCFLAGS', script)
+
     def test_manual_only_fixed_concurrency_and_no_image_command(self):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
         self.assertIn('  workflow_dispatch:', workflow)
