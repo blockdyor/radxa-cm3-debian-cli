@@ -155,7 +155,8 @@ def prepare_target(work, evidence):
             raise ValueError('target is not ARM64')
         # A fixture OS root, never a real disk or the builder root from /proc/cmdline.
         put(root, 'etc/fstab', 'UUID=11111111-1111-4111-8111-111111111111 / ext4 defaults 0 1\n')
-        put(root, 'etc/default/u-boot',
+        # Use u-boot-menu's supported fragment; do not pre-create its dpkg conffile.
+        put(root, 'etc/u-boot-menu/conf.d/99-cm3-preflight.conf',
             'U_BOOT_PARAMETERS="ro console=ttyFIQ0,1500000n8 apparmor=1 security=apparmor"\n'
             f'U_BOOT_FDT="rockchip/{DTB}"\nU_BOOT_FDT_DIR="/usr/lib/linux-image-"\n'
             'U_BOOT_FDT_OVERLAYS_DIR="/boot/cm3-no-enabled-overlays/"\n')

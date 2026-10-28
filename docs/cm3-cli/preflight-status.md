@@ -144,13 +144,40 @@ checks actual ARM64 execution before expensive source compilation. Local policy
 regression fails before the correction and passes after it; actual foreign
 bootstrap remains an external-run check, not a local production-host test.
 
-## Package attempt 6 (running; no result inferred)
+## Package attempt 6 (source/bootstrap/tamper passed; seed install failed)
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40711214571
 Checked-out commit: `cc1ba6de1a19c8243f98f52aa73b0b9e7f2166ff`, run attempt 1.
-Started 2026-10-28T14:58:24Z. Exact checkout, 30 local tests, cumulative admission
-and runner qualification passed. The changed dependency and early ARM64 check
-are under test. No source/ARM64 result or full-preflight PASS is inferred.
+Started 2026-10-28T14:58:24Z; completed FAILURE at 2026-10-28T15:52:03Z.
+Exact checkout, 30 local tests, cumulative admission and runner qualification
+passed. Source `result.json` is PASS (2885.06 seconds), all nine packages recorded.
+Early ARM64 execution, the real ARM64 minbase bootstrap, ephemeral repository
+signature verification and APT rejection of deliberately tampered metadata
+passed; restored signed metadata was accepted afterward.
+
+The separate `arm64-result.json` is FAIL (311.73 seconds). Initial retained-seed
+installation reaches u-boot-menu 4.2.4 but dpkg prompts for the fixture's
+pre-created `/etc/default/u-boot`, receives EOF and fails; APT exits 100.
+`DEBIAN_FRONTEND=noninteractive` does not answer dpkg conffile prompts.
+Headers/full BSP whitelist installation, real DKMS/DTBO compilation, boot fixture
+and reinstall/upgrade/remove/audit checks were NOT reached. A partial seed install
+is not a configured target or a full-preflight PASS.
+
+Diagnostic artifact ID `12829104613`, retention through 2026-11-11T15:51:58Z.
+SHA256 `1d76e20138b234b1df9ecb1f048c45b877b84f386ca003ed5bc4b978e8218116`
+matches the downloaded bytes and API digest; all 36 ZIP members pass CRC checks.
+No compiled package payloads or target root were retained.
+
+The subsequent minimal correction keeps all boot values but writes the supported
+`/etc/u-boot-menu/conf.d/99-cm3-preflight.conf` instead of the package conffile.
+The inspected Debian 4.2.4 reader loads that directory after its default file.
+The new local regression fails before the correction and passes afterward;
+31 local tests pass. A separate unprivileged, source-path-remapped check of the
+actual Debian `read-config` loads the exact serial/AppArmor/DTB settings and
+preserves the default file. This is not dpkg/ARM64 integration validation.
+No global conffile forcing, warning suppression, security change or new build.
+No recoverable compiled payload exists, so complete external verification needs
+an owner-authorized counted rebuild; the exhausted budget is a genuine blocker.
 
 ## Admission and remaining work
 
@@ -160,8 +187,8 @@ image or a competing workflow. Its source PASS and bootstrap failure are above.
 See `build.md` for exact scope and remaining gates.
 
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
-all six are reserved/used; attempt 6 is running and ZERO remain. Attempts 1–5
-had four workflow failures and one source-only workflow PASS. No seventh or
+all six completed and are used; ZERO remain. All six runs reconcile with the
+ledger: five workflow failures and one source-only workflow PASS. No seventh or
 rerun is authorized, even if further implementation needs another compilation.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
@@ -170,9 +197,10 @@ the current run/SHA. Reservations still belong on the existing implementation
 card before each dispatch. Historical revisions/helper tasks are not bypasses.
 See `attempts.json` and `build.md`; image budget/prerequisites are unchanged.
 
-A successful source compile is NOT full package preflight. Signed repository,
-clean ARM64 configuration/update, real DKMS module and DTBO builds, exact boot
-integration, secure enrollment and attested update verification remain pending.
+A successful source compile is NOT full package preflight. Ephemeral signatures,
+bootstrap and tamper checks above do not pass the remaining complete clean ARM64
+configuration/update, real DKMS/DTBO, exact boot integration, secure enrollment
+and attested update requirements.
 Image assembly is disabled; no full-image attempt has run in the inspected
 repository. Check the phase-wide ledger before any future image stage. Both
 original gate definitions and all 28 UNTESTED hardware rows remain unchanged.

@@ -11,9 +11,12 @@ first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. The cumulative package limit is SIX; attempts
 1–6 are reserved/used and ZERO remain. Attempt 5 rebuilt all nine packages and verified
 the ephemeral repository signature, then failed before ARM64 bootstrap because
-`arch-test` was not installed. Do not rerun it. The final changed attempt 6 is
-running; it explicitly installs that dependency and checks ARM64 execution before
-compilation. A seventh attempt or rerun is prohibited. See
+`arch-test` was not installed. Do not rerun it. The final changed attempt 6 passed
+compilation, ARM64 bootstrap and APT tamper rejection, then failed at a dpkg
+conffile prompt for the fixture's pre-created `/etc/default/u-boot`. The correction
+uses the supported config-fragment directory without overwriting that conffile;
+it has local coverage, not external installation validation. A seventh attempt
+or rerun is prohibited. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
 ## Historical package-only invocation (do not repeat unchanged)
@@ -83,7 +86,23 @@ do not repeat; all six attempts are now reserved/used):
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40711214571
 
-This stage creates an ephemeral Ed25519 job-only key outside retained output,
+This run completed FAILURE at 2026-10-28T15:52:03Z. Source `result.json` is PASS;
+`arm64-result.json` is FAIL at initial seed installation. ARM64 bootstrap,
+ephemeral repository signature verification and APT tamper rejection passed;
+headers/full BSP install, DKMS, DTBO and boot/update fixture checks did not run.
+The subsequent correction moves the unchanged boot settings to
+`/etc/u-boot-menu/conf.d/99-cm3-preflight.conf`. Debian u-boot-menu 4.2.4's actual
+`read-config` sources this directory after the package-owned default. A local
+unprivileged, path-remapped reader check loads the exact settings and leaves the
+default file unchanged; the regression fails on the old pre-created conffile.
+No global `--force-conf*` setting, security relaxation or source change is needed.
+This is NOT a successful package-install test. No compiled payloads were retained
+from this completed disposable runner; full external integration needs another
+counted compilation, which requires a narrow owner budget extension. No new
+dispatch command is authorized by this document, and none was executed.
+
+Intended full probe behavior (NOT an end-to-end PASS): it creates an ephemeral
+Ed25519 job-only key outside retained output,
 signs a nine-package whitelist APT repository, verifies it, then bootstraps a
 new Essential-inclusive ARM64 minbase directory from authenticated Debian
 Trixie/update/security repositories. It adds the BSP through scoped signed-by,

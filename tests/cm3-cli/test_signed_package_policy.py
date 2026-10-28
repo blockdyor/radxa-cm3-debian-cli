@@ -85,6 +85,21 @@ class SignedPackagePolicyTests(unittest.TestCase):
         self.assertLess(container_command.index('arch-test arm64;'),
                         container_command.index('python3 /src/scripts/cm3-source-preflight.py'))
 
+    def test_boot_fixture_uses_supported_dropin_not_package_conffile(self):
+        text = (ROOT / 'scripts/cm3-package-preflight.py').read_text()
+        tree = ast.parse(text)
+        puts = {node.args[1].value: node for node in ast.walk(tree)
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id == 'put' and isinstance(node.args[1], ast.Constant)}
+        self.assertNotIn('etc/default/u-boot', puts)
+        fragment = 'etc/u-boot-menu/conf.d/99-cm3-preflight.conf'
+        self.assertIn(fragment, puts)
+        content = ast.get_source_segment(text, puts[fragment].args[2])
+        assert content is not None
+        self.assertIn('console=ttyFIQ0,1500000n8 apparmor=1 security=apparmor', content)
+        self.assertIn('rockchip/{DTB}', content)
+        self.assertNotIn('--force-conf', text)
+
     def test_probe_is_not_image_or_update_trust_pass(self):
         text = (ROOT / 'scripts/cm3-package-preflight.py').read_text()
         for prohibited in ['trusted=yes', 'allow-unauthenticated', 'allow-insecure',
