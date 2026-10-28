@@ -6,21 +6,24 @@ Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Boa
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
-The workflow registration was repaired through focused bootstrap PR #3. The
-initial package run failed compiling U-Boot; see `preflight-status.md` for
-actual evidence and the bounded changed-source retry.
+The workflow registration was repaired through focused bootstrap PR #3. All
+three authorized source-package attempts failed; the final blocker is the
+kernel Btrfs GCC14 diagnostic. No package attempt remains. See
+`preflight-status.md` for actual run evidence and precise resume requirements.
 
-## Current runnable stage
+## Historical package-only invocation (budget exhausted; do not run)
 
-From an authenticated external control host with `gh` access:
+The final authorized attempt used this exact command. It is recorded for
+reproduction only after explicit additional attempt authorization:
 
-    SHA=$(git rev-parse HEAD)
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli \
-      -f expected_sha="$SHA" \
-      -f hypothesis='Final package retry: order kernel configuration before compile and use ARM64 helper hardening flags'
+      -f expected_sha=1519b8aa0bf81a573272bc31261c4855b3eed9e8 \
+      -f hypothesis='Final retry 3/3: order kernel configuration before compile and use ARM64 helper hardening flags'
 
-Use a clean checkout of the exact pushed development commit. The workflow rejects
+That command used a clean checkout of the then-pushed development commit; the
+branch has since advanced to retain guards and record the exhausted budget.
+Do not reuse the stale expected SHA or rerun an old revision. The workflow rejects
 a ref/SHA mismatch, checks the lock and tests, records actual runner resources,
 registers digest-pinned ARM64 emulation on the ephemeral runner, and builds the
 five locked source projects in a digest-pinned Debian container. It never calls

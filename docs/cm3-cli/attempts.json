@@ -21,7 +21,15 @@
       "run_attempt": 1,
       "hypothesis": "Initialize U-Boot cached soc/current without suppressing warnings",
       "result": "FAIL: U-Boot built; kernel configuration/compilation race and AMD64 helper flags sent to ARM64 HOSTCC"
+    },
+    {
+      "number": 3,
+      "commit": "1519b8aa0bf81a573272bc31261c4855b3eed9e8",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40656875860",
+      "run_attempt": 1,
+      "hypothesis": "Order kernel configuration before compile and use ARM64 helper hardening flags",
+      "result": "FAIL: kernel fs/btrfs/send.c:7950 kvcalloc arguments transposed; GCC14 Werror=calloc-transposed-args; helper clean probes still report x86-only fcf-protection"
     }
   ],
-  "status": "Image stage not implemented or enabled. Reserve an entry before any future image assembly; this file is not an automatic counter."
+  "status": "All three package attempts consumed. Source driver refuses more compilation on this revision; owner extension required. Image stage not implemented or enabled; zero full-image attempts. This observed ledger is not an automatic atomic admission counter."
 }

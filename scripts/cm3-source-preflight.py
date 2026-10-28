@@ -205,6 +205,9 @@ def main():
             os.environ.get('GITHUB_REPOSITORY') != 'blockdyor/radxa-cm3-debian-cli' or
             platform.machine() != 'x86_64' or os.geteuid() != 0):
         parser.error('package builds are restricted to the external AMD64 CI container')
+    ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
+    if len(ledger['package_attempts']) >= ledger['maximum_package_attempts']:
+        parser.error('package attempt budget exhausted; explicit owner extension required')
     if args.workdir is None or not args.workdir.is_absolute():
         parser.error('an explicit absolute, empty workdir is required')
     work = args.workdir

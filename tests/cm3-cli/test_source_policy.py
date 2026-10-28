@@ -1,11 +1,14 @@
 import copy
+import contextlib
 import csv
 import hashlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -76,6 +79,18 @@ class SourcePolicyTests(unittest.TestCase):
                                 capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('restricted to the external AMD64 CI container', result.stderr)
+
+    def test_package_budget_refuses_external_fourth_compile_before_workdir(self):
+        errors = io.StringIO()
+        with patch.dict(preflight.os.environ, GITHUB_ACTIONS='true',
+                        GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli'), \
+                patch.object(preflight.platform, 'machine', return_value='x86_64'), \
+                patch.object(preflight.os, 'geteuid', return_value=0), \
+                patch.object(sys, 'argv', ['cm3-source-preflight.py']), \
+                contextlib.redirect_stderr(errors):
+            with self.assertRaises(SystemExit):
+                preflight.main()
+        self.assertIn('package attempt budget exhausted', errors.getvalue())
 
     def test_loader_initialization_patch_is_narrow_and_fail_closed(self):
         with tempfile.TemporaryDirectory() as directory:

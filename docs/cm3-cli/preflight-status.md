@@ -50,17 +50,48 @@ AMD64 `-fcf-protection=full` passed to the recipe's ARM64 `HOSTCC`.
 The final retry adds the missing `build-all: build-defconfig` dependency and
 selects Debian's ARM64 C/C++/link hardening flags explicitly for ARM64 helpers.
 It does not turn off hardening or change the kernel configuration/source pin.
-A local real `make -j2` fixture checks the ordering; actual cross compilation
-remains an external check, not inferred from that fixture.
+A local real `make -j2` fixture checks the ordering; the final external run
+below establishes the actual result, not that fixture alone.
+
+## Package attempt 3 of 3 (failed; budget exhausted)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40656875860
+Checked-out commit: `1519b8aa0bf81a573272bc31261c4855b3eed9e8`, run attempt 1.
+Completed failure at 2026-10-28T09:01:49Z. Source driver reports 2056.19 seconds.
+Kernel configuration now precedes compilation and compilation proceeds, but
+`fs/btrfs/send.c:7950` calls `kvcalloc` with the sizeof expression in the count
+argument. GCC14 rejects this with `-Werror=calloc-transposed-args`.
+No kernel package or complete nine-package whitelist was produced.
+
+Architecture-correct helper flags were recorded (including ARM64 branch
+protection), but clean probes STILL report x86-only `-fcf-protection=full`.
+Therefore that flag-propagation issue is NOT resolved by this run. The main
+terminal failure is the Btrfs diagnostic; no diagnostic was suppressed and no
+kernel facility was disabled to force a pass. The existing recipe also emits
+nonterminal debhelper include-remake warnings; those remain recorded, not hidden.
+
+Diagnostic artifact: `cm3-source-preflight-40656875860-1`, ID `12803836426`.
+ZIP SHA256: `76e489b93c08a0097c9f232bf2482bd5df0bb8b8e68be438784d4f575fd660db`
+(downloaded bytes independently match the artifact API digest).
+GitHub retention ends 2026-11-11T09:01:44Z. Contains logs, locked inputs,
+recipe/source diffs, flags and package-tool metadata; no binaries or disk image.
+
+Smallest resume step: explicit owner approval for an additional bounded package
+attempt, followed by review of the exact Btrfs allocation argument order and
+remaining cross-architecture flag propagation, targeted regression checks and
+only then a changed-source external probe. No fourth dispatch/rerun is authorized
+now. Do not change the compiler warning policy, board, kernel lineage or image
+budget to circumvent this limit.
 
 ## Admission and remaining work
 
 Package-only budget: initial attempt plus at most two evidence-based retries,
-three total across operators/workflow reruns. Two attempts are consumed;
-no unchanged failing rerun is permitted. Before dispatch, reserve the next
-attempt in the shared operational ledger and record its exact commit/hypothesis;
-a concurrent or duplicate probe is prohibited. `attempts.json` records observed
-runs, not an automatic atomic admission service.
+three total across operators/workflow reruns. All three are consumed. The source
+driver at the final documentation revision rejects further compilation using
+this observed ledger; read-only local lock/tests remain available. Historical
+revisions are not a bypass: do not rerun them. `attempts.json` records observed
+runs, not an automatic atomic cross-operator admission service. The workflow
+remains registered active, but that is not authorization for another dispatch.
 
 A successful source compile is NOT full package preflight. Signed repository,
 clean ARM64 configuration/update, real DKMS module and DTBO builds, exact boot
