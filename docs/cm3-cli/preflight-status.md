@@ -100,12 +100,33 @@ check reused the actual ARM64 flag record from attempt 3; the external runner
 must regenerate its own flags. Eighteen local regression/policy tests pass,
 including a make LP64 fixture, allocation diagnostic before/after, preserved
 history, acceptance through six and rejection of an unapproved seventh attempt.
-External confirmation of both corrections is still pending.
+External confirmation of both corrections is recorded by attempt 4 below.
+
+## Package attempt 4 (source-build passed; full preflight NOT RUN)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40682450955
+Checked-out commit: `112d481fa021b72d7758680eed1b8ce3a25b3141`, run attempt 1.
+Completed SUCCESS at 2026-10-28T13:01:56Z. Source driver reports 4544.82 seconds.
+Actual checkout, policy tests, cumulative admission, runner qualification and all
+five source-project builds passed. The manifest records all nine expected package
+names, versions, architectures and SHA256 hashes, including ARM64 image/headers.
+This establishes source compilation, NOT authenticated installation or boot.
+
+Diagnostic artifact: `cm3-source-preflight-40682450955-1`, ID `12817334148`.
+ZIP SHA256: `3c187891c26751db1570d558c82c56cc5a734827b9d197e911fb67f22294b930`.
+Downloaded ZIP bytes match the GitHub artifact API digest; all 33 members pass
+CRC validation. Retention ends 2026-11-11T13:01:52Z. `result.json` explicitly says
+`full_package_preflight: NOT RUN` and `image_build: NOT RUN`.
+The sole retained artifact contains diagnostics, not `.deb`/`.udeb` payloads;
+the successful disposable runner is finished. No compiled package recovery is
+claimed. A changed next-stage implementation that needs them must use a counted
+attempt, not rerun this successful revision or hide a full rebuild as a test.
 
 ## Admission and remaining work
 
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
-attempts 1–3 remain consumed. A read-only Actions admission step reconciles full
+attempts 1–4 are consumed (three failures, then source PASS); two remain.
+A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
 rejects reruns, missing records and a seventh attempt, and binds its result to
 the current run/SHA. Reservations still belong on the existing implementation
