@@ -190,7 +190,13 @@ See `build.md` for exact scope and remaining gates.
 Package-only budget: SEVEN cumulative attempts following explicit owner approval
 on 2026-10-28. All six historical runs remain consumed and reconcile with the
 ledger: five workflow failures and one source-only workflow PASS. Only changed
-attempt 7 is newly authorized; an eighth attempt or any rerun needs a new decision.
+attempt 7 was newly authorized and is now reserved/used by run
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034
+at `e2a51296f58f0269a9218154e648a99ea1a93cd8`, run attempt 1.
+Checkout/tests, cumulative admission and runner qualification passed; source and
+signed ARM64 work is IN PROGRESS, not a PASS. No attempt remains; an eighth
+attempt or any rerun needs a new decision. Encrypted recovery is configured,
+not yet verified on actual compiled outputs.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
 rejects reruns, missing records and an eighth attempt, and binds its result to

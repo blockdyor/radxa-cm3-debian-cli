@@ -10,7 +10,8 @@ The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. The owner extended the cumulative package limit
 to SEVEN on 2026-10-28; attempts 1–6 remain consumed and only attempt 7 is newly
-authorized. Attempt 5 rebuilt all nine packages and verified
+authorized and now reserved/used by the running probe below. No attempt remains.
+Attempt 5 rebuilt all nine packages and verified
 the ephemeral repository signature, then failed before ARM64 bootstrap because
 `arch-test` was not installed. Do not rerun it. The final changed attempt 6 passed
 compilation, ARM64 bootstrap and APT tamper rejection, then failed at a dpkg
@@ -59,10 +60,9 @@ commands on the control host or board. No local Docker installation is required
 or authorized by these instructions.
 
 The exact historical dispatches below and `.github/workflows/build.yaml` record
-the implemented invocation. Only the changed seventh source attempt is permitted,
-after reviewed publication, a freshly verified pushed SHA, a specific hypothesis
-and reservation on the existing implementation record. Admission policy and the
-retained ledger enforce the cumulative seven-attempt ceiling. Full-image assembly
+the implemented invocation. The changed seventh source attempt was reserved and
+dispatched once at its reviewed, verified pushed SHA. No next dispatch is permitted.
+Admission policy and the retained ledger enforce the cumulative seven-attempt ceiling. Full-image assembly
 remains held. Changing `expected_sha`, invoking a
 helper directly or cloning a fresh checkout does not reset either budget.
 
@@ -100,7 +100,7 @@ workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
 Package-only admission is limited to SEVEN cumulative attempts, separate from the
-full-image budget; the first six attempts remain consumed. Reserve on the
+full-image budget; all seven are now reserved/used. Reserve on the
 existing implementation card before dispatch and reconcile `attempts.json` with
 the entire Actions workflow history. The read-only admission step counts all
 observed run attempts under shared concurrency and refuses an eighth attempt,
@@ -135,6 +135,23 @@ can encrypt a replacement. No automatic cross-run reuse or uncounted rebuild is
 enabled; loss of the private recipient key makes the ciphertext unrecoverable.
 
 ## Changed next-stage package probe
+
+### Changed attempt 7 (running, result not yet established)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034
+
+Dispatched once at reviewed source commit `e2a51296f58f0269a9218154e648a99ea1a93cd8`.
+Checkout/revision tests, cumulative admission and runner qualification passed;
+source/signed ARM64 compilation and installation are still in progress. The
+following exact command is a historical dispatch record, NOT permission to rerun:
+
+    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
+      --ref dev/cm3-debian-cli -f expected_sha=e2a51296f58f0269a9218154e648a99ea1a93cd8 \
+      -f hypothesis='Attempt 7/7: supported boot drop-in enables signed ARM64 install DKMS DTBO; preserve encrypted compilation'
+
+All seven cumulative attempts are reserved/used; no eighth or rerun is authorized.
+Source, ARM64 integration and encrypted-output recovery require separate actual
+results before any PASS claim. Later documentation commits are not the compiled SHA.
 
 The fifth-attempt development revision extends this SAME admitted manual job
 with `scripts/cm3-package-preflight.py`, after successful compilation. Since

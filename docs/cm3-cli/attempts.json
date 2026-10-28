@@ -66,7 +66,16 @@
       "artifact_id": 12829104613,
       "artifact_sha256": "1d76e20138b234b1df9ecb1f048c45b877b84f386ca003ed5bc4b978e8218116",
       "retained_payloads": "Diagnostics only; no debs or recoverable compiled output"
+    },
+    {
+      "number": 7,
+      "commit": "e2a51296f58f0269a9218154e648a99ea1a93cd8",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 7/7: supported boot drop-in enables signed ARM64 install DKMS DTBO; preserve encrypted compilation",
+      "result": "IN PROGRESS: exact revision/tests/admission/runner qualification passed; source and signed ARM64 stage running, no outcome yet",
+      "retained_payloads": "Encrypted allowlisted compilation recovery configured; actual upload and recovery NOT YET VERIFIED"
     }
   ],
-  "status": "Six cumulative package attempts consumed: five workflow failures, one source-only workflow PASS. Only attempt seven newly authorized; eighth and reruns prohibited. Attempts 4-6 compiled all nine packages; attempt 6 passed ARM64 bootstrap and tamper rejection but failed the initial seed install at a u-boot-menu conffile prompt. Supported config-fragment correction is locally checked, NOT externally validated. Source PASS is not complete package preflight. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency. Prior runs retained diagnostics only, no compiled payloads. Image stage not implemented or enabled; zero full-image attempts."
+  "status": "All seven cumulative source attempts reserved/used: six completed and changed attempt seven running at its recorded SHA. No eighth or rerun authorized. Attempts 4-6 compiled all nine packages; attempt 6 passed ARM64 bootstrap and tamper rejection but failed initial seed installation at a u-boot-menu conffile prompt. Corrected attempt-seven installation, source result and encrypted retention remain unverified pending completion. Source PASS is not complete package preflight. Read-only admission preserves full history under shared exclusive concurrency. Image stage not implemented or enabled; zero full-image attempts."
 }
