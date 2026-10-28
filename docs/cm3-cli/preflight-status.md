@@ -122,16 +122,24 @@ the successful disposable runner is finished. No compiled package recovery is
 claimed. A changed next-stage implementation that needs them must use a counted
 attempt, not rerun this successful revision or hide a full rebuild as a test.
 
+## Package attempt 5 (in progress; no result inferred)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40698441411
+Checked-out commit: `293971c1a011ef3cd69343827cf36e1bb91a064f`, run attempt 1.
+Started 2026-10-28T13:39:30Z. Exact checkout, local tests, cumulative admission
+and runner qualification passed. Compilation/ARM64 probe outcome is pending;
+there is no claimed signed-install/DKMS PASS or final artifact yet.
+
 ## Admission and remaining work
 
-The next changed implementation adds a signed whitelist/Essential-inclusive
+The fifth-attempt implementation adds a signed whitelist/Essential-inclusive
 ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full
 image or a competing workflow. Its external result is NOT yet established.
-See `build.md` for exact scope and remaining gates. No new source attempt is
-claimed here until its reservation and actual run are recorded.
+See `build.md` for exact scope and remaining gates.
 
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
-attempts 1–4 are consumed (three failures, then source PASS); two remain.
+attempts 1–5 are reserved/used (three failures, then source PASS, fifth pending);
+one remains.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
 rejects reruns, missing records and a seventh attempt, and binds its result to

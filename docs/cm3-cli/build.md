@@ -9,8 +9,9 @@ The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. The cumulative package limit is SIX; attempts
-1–4 remain consumed and two remain. Changed implementation probes may use attempts
-5–6, one at a time, with recorded hypotheses and remote revisions. See
+1–5 are reserved/used and one remains. Attempt 5 is now running the changed
+signed ARM64 probe; do not duplicate it. A further evidence-based changed
+implementation probe may use attempt 6 only. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
 ## Historical package-only invocation (do not repeat unchanged)
@@ -40,7 +41,7 @@ workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
 Package-only admission is limited to SIX cumulative attempts, separate from the
-full-image budget; four historical attempts remain consumed. Reserve on the
+full-image budget; five attempts are reserved/used. Reserve on the
 existing implementation card before dispatch and reconcile `attempts.json` with
 the entire Actions workflow history. The read-only admission step counts all
 observed run attempts under shared concurrency and refuses a seventh attempt,
@@ -59,14 +60,15 @@ checkout and package output directories are ignored by Git.
 
 ## Changed next-stage package probe
 
-The next reviewed development revision extends this SAME admitted manual job
+The fifth-attempt development revision extends this SAME admitted manual job
 with `scripts/cm3-package-preflight.py`, after successful compilation. Since
 attempt 4 retained no payloads and no cache, this necessarily recompiles and
 consumes a new cumulative package attempt; it is not a rerun of attempt 4.
-Reserve the changed exact SHA before dispatch, with the existing input names:
+The fifth attempt was reserved and dispatched with the existing input names
+(historical invocation only; do not repeat):
 
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
-      --ref dev/cm3-debian-cli -f expected_sha=REVIEWED_FULL_COMMIT \
+      --ref dev/cm3-debian-cli -f expected_sha=293971c1a011ef3cd69343827cf36e1bb91a064f \
       -f hypothesis='Attempt 5/6: signed whitelist APT tamper rejection and clean ARM64 install DKMS extlinux fixture'
 
 This stage creates an ephemeral Ed25519 job-only key outside retained output,

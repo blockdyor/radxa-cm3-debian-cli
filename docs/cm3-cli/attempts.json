@@ -42,7 +42,15 @@
       "artifact_id": 12817334148,
       "artifact_sha256": "3c187891c26751db1570d558c82c56cc5a734827b9d197e911fb67f22294b930",
       "retained_payloads": "Diagnostics only; no debs, no recoverable compiled output in the completed disposable runner"
+    },
+    {
+      "number": 5,
+      "commit": "293971c1a011ef3cd69343827cf36e1bb91a064f",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40698441411",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 5/6: signed whitelist APT tamper rejection and clean ARM64 install DKMS extlinux fixture",
+      "result": "IN PROGRESS: checkout, local policy, cumulative admission and resource qualification passed; source compile and signed ARM64 probe outcome pending"
     }
   ],
-  "status": "Four source attempts consumed: three failures and one source-build PASS; two remain of cumulative six. Source PASS is not complete package preflight. All workers must reserve on the existing implementation card before dispatch. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency; reruns forbidden. Image stage not implemented or enabled; zero full-image attempts."
+  "status": "Five source attempts reserved/used: three failures, one source-build PASS, fifth in progress; one remains of cumulative six. Source PASS is not complete package preflight. All workers must reserve on the existing implementation card before dispatch. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency; reruns forbidden. Image stage not implemented or enabled; zero full-image attempts."
 }
