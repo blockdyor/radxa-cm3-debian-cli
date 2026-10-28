@@ -120,6 +120,16 @@ def prepare_kernel_recipe(source, evidence):
                 '# Do not race configuration against compilation under make -j2.\n'
                 'build-all: build-defconfig')
     (evidence / 'kernel-helper-flags.json').write_text(json.dumps(flags, indent=2) + '\n')
+    # Clean parses resolve_btfids' LP64 probe with target CC but inherited AMD64 CFLAGS.
+    local_patch(source, 'src/Makefile',
+                'O=$(resolve_btfids_O) clean',
+                'O=$(resolve_btfids_O) CFLAGS="$(HOSTCFLAGS)" clean')
+    # Backport Linux 6ff09b6b8c2fb6b3edda4ffaa173153a40653067, context unchanged.
+    local_patch(source, 'src/fs/btrfs/send.c',
+                'kvcalloc(sizeof(*sctx->clone_roots),\n'
+                '\t\t\t\t     arg->clone_sources_count + 1,',
+                'kvcalloc(arg->clone_sources_count + 1,\n'
+                '\t\t\t\t     sizeof(*sctx->clone_roots),')
 
 
 def build_recipe(recipe, lock, work, evidence):
@@ -208,6 +218,15 @@ def main():
     ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
     if len(ledger['package_attempts']) >= ledger['maximum_package_attempts']:
         parser.error('package attempt budget exhausted; explicit owner extension required')
+    admission_path = ROOT / 'preflight-work/evidence/package-admission.json'
+    if not admission_path.is_file():
+        parser.error('verified Actions package admission required before compilation')
+    admission = json.loads(admission_path.read_text())
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 6 or
+            admission['cumulative_attempts'] > 6 or
+            str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
+            admission['commit'] != os.environ.get('GITHUB_SHA')):
+        parser.error('package admission does not match this run/revision/budget')
     if args.workdir is None or not args.workdir.is_absolute():
         parser.error('an explicit absolute, empty workdir is required')
     work = args.workdir

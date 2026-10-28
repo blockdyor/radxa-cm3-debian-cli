@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: cm3-phase-b-exclusive
@@ -41,6 +42,10 @@ jobs:
           test "$GITHUB_SHA" = "$EXPECTED_SHA"
           python3 -m unittest discover -s tests/cm3-cli -v
           python3 scripts/cm3-source-preflight.py --check-lock
+      - name: Reconcile cumulative package budget before compilation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cm3-package-budget.py
       - name: Qualify this ephemeral external runner
         run: |
           set -euo pipefail
@@ -65,7 +70,7 @@ jobs:
           docker run --privileged --rm "$binfmt" --install arm64
           mkdir -p package-work
           docker run --rm --platform linux/amd64 \
-            -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY \
+            -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY -e GITHUB_RUN_ID -e GITHUB_SHA \
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
             "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates; exec python3 /src/scripts/cm3-source-preflight.py --workdir /work' \
             2>&1 | tee preflight-work/source-build.log
@@ -78,6 +83,7 @@ jobs:
           if-no-files-found: error
           path: |
             preflight-work/evidence/runner.txt
+            preflight-work/evidence/package-admission.json
             preflight-work/source-build.log
             package-work/evidence/*.json
             package-work/evidence/*.tsv

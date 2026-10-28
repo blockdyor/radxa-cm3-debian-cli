@@ -7,14 +7,15 @@ Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branc
 currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
-three authorized source-package attempts failed; the final blocker is the
-kernel Btrfs GCC14 diagnostic. No package attempt remains. See
+first three source-package attempts failed. The owner has extended the cumulative
+package limit to SIX; attempts 1–3 remain consumed. Corrected-source probes may
+use attempts 4–6, one at a time, with recorded hypotheses and remote revisions. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
-## Historical package-only invocation (budget exhausted; do not run)
+## Historical package-only invocation (do not repeat unchanged)
 
 The final authorized attempt used this exact command. It is recorded for
-reproduction only after explicit additional attempt authorization:
+provenance, not as a command to rerun the failed source:
 
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli \
@@ -22,7 +23,7 @@ reproduction only after explicit additional attempt authorization:
       -f hypothesis='Final retry 3/3: order kernel configuration before compile and use ARM64 helper hardening flags'
 
 That command used a clean checkout of the then-pushed development commit; the
-branch has since advanced to retain guards and record the exhausted budget.
+branch has since advanced to retain guards, corrections and the cumulative budget.
 Do not reuse the stale expected SHA or rerun an old revision. The workflow rejects
 a ref/SHA mismatch, checks the lock and tests, records actual runner resources,
 registers digest-pinned ARM64 emulation on the ephemeral runner, and builds the
@@ -37,9 +38,17 @@ package-probe admission checks require x86_64, 2 CPUs, 7 GB RAM and 24 GiB free
 workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
-Package-only admission is limited to three total attempts (initial plus two
-evidence-based retries), separate from the full-image budget. Reserve a shared
-ledger entry before dispatch; do not use workflow reruns to reset this count.
+Package-only admission is limited to SIX cumulative attempts, separate from the
+full-image budget; three historical attempts remain consumed. Reserve on the
+existing implementation card before dispatch and reconcile `attempts.json` with
+the entire Actions workflow history. The read-only admission step counts all
+observed run attempts under shared concurrency and refuses a seventh attempt,
+reruns, missing historical runs, revision drift and overlapping compilation.
+It writes a run/SHA-bound admission record checked again by the source driver.
+Do not delete runs, invoke old revisions, use another workflow/repository or a
+helper task to bypass this coordinator. This is not protection against an owner
+deliberately modifying history/code. No automatic write-capable counter or new
+service is introduced; workflow-token permissions remain read-only.
 
 The artifact `cm3-source-preflight-RUN_ID-RUN_ATTEMPT` retains allowlisted
 source-build diagnostics for 14 days. It does not upload `.deb` files, firmware,
@@ -47,7 +56,8 @@ source trees, private signing material, enrollment keys, or a disk image. Review
 logs for publication-sensitive content before republishing elsewhere. Source
 checkout and package output directories are ignored by Git.
 
-Local, unprivileged checks (standard Python and Bash only):
+Local, unprivileged checks (Python/Bash; compiler regressions additionally use
+GCC14/make and an ARM64 compiler when installed, otherwise explicitly skip):
 
     python3 -m unittest discover -s tests/cm3-cli -v
     python3 scripts/cm3-source-preflight.py --check-lock

@@ -22,6 +22,16 @@ commit is asserted against the manual workflow's `expected_sha`.
   QEMU; its HOSTCC is intentionally ARM64, not silently changed to native x86.
   Runtime hooks need module/initramfs/boot utilities even when payload control
   declares no Depends. Overlay DKMS requires matching headers and target tools.
+  Backport upstream Linux commit `6ff09b6b8c2fb6b3edda4ffaa173153a40653067`
+  (Dmitry Antipov, reviewed/signed by David Sterba):
+  https://github.com/torvalds/linux/commit/6ff09b6b8c2fb6b3edda4ffaa173153a40653067 .
+  Exact two-argument reorder in `fs/btrfs/send.c`, no other allocation change.
+  The `resolve_btfids_clean` submake alone receives `CFLAGS="$(HOSTCFLAGS)"`
+  because its LP64 preprocessor probe uses exported target CC plus ordinary
+  CFLAGS. Kernel Kbuild compiler/flags remain configuration-controlled; header
+  helpers remain ARM64 executables run under QEMU and later installed on ARM64.
+  Native AMD64 U-Boot host tools and the rkbin executable are not switched.
+  Both recipe and nested source diffs retain these corrections in diagnostics.
 - `radxa-pkg/u-boot-rk2601@28cee0b81ceff7986220665c4567222c5aaec790`,
   gitlinks `radxa/u-boot@d9ab7ec6029573ac538b6707a0dffd0a5d049e77` and
   `radxa/rkbin@f3e6dd6372377faee13b29d0ce35eb08049356ef`.

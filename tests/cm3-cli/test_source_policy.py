@@ -80,12 +80,15 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('restricted to the external AMD64 CI container', result.stderr)
 
-    def test_package_budget_refuses_external_fourth_compile_before_workdir(self):
+    def test_package_budget_refuses_external_seventh_compile_before_workdir(self):
         errors = io.StringIO()
+        exhausted = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
+        exhausted['package_attempts'] = [{}] * 6
         with patch.dict(preflight.os.environ, GITHUB_ACTIONS='true',
                         GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli'), \
                 patch.object(preflight.platform, 'machine', return_value='x86_64'), \
                 patch.object(preflight.os, 'geteuid', return_value=0), \
+                patch.object(preflight.json, 'loads', side_effect=[self.lock, exhausted]), \
                 patch.object(sys, 'argv', ['cm3-source-preflight.py']), \
                 contextlib.redirect_stderr(errors):
             with self.assertRaises(SystemExit):
@@ -132,6 +135,12 @@ class SourcePolicyTests(unittest.TestCase):
             (root / 'Makefile.extra').write_text('DPKG_FLAGS ?= -d\nJOBS=-j$(shell nproc)\n')
             (root / '.github/local/Makefile.local').write_text(
                 'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config\n')
+            (root / 'src/fs/btrfs').mkdir(parents=True)
+            (root / 'src/Makefile').write_text('O=$(resolve_btfids_O) clean\n')
+            (root / 'src/fs/btrfs/send.c').write_text(
+                'kvcalloc(sizeof(*sctx->clone_roots),\n'
+                '\t\t\t\t     arg->clone_sources_count + 1,\n'
+                '\t\t\t\t     GFP_KERNEL);\n')
             with patch.object(preflight, 'run', return_value='-O2\n') as command:
                 preflight.prepare_kernel_recipe(root, root)
             self.assertEqual(command.call_count, 4)
@@ -146,6 +155,9 @@ class SourcePolicyTests(unittest.TestCase):
             subprocess.run(['make', '-j2', 'build'], cwd=root, check=True, capture_output=True)
             self.assertEqual(json.loads((root / 'kernel-helper-flags.json').read_text())['CFLAGS'], '-O2')
             self.assertNotIn('DPKG_FLAGS ?= -d', (root / 'Makefile.extra').read_text())
+            self.assertIn('CFLAGS="$(HOSTCFLAGS)" clean', (root / 'src/Makefile').read_text())
+            self.assertIn('kvcalloc(arg->clone_sources_count + 1,',
+                          (root / 'src/fs/btrfs/send.c').read_text())
 
     def test_development_branch_retains_bootstrap_fork_guards(self):
         for name in ['check_linked_issue', 'ci-request-review', 'dependabot',

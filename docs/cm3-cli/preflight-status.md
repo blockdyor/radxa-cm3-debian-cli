@@ -53,7 +53,7 @@ It does not turn off hardening or change the kernel configuration/source pin.
 A local real `make -j2` fixture checks the ordering; the final external run
 below establishes the actual result, not that fixture alone.
 
-## Package attempt 3 of 3 (failed; budget exhausted)
+## Package attempt 3 (failed; original three-attempt budget exhausted)
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40656875860
 Checked-out commit: `1519b8aa0bf81a573272bc31261c4855b3eed9e8`, run attempt 1.
@@ -76,22 +76,41 @@ ZIP SHA256: `76e489b93c08a0097c9f232bf2482bd5df0bb8b8e68be438784d4f575fd660db`
 GitHub retention ends 2026-11-11T09:01:44Z. Contains logs, locked inputs,
 recipe/source diffs, flags and package-tool metadata; no binaries or disk image.
 
-Smallest resume step: explicit owner approval for an additional bounded package
-attempt, followed by review of the exact Btrfs allocation argument order and
-remaining cross-architecture flag propagation, targeted regression checks and
-only then a changed-source external probe. No fourth dispatch/rerun is authorized
-now. Do not change the compiler warning policy, board, kernel lineage or image
-budget to circumvent this limit.
+The later 2026-10-28 owner extension supersedes that original budget blocker:
+attempts 4–6 are now authorized, not a reset. The next changed-source candidate
+backports upstream Linux `6ff09b6b8c2fb6b3edda4ffaa173153a40653067`, swapping only
+the two `kvcalloc` arguments, preserving expression types, multiplication overflow
+semantics, flags and failure handling. No Btrfs feature/diagnostic is disabled.
+
+The clean-time flag leak is now reproduced: kernel `resolve_btfids_clean` exports
+target `CC` to `tools/bpf/resolve_btfids`, whose included
+`tools/scripts/Makefile.arch:37` immediately preprocesses the LP64 probe using
+ordinary inherited `CFLAGS`, not `HOSTCFLAGS`. Both clean and distclean invoke it.
+The targeted correction supplies existing ARM64 `HOSTCFLAGS` only to that clean
+submake. The original kernel helper compiler is unchanged; native loader tools
+are untouched. No global flag stripping or compiler substitution was applied.
+The saved CI log does not show the precise debhelper flag-export command, so
+that particular producer is not claimed verified.
+
+Targeted GCC14 checks pass: full pinned source clean reproduces the diagnostic
+before the patch and runs without compiler errors after it; the exact backported
+allocation excerpt compiles, with five count/overflow boundary checks. This is
+not kernel/package compilation. Local dpkg-buildflags is absent, so this clean
+check reused the actual ARM64 flag record from attempt 3; the external runner
+must regenerate its own flags. Eighteen local regression/policy tests pass,
+including a make LP64 fixture, allocation diagnostic before/after, preserved
+history, acceptance through six and rejection of an unapproved seventh attempt.
+External confirmation of both corrections is still pending.
 
 ## Admission and remaining work
 
-Package-only budget: initial attempt plus at most two evidence-based retries,
-three total across operators/workflow reruns. All three are consumed. The source
-driver at the final documentation revision rejects further compilation using
-this observed ledger; read-only local lock/tests remain available. Historical
-revisions are not a bypass: do not rerun them. `attempts.json` records observed
-runs, not an automatic atomic cross-operator admission service. The workflow
-remains registered active, but that is not authorization for another dispatch.
+Package-only budget: SIX cumulative attempts across workers and workflow runs;
+attempts 1–3 remain consumed. A read-only Actions admission step reconciles full
+history and run_attempt values under the existing shared exclusive concurrency,
+rejects reruns, missing records and a seventh attempt, and binds its result to
+the current run/SHA. Reservations still belong on the existing implementation
+card before each dispatch. Historical revisions/helper tasks are not bypasses.
+See `attempts.json` and `build.md`; image budget/prerequisites are unchanged.
 
 A successful source compile is NOT full package preflight. Signed repository,
 clean ARM64 configuration/update, real DKMS module and DTBO builds, exact boot
