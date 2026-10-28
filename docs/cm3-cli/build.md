@@ -8,16 +8,70 @@ currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. The cumulative package limit is SIX; attempts
-1–6 are reserved/used and ZERO remain. Attempt 5 rebuilt all nine packages and verified
+not full signed ARM64 preflight. The owner extended the cumulative package limit
+to SEVEN on 2026-10-28; attempts 1–6 remain consumed and only attempt 7 is newly
+authorized. Attempt 5 rebuilt all nine packages and verified
 the ephemeral repository signature, then failed before ARM64 bootstrap because
 `arch-test` was not installed. Do not rerun it. The final changed attempt 6 passed
 compilation, ARM64 bootstrap and APT tamper rejection, then failed at a dpkg
 conffile prompt for the fixture's pre-created `/etc/default/u-boot`. The correction
 uses the supported config-fragment directory without overwriting that conffile;
-it has local coverage, not external installation validation. A seventh attempt
-or rerun is prohibited. See
+it has local coverage, not external installation validation. An eighth attempt
+or any rerun is prohibited. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
+
+## Prerequisites and reproduction boundary
+
+Debian's release basis, checked on 2026-10-28 against
+https://www.debian.org/releases/, is Debian 13 Trixie (point release 13.7,
+2026-09-12). The workflow selects authenticated current `trixie`,
+`trixie-updates` and `trixie-security` packages, not a frozen 13.7 rootfs.
+Recheck the official release basis before a later authorized build; a stable
+release change requires review, not silently changing the target or using the
+moving `stable` alias.
+
+For source inspection and unprivileged checks, use Git, Python 3 and Bash in a
+separate development checkout. Obtain the fork and select the full reviewed
+commit, not merely whichever revision the branch happens to contain:
+
+    git clone --branch dev/cm3-debian-cli https://github.com/blockdyor/radxa-cm3-debian-cli.git
+    cd radxa-cm3-debian-cli
+    git checkout --detach FULL_REVIEWED_COMMIT
+    git rev-parse HEAD
+    python3 scripts/cm3-source-preflight.py --check-lock
+    python3 -m unittest discover -s tests/cm3-cli -v
+    bash -n src/libexec/rsdk/rsdk-build
+    git diff --check
+
+`FULL_REVIEWED_COMMIT` is an intentional placeholder for an approved 40-character
+Git commit, not a dispatch input or permission to rebuild. Compiler-dependent
+tests may skip if their tools are unavailable; inspect the test output rather
+than treating a skipped regression as an executed compiler check.
+
+The external workflow requires authenticated fork Actions access, the manual
+workflow registered on the default branch, a pushed/reviewed development SHA,
+an admitted budget reservation and no overlapping compilation. The disposable
+runner supplies Git, Python, jq, Docker and outbound access to GitHub, the pinned
+OCI registries and authenticated Debian archives. It registers pinned binfmt
+and installs recipe/cross-build/signing/bootstrap dependencies only inside its
+external container. Do not run the compile drivers or privileged container
+commands on the control host or board. No local Docker installation is required
+or authorized by these instructions.
+
+The exact historical dispatches below and `.github/workflows/build.yaml` record
+the implemented invocation. Only the changed seventh source attempt is permitted,
+after reviewed publication, a freshly verified pushed SHA, a specific hypothesis
+and reservation on the existing implementation record. Admission policy and the
+retained ledger enforce the cumulative seven-attempt ceiling. Full-image assembly
+remains held. Changing `expected_sha`, invoking a
+helper directly or cloning a fresh checkout does not reset either budget.
+
+Source pins make the experiment inspectable, not bitwise reproducible. The
+complete authenticated package/compiler snapshot and two-clean-build comparison
+remain missing; see `provenance.md`. A new run may select different Debian
+dependencies even with unchanged Git and OCI pins. Stop on missing inputs,
+signature/expiry failure, revision drift or resource admission failure; do not
+replace sources or weaken checks to continue.
 
 ## Historical package-only invocation (do not repeat unchanged)
 
@@ -45,11 +99,11 @@ package-probe admission checks require x86_64, 2 CPUs, 7 GB RAM and 24 GiB free
 workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
-Package-only admission is limited to SIX cumulative attempts, separate from the
-full-image budget; all six attempts are reserved/used. Reserve on the
+Package-only admission is limited to SEVEN cumulative attempts, separate from the
+full-image budget; the first six attempts remain consumed. Reserve on the
 existing implementation card before dispatch and reconcile `attempts.json` with
 the entire Actions workflow history. The read-only admission step counts all
-observed run attempts under shared concurrency and refuses a seventh attempt,
+observed run attempts under shared concurrency and refuses an eighth attempt,
 reruns, missing historical runs, revision drift and overlapping compilation.
 It writes a run/SHA-bound admission record checked again by the source driver.
 Do not delete runs, invoke old revisions, use another workflow/repository or a
@@ -62,6 +116,23 @@ source-build diagnostics for 14 days. It does not upload `.deb` files, firmware,
 source trees, private signing material, enrollment keys, or a disk image. Review
 logs for publication-sensitive content before republishing elsewhere. Source
 checkout and package output directories are ignored by Git.
+
+The seventh-attempt workflow additionally retains `cm3-encrypted-recovery-RUN_ID-RUN_ATTEMPT`
+for 14 days after successful source compilation, even if ARM64 installation fails.
+`scripts/cm3-retain-packages.py` revalidates the exact nine binary identities/hashes
+and seals only selected packages plus allowlisted JSON/diff/config/buildinfo/changes
+with OpenSSL CMS AES-256-GCM to `project/cm3-cli/retention-recipient.pem`.
+The recipient private key stays outside the checkout and CI; roots, signing keys,
+ordinary logs and arbitrary source trees are excluded. Local real encryption,
+decryption, tamper rejection and matching-recipient checks pass; external upload
+and actual compiled-payload recovery are not yet verified. This is internal
+recovery, not plaintext distribution, source-license closure or update trust.
+Before reuse, verify the artifact API digest and exact approved run/SHA, decrypt
+to a disposable directory, require successful authenticated decryption before
+reading/extracting anything, and verify every archived file against its manifest.
+GCM integrity is not producer authentication: anyone with the public certificate
+can encrypt a replacement. No automatic cross-run reuse or uncounted rebuild is
+enabled; loss of the private recipient key makes the ciphertext unrecoverable.
 
 ## Changed next-stage package probe
 
@@ -98,8 +169,8 @@ default file unchanged; the regression fails on the old pre-created conffile.
 No global `--force-conf*` setting, security relaxation or source change is needed.
 This is NOT a successful package-install test. No compiled payloads were retained
 from this completed disposable runner; full external integration needs another
-counted compilation, which requires a narrow owner budget extension. No new
-dispatch command is authorized by this document, and none was executed.
+counted compilation. The subsequent explicit approval authorizes only changed
+attempt 7 under the limits above; this historical command is not reusable.
 
 Intended full probe behavior (NOT an end-to-end PASS): it creates an ephemeral
 Ed25519 job-only key outside retained output,
@@ -120,7 +191,8 @@ proc/sys/tmpfs-dev mounts, with guaranteed unmount cleanup. It receives no GitHu
 token, host block-device bind, signing secret or production connection. The job
 still has read-only token permissions, shared exclusive concurrency, two compile
 jobs and a 180-minute total bound. Keys, target directory and signed package
-payloads are NOT uploaded. Diagnostic-only retention is unchanged.
+payloads are NOT uploaded in plaintext. Diagnostic retention remains allowlisted;
+the separate encrypted recovery artifact described above retains compiled output.
 
 Even a PASS here is NOT the full package gate: deterministic configuration is
 a probe fixture, not `cm3-cli-board-support`; no target kernel boots in chroot,

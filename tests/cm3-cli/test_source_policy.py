@@ -80,10 +80,10 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('restricted to the external AMD64 CI container', result.stderr)
 
-    def test_package_budget_refuses_external_seventh_compile_before_workdir(self):
+    def test_package_budget_refuses_external_eighth_compile_before_workdir(self):
         errors = io.StringIO()
         exhausted = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
-        exhausted['package_attempts'] = [{}] * 6
+        exhausted['package_attempts'] = [{}] * 7
         with patch.dict(preflight.os.environ, GITHUB_ACTIONS='true',
                         GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli'), \
                 patch.object(preflight.platform, 'machine', return_value='x86_64'), \

@@ -42,6 +42,7 @@ jobs:
           test "$GITHUB_SHA" = "$EXPECTED_SHA"
           python3 -m unittest discover -s tests/cm3-cli -v
           python3 scripts/cm3-source-preflight.py --check-lock
+          openssl x509 -in project/cm3-cli/retention-recipient.pem -noout -checkend 1209600
       - name: Reconcile cumulative package budget before compilation
         env:
           GH_TOKEN: ${{ github.token }}
@@ -74,6 +75,18 @@ jobs:
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
             "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates arch-test; arch-test arm64; python3 /src/scripts/cm3-source-preflight.py --workdir /work; exec python3 /src/scripts/cm3-package-preflight.py --workdir /work' \
             2>&1 | tee preflight-work/source-build.log
+      - name: Encrypt allowlisted successful compilation for internal recovery
+        if: always()
+        run: python3 scripts/cm3-retain-packages.py --workdir package-work --output preflight-work/cm3-recovery.cms
+      - name: Retain encrypted recovery output (no plaintext binaries or keys)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: warn
+          compression-level: 0
+          path: preflight-work/cm3-recovery.cms
       - name: Retain allowlisted diagnostic evidence only
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

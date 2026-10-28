@@ -27,7 +27,7 @@ class PackageBudgetTests(unittest.TestCase):
         return self.runs[-1]['id']
 
     def test_historical_three_remain_consumed(self):
-        self.assertEqual(self.ledger['maximum_package_attempts'], 6)
+        self.assertEqual(self.ledger['maximum_package_attempts'], 7)
         self.assertEqual([a['number'] for a in self.ledger['package_attempts'][:3]], [1, 2, 3])
         self.assertEqual([a['run_url'].rsplit('/', 1)[1]
                           for a in self.ledger['package_attempts'][:3]],
@@ -35,8 +35,8 @@ class PackageBudgetTests(unittest.TestCase):
         self.assertEqual(self.ledger['maximum_full_image_attempts'], 3)
         self.assertEqual(self.ledger['full_image_attempts'], [])
 
-    def test_six_allowed_and_seventh_rejected_without_ledger_refresh(self):
-        while len(self.runs) < 6:
+    def test_seventh_allowed_and_eighth_rejected_without_ledger_refresh(self):
+        while len(self.runs) < 7:
             for run in self.runs:
                 run['status'] = 'completed'
             run_id = self.append()
@@ -45,7 +45,7 @@ class PackageBudgetTests(unittest.TestCase):
         for run in self.runs:
             run['status'] = 'completed'
         run_id = self.append()
-        with self.assertRaisesRegex(ValueError, 'seventh attempt prohibited'):
+        with self.assertRaisesRegex(ValueError, 'eighth attempt prohibited'):
             budget.admit(self.ledger, self.runs, run_id, 'a' * 40)
 
     def test_rerun_deleted_history_sha_mismatch_and_overlap_fail_closed(self):

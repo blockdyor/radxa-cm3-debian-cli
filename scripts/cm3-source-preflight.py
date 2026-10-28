@@ -60,6 +60,26 @@ def expected_packages(lock):
     }
 
 
+def verify_kernel_config(text):
+    settings = {}
+    for line in text.splitlines():
+        if re.match(r'^CONFIG_[A-Z0-9_]+=', line):
+            name, value = line.split('=', 1)
+            if name in settings:
+                raise ValueError('duplicate kernel configuration: ' + name)
+            settings[name] = value
+    builtin = '''BLK_DEV_INITRD RD_GZIP MODULES CGROUPS NAMESPACES UTS_NS IPC_NS
+USER_NS PID_NS NET_NS SECCOMP SECCOMP_FILTER MULTIUSER SECURITY SECURITYFS
+SECURITY_APPARMOR'''.split()
+    modular = 'OVERLAY_FS BRIDGE BRIDGE_NETFILTER NETFILTER NF_TABLES TUN IPV6'.split()
+    for names, allowed in [(builtin, {'y'}), (modular, {'y', 'm'})]:
+        for name in names:
+            symbol = 'CONFIG_' + name
+            if settings.get(symbol) not in allowed:
+                raise ValueError('required kernel support absent: ' + symbol)
+    # Compiled support is not proof of an active target LSM or loaded policy.
+
+
 def run(*args, cwd=None, capture=False):
     print('+', ' '.join(map(str, args)), flush=True)
     return subprocess.run(list(map(str, args)), cwd=cwd, check=True, text=True,
@@ -174,6 +194,7 @@ def build_recipe(recipe, lock, work, evidence):
     run('dpkg-buildpackage', '--no-sign', '-b', '-j2', cwd=source)
     if recipe['name'] == 'linux-rk2410-nocsf':
         shutil.copyfile(source / 'src/.config', evidence / 'kernel.config')
+        verify_kernel_config((evidence / 'kernel.config').read_text())
     for suffix in ['*.buildinfo', '*.changes']:
         for path in work.glob(suffix):
             shutil.copyfile(path, evidence / path.name)
@@ -222,8 +243,8 @@ def main():
     if not admission_path.is_file():
         parser.error('verified Actions package admission required before compilation')
     admission = json.loads(admission_path.read_text())
-    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 6 or
-            admission['cumulative_attempts'] > 6 or
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 7 or
+            not 1 <= admission['cumulative_attempts'] <= 7 or
             str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
             admission['commit'] != os.environ.get('GITHUB_SHA')):
         parser.error('package admission does not match this run/revision/budget')

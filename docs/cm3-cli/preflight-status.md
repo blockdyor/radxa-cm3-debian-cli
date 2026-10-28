@@ -177,7 +177,8 @@ actual Debian `read-config` loads the exact serial/AppArmor/DTB settings and
 preserves the default file. This is not dpkg/ARM64 integration validation.
 No global conffile forcing, warning suppression, security change or new build.
 No recoverable compiled payload exists, so complete external verification needs
-an owner-authorized counted rebuild; the exhausted budget is a genuine blocker.
+an owner-authorized counted rebuild. The later explicit extension below resolves
+only that budget blocker, not the failed install or remaining readiness gates.
 
 ## Admission and remaining work
 
@@ -186,13 +187,13 @@ ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full
 image or a competing workflow. Its source PASS and bootstrap failure are above.
 See `build.md` for exact scope and remaining gates.
 
-Package-only budget: SIX cumulative attempts across workers and workflow runs;
-all six completed and are used; ZERO remain. All six runs reconcile with the
-ledger: five workflow failures and one source-only workflow PASS. No seventh or
-rerun is authorized, even if further implementation needs another compilation.
+Package-only budget: SEVEN cumulative attempts following explicit owner approval
+on 2026-10-28. All six historical runs remain consumed and reconcile with the
+ledger: five workflow failures and one source-only workflow PASS. Only changed
+attempt 7 is newly authorized; an eighth attempt or any rerun needs a new decision.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
-rejects reruns, missing records and a seventh attempt, and binds its result to
+rejects reruns, missing records and an eighth attempt, and binds its result to
 the current run/SHA. Reservations still belong on the existing implementation
 card before each dispatch. Historical revisions/helper tasks are not bypasses.
 See `attempts.json` and `build.md`; image budget/prerequisites are unchanged.

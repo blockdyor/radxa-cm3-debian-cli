@@ -237,9 +237,7 @@ def test_target(root, lock, evidence):
         if stream.read(2) != b'\x1f\x8b':
             raise ValueError('initramfs is not gzip compressed')
     config = (root / f'boot/config-{kernel}').read_text()
-    for setting in ['CONFIG_BLK_DEV_INITRD=y', 'CONFIG_SECURITY_APPARMOR=y', 'CONFIG_MODULES=y']:
-        if setting not in config.splitlines():
-            raise ValueError('required kernel support absent: ' + setting)
+    source.verify_kernel_config(config)
     chroot(root, 'u-boot-update')
     menu = root / 'boot/extlinux/extlinux.conf'
     before = menu.read_bytes()
@@ -311,8 +309,8 @@ def main():
     if result['status'] != 'PASS':
         parser.error('successful source build in this job is required')
     admission = json.loads((ROOT / 'preflight-work/evidence/package-admission.json').read_text())
-    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 6 or
-            admission['cumulative_attempts'] > 6 or
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 7 or
+            not 1 <= admission['cumulative_attempts'] <= 7 or
             str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
             admission['commit'] != os.environ.get('GITHUB_SHA')):
         parser.error('missing matching cumulative package admission')

@@ -70,6 +70,36 @@ payload flavor derive from the same suffixed version. A successful job records
 all nine whitelisted package versions/architectures/hashes; this is not the final
 Essential-inclusive target manifest or a signed install/configuration result.
 
+## Exact binary whitelist
+
+`scripts/cm3-source-preflight.py --check-lock` derives this set from the lock.
+The alias architecture `all` does not make the embedded payload board-neutral.
+These are expected package identities, not a final installed image manifest.
+
+| Package | Version | Architecture |
+| --- | --- | --- |
+| linux-image-radxa-cm3-rpi-cm4-io | 6.1.84-18+cm3cli1 | all |
+| linux-headers-radxa-cm3-rpi-cm4-io | 6.1.84-18+cm3cli1 | all |
+| linux-image-6.1.84-18+cm3cli1-rk2410-nocsf | 6.1.84-18+cm3cli1 | arm64 |
+| linux-headers-6.1.84-18+cm3cli1-rk2410-nocsf | 6.1.84-18+cm3cli1 | arm64 |
+| u-boot-radxa-cm3-rpi-cm4-io | 2017.09-71+cm3cli1 | all |
+| u-boot-rk2601 | 2017.09-71+cm3cli1 | all |
+| radxa-overlays-dkms | 0.2.25+cm3cli1 | all |
+| radxa-bootutils | 0.2.6+cm3cli1 | all |
+| radxa-udev | 0.1.4+cm3cli1 | all |
+
+The first seven close the missing BSP/overlay binary path; rebuilding bootutils
+and udev makes nine selected binaries from five source projects. The proposed
+board-support package is not a tenth completed package. Audited profile sources
+are `radxa-pkg/radxa-profiles@fd5c4cd7e1fede8cb44f3b7788d78a20c2363e2a`
+and `radxa-pkg/vendor-profiles@f60785267aca74af42b303fe0b8f19da525b1e15`;
+neither task umbrella is installed by this probe.
+
+Builder OCI and binfmt digests live in `source-lock.json`; action commit pins
+live in `.github/workflows/build.yaml`. Record those files and the actual fork
+commit together, including local patches. Pinning only the upstream SDK base
+would omit this experiment's source corrections and admission/security guards.
+
 ## Deliberate exclusions and retained functions
 
 The missing Trixie path requires seven BSP/overlay binaries from three source
@@ -140,3 +170,21 @@ implemented or verified. If attestation fails/unavailable, stop; obtain an appro
 persistent signing-key mechanism instead of falling back to unsigned packages.
 No private key or enrollment secret may enter an artifact. There is no claimed
 existing maintained online BSP feed.
+
+Before support or update promotion, assign a named maintainer and support
+end date for the source-built BSP and project board support. Responsibility must
+cover routine upstream/license review, urgent CVE triage/backports, signing and
+attestation trust, monotonic versions, distinct-version upgrades, known-good boot
+retention and rescue verification. Review Debian and vendor changes monthly and
+on urgent advisories; this is a required maintenance policy, not evidence that a
+maintainer or service already exists. Unassigned ownership remains a G2 blocker.
+
+Current diagnostic retention is not a corresponding-source distribution: the
+diagnostic artifact deliberately excludes source trees and binaries. The separate
+encrypted recovery artifact is internal retention, not a reviewed plaintext
+distribution or attested update channel; see `build.md`. Before any binary
+artifact delivery, separately assemble and review the complete applicable
+source/config/patch/build-script and license records, including file-level blob
+hashes/terms. If redistribution terms or corresponding sources cannot be closed,
+withhold the affected payload rather than treating a successful compile as legal
+clearance. Never upload the private research bundle as a substitute.

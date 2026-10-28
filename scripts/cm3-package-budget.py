@@ -11,8 +11,8 @@ WORKFLOW = 396827381
 
 
 def admit(ledger, runs, run_id, sha):
-    if ledger['maximum_package_attempts'] != 6:
-        raise ValueError('expected the cumulative owner-authorized six-attempt limit')
+    if ledger['maximum_package_attempts'] != 7:
+        raise ValueError('expected the cumulative owner-authorized seven-attempt limit')
     by_id = {r['id']: r for r in runs}
     if len(by_id) != len(runs) or run_id not in by_id:
         raise ValueError('duplicate or missing current workflow run')
@@ -27,11 +27,11 @@ def admit(ledger, runs, run_id, sha):
         raise ValueError('wrong revision/workflow or prohibited rerun')
     used = sum(r['run_attempt'] for r in runs)
     if used > ledger['maximum_package_attempts']:
-        raise ValueError('package attempt budget exhausted; seventh attempt prohibited')
+        raise ValueError('package attempt budget exhausted; eighth attempt prohibited')
     if any(r['id'] != run_id and r['status'] == 'in_progress' for r in runs):
         raise ValueError('another package attempt is running')
     return {'status': 'ADMITTED', 'run_id': run_id, 'commit': sha,
-            'workflow_id': WORKFLOW, 'cumulative_attempts': used, 'maximum_attempts': 6,
+            'workflow_id': WORKFLOW, 'cumulative_attempts': used, 'maximum_attempts': 7,
             'runs': [{k: r[k] for k in ['id', 'head_sha', 'run_attempt', 'status', 'conclusion']}
                      for r in runs]}
 

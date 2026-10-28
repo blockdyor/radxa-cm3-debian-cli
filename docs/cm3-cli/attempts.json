@@ -4,8 +4,8 @@
   "maximum_full_image_attempts": 3,
   "maximum_concurrent_full_images": 1,
   "full_image_attempts": [],
-  "maximum_package_attempts": 6,
-  "package_budget_authorization": "Owner extension 2026-10-28: three additional attempts, cumulative six; historical attempts retained; seventh prohibited",
+  "maximum_package_attempts": 7,
+  "package_budget_authorization": "Owner extension 2026-10-28: authorize attempt seven only, cumulative seven; all six consumed attempts retained; eighth and reruns prohibited",
   "package_attempts": [
     {
       "number": 1,
@@ -68,5 +68,5 @@
       "retained_payloads": "Diagnostics only; no debs or recoverable compiled output"
     }
   ],
-  "status": "All SIX cumulative package attempts completed/used: five workflow failures, one source-only workflow PASS; zero remain, seventh/reruns prohibited. Attempts 4-6 compiled all nine packages; attempt 6 passed ARM64 bootstrap and tamper rejection but failed the initial seed install at a u-boot-menu conffile prompt. Supported config-fragment correction is locally checked, NOT externally validated. Source PASS is not complete package preflight. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency. No retained compiled payloads; further full integration requires an owner-authorized counted rebuild, not a rerun. Image stage not implemented or enabled; zero full-image attempts."
+  "status": "Six cumulative package attempts consumed: five workflow failures, one source-only workflow PASS. Only attempt seven newly authorized; eighth and reruns prohibited. Attempts 4-6 compiled all nine packages; attempt 6 passed ARM64 bootstrap and tamper rejection but failed the initial seed install at a u-boot-menu conffile prompt. Supported config-fragment correction is locally checked, NOT externally validated. Source PASS is not complete package preflight. Read-only Actions admission reconciles the complete run history under shared exclusive concurrency. Prior runs retained diagnostics only, no compiled payloads. Image stage not implemented or enabled; zero full-image attempts."
 }
