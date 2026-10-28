@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import unittest
@@ -130,6 +131,16 @@ class SourcePolicyTests(unittest.TestCase):
             subprocess.run(['make', '-j2', 'build'], cwd=root, check=True, capture_output=True)
             self.assertEqual(json.loads((root / 'kernel-helper-flags.json').read_text())['CFLAGS'], '-O2')
             self.assertNotIn('DPKG_FLAGS ?= -d', (root / 'Makefile.extra').read_text())
+
+    def test_development_branch_retains_bootstrap_fork_guards(self):
+        for name in ['check_linked_issue', 'ci-request-review', 'dependabot',
+                     'infra-repo-update-production', 'infra-repo-update-test',
+                     'new_version', 'docs', 'release']:
+            with self.subTest(workflow=name):
+                text = (ROOT / '.github/workflows' / (name + '.yaml')).read_text()
+                for job in re.split(r'\n  (?=\S)', text):
+                    if 'runs-on:' in job:
+                        self.assertIn("github.repository == 'RadxaOS-SDK/rsdk'", job)
 
     def test_image_entrypoint_is_explicitly_held(self):
         script = (ROOT / 'src/libexec/rsdk/rsdk-build').read_text()
