@@ -9,11 +9,11 @@ The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. The cumulative package limit is SIX; attempts
-1–5 are used and one remains. Attempt 5 rebuilt all nine packages and verified
+1–6 are reserved/used and ZERO remain. Attempt 5 rebuilt all nine packages and verified
 the ephemeral repository signature, then failed before ARM64 bootstrap because
-`arch-test` was not installed. Do not rerun it. Only the evidence-based changed
-attempt 6 remains authorized; it explicitly installs that dependency and checks
-ARM64 execution before compilation. See
+`arch-test` was not installed. Do not rerun it. The final changed attempt 6 is
+running; it explicitly installs that dependency and checks ARM64 execution before
+compilation. A seventh attempt or rerun is prohibited. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
 ## Historical package-only invocation (do not repeat unchanged)
@@ -43,7 +43,7 @@ workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
 Package-only admission is limited to SIX cumulative attempts, separate from the
-full-image budget; five attempts are reserved/used. Reserve on the
+full-image budget; all six attempts are reserved/used. Reserve on the
 existing implementation card before dispatch and reconcile `attempts.json` with
 the entire Actions workflow history. The read-only admission step counts all
 observed run attempts under shared concurrency and refuses a seventh attempt,
@@ -72,6 +72,16 @@ The fifth attempt was reserved and dispatched with the existing input names
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli -f expected_sha=293971c1a011ef3cd69343827cf36e1bb91a064f \
       -f hypothesis='Attempt 5/6: signed whitelist APT tamper rejection and clean ARM64 install DKMS extlinux fixture'
+
+The final changed attempt 6 explicitly installs `arch-test` and runs
+`arch-test arm64` before compilation. Its actual invocation was (historical,
+do not repeat; all six attempts are now reserved/used):
+
+    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
+      --ref dev/cm3-debian-cli -f expected_sha=cc1ba6de1a19c8243f98f52aa73b0b9e7f2166ff \
+      -f hypothesis='Attempt 6/6: explicit arch-test dependency and early ARM64 execution check before signed install DKMS probe'
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40711214571
 
 This stage creates an ephemeral Ed25519 job-only key outside retained output,
 signs a nine-package whitelist APT repository, verifies it, then bootstraps a

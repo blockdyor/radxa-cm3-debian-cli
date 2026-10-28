@@ -144,6 +144,14 @@ checks actual ARM64 execution before expensive source compilation. Local policy
 regression fails before the correction and passes after it; actual foreign
 bootstrap remains an external-run check, not a local production-host test.
 
+## Package attempt 6 (running; no result inferred)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40711214571
+Checked-out commit: `cc1ba6de1a19c8243f98f52aa73b0b9e7f2166ff`, run attempt 1.
+Started 2026-10-28T14:58:24Z. Exact checkout, 30 local tests, cumulative admission
+and runner qualification passed. The changed dependency and early ARM64 check
+are under test. No source/ARM64 result or full-preflight PASS is inferred.
+
 ## Admission and remaining work
 
 The fifth-attempt implementation adds a signed whitelist/Essential-inclusive
@@ -152,8 +160,9 @@ image or a competing workflow. Its source PASS and bootstrap failure are above.
 See `build.md` for exact scope and remaining gates.
 
 Package-only budget: SIX cumulative attempts across workers and workflow runs;
-attempts 1–5 are used (four workflow failures, one source-only workflow PASS);
-one remains.
+all six are reserved/used; attempt 6 is running and ZERO remain. Attempts 1–5
+had four workflow failures and one source-only workflow PASS. No seventh or
+rerun is authorized, even if further implementation needs another compilation.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
 rejects reruns, missing records and a seventh attempt, and binds its result to
