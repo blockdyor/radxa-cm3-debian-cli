@@ -81,7 +81,8 @@ class SignedPackagePolicyTests(unittest.TestCase):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
         container_command = workflow.split("sh -ec '", 1)[1].split("' \\", 1)[0]
         self.assertIn('apt-get install -y --no-install-recommends python3', container_command)
-        self.assertIn('python3 ca-certificates arch-test;', container_command)
+        self.assertIn('python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test '
+                      'debian-archive-keyring mount;', container_command)
         self.assertLess(container_command.index('arch-test arm64;'),
                         container_command.index('python3 /src/scripts/cm3-source-preflight.py'))
 

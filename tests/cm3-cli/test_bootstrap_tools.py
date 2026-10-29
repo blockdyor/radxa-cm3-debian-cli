@@ -52,6 +52,17 @@ class BootstrapTools(unittest.TestCase):
         self.assertIn(setup, workflow)
         self.assertLess(workflow.index(setup),
                         workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work'))
+        compile_at = workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work')
+        prerequisites = ('apt-get install -y --no-install-recommends python3 ca-certificates '
+                         'apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount;')
+        self.assertLess(workflow.index(prerequisites), workflow.index(setup))
+        self.assertLess(workflow.index('command -v jsonnet;'), compile_at)
+        for method in ('test_exact_profile_has_no_inherited_trust_or_provisioning_hooks',
+                       'test_missing_failed_stale_receipt_and_overrides_fail_closed',
+                       'test_shell_paths_are_quoted',
+                       'test_receipt_is_json_data_not_a_file_path_or_injected_jsonnet'):
+            self.assertLess(workflow.index('test_rsdk_profile.ProfileRendering.' + method), compile_at)
+        self.assertNotIn('ProfileRendering.test_legacy', workflow)
         self.assertNotIn('jsonnet bdebstrap', workflow)
         source = (ROOT / 'scripts/cm3-bootstrap-tools.py').read_text()
         self.assertNotIn('/etc/apt/', source)

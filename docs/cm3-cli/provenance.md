@@ -156,6 +156,27 @@ This improves notice/input preservation but does not complete legal review or
 corresponding-source delivery. Actual packaging of this later correction remains
 unverified externally; attempt 12 predates it. No blob bytes are added to Git.
 
+Selected-payload delivery records remain open (not additional development gates):
+
+- CS-1: bind actual binary hashes to complete modified kernel/U-Boot sources,
+  recipe patches, generated configs, board sources, build scripts and notices.
+  Binary-only builds, diagnostics and encrypted retention are not that delivery.
+- NOTICE-1: inspect the later built loader package for the unchanged rkbin notice
+  alongside its existing copyright and selected-input provenance.
+- RADIO-1: before final-image delivery, record exact installed firmware versions,
+  files/hashes and matching Debian source/copyright stanzas for the two selected
+  radio packages; seed names alone do not establish file-level license closure.
+- OVERLAY-1: reconcile the shipped overlay tree's GPL-2 root license, GPL-3+
+  packaging declaration and file-specific notices; do not apply wrapper terms
+  indiscriminately to the installed source tree.
+
+The pinned U-Boot notice is `Licenses/README` plus `Licenses/gpl-2.0.txt`, not
+a missing root LICENSE. Bootutils declares its terms in `debian/copyright`.
+The loader recipe replaces vendor SPL with compiled U-Boot SPL; the selected
+embedded proprietary inputs are DDR, USB helper and BL31, while `boot_merger`
+is a host build tool. These source-selection facts do not prove the contents or
+corresponding-source completeness of a later delivered binary.
+
 The first source probe pins OCI manifests and Git sources but resolves fresh
 signed Trixie build dependencies. It records installed source/package versions,
 APT InRelease files and generated `.buildinfo`/`.changes`. These enable auditing;
@@ -194,6 +215,14 @@ trusted signing job that attests only the verified repository's encrypted bundle
 then checks exact repository/workflow/source/signer identity and tamper rejection.
 The package builder itself still has read-only token scopes. Actual producer
 round-trip and later deliberate authenticated import are NOT yet verified.
+The standalone `scripts/cm3-verify-bundle.py` consumer requires a local public
+attestation bundle, independently approved full producer commit and ciphertext
+SHA256. It uses official `gh attestation verify` with fixed repository/workflow,
+source/ref/signer, issuer, SLSA v1 and hosted-runner policies; a failed check emits
+no receipt. Its JSON receipt verifies ciphertext only: it neither approves the
+inner APT key nor authorizes decryption/import. Producer and later consumer
+revisions must not be conflated, and historical encrypted retention is not an
+attested update channel.
 If attestation fails/unavailable, stop; obtain an approved
 persistent signing-key mechanism instead of falling back to unsigned packages.
 No private key or enrollment secret may enter an artifact. There is no claimed

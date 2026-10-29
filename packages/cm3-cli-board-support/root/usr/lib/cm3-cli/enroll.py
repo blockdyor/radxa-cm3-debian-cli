@@ -19,17 +19,25 @@ STATE = 'var/lib/cm3-cli/enrollment.json'
 READY = 'run/cm3-cli/enrolled.json'
 
 
-def read_private(root, relative, limit=16384, public=False):
-    path = root / relative
-    # All parents must be real, root-owned directories, not account-controlled paths.
-    for parent in path.parents:
-        if parent == root.parent and root != Path('/'):
-            break
-        if parent == root:
-            break
-        info = parent.lstat()
+def trusted_parents(root, relative, allow_missing=False):
+    # Walk outward from the trusted root before any operation can follow a link.
+    parent = root
+    for part in (None, *Path(relative).parts[:-1]):
+        if part is not None:
+            parent = parent / part
+        try:
+            info = parent.lstat()
+        except FileNotFoundError:
+            if allow_missing:
+                return
+            raise
         if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.geteuid() or info.st_mode & 0o022:
             raise ValueError('unsafe enrollment directory')
+
+
+def read_private(root, relative, limit=16384, public=False):
+    path = root / relative
+    trusted_parents(root, relative)
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, 'rb') as stream:
         info = os.fstat(stream.fileno())
@@ -45,6 +53,7 @@ def read_private(root, relative, limit=16384, public=False):
 
 def atomic(root, relative, data, mode=0o600):
     path = root / relative
+    trusted_parents(root, relative, allow_missing=True)
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     if path.parent.is_symlink() or path.is_symlink():
         raise ValueError('refusing symlink enrollment output')
@@ -141,6 +150,8 @@ def check(root):
 
 
 def enroll(root, command=run):
+    trusted_parents(root, STATE, allow_missing=True)
+    trusted_parents(root, READY, allow_missing=True)
     (root / READY).unlink(missing_ok=True)
     target(root)
     config, digest = document(root)
@@ -202,6 +213,7 @@ def main():
     try:
         # The CLI deliberately has no --root or arbitrary-command option.
         lock = ROOT / 'run/cm3-cli'
+        trusted_parents(ROOT, 'run/cm3-cli/lock', allow_missing=True)
         lock.mkdir(mode=0o700, exist_ok=True)
         with (lock / 'lock').open('a') as stream:
             fcntl.flock(stream, fcntl.LOCK_EX)
