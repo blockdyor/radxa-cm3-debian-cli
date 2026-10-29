@@ -228,7 +228,11 @@ def main():
     parser.add_argument('--workdir', type=Path)
     parser.add_argument('--check-lock', action='store_true')
     args = parser.parse_args()
-    lock = load_lock(args.lock)
+    # CLI builds and their evidence must use the same checked-in lock as admission.
+    lock_path = ROOT / 'project/cm3-cli/source-lock.json'
+    if args.lock.resolve() != lock_path:
+        parser.error('--lock must identify the checked-in source lock')
+    lock = load_lock(lock_path)
     if args.check_lock:
         print(json.dumps({'target': lock['target'], 'packages': expected_packages(lock)}, indent=2))
         return
@@ -259,7 +263,7 @@ def main():
     started = time.time()
     result = {'stage': 'source-package-build', 'status': 'FAIL',
               'full_package_preflight': 'NOT RUN', 'image_build': 'NOT RUN'}
-    shutil.copyfile(args.lock, evidence / 'source-lock.json')
+    shutil.copyfile(lock_path, evidence / 'source-lock.json')
     try:
         sources = Path('/etc/apt/sources.list.d/debian.sources')
         if not sources.is_file() or 'trixie' not in sources.read_text():

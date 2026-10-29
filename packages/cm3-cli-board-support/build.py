@@ -28,12 +28,25 @@ PAYLOAD = (
 )
 
 
+def output_path(value, root=None):
+    path = Path(value)
+    if '..' in path.parts:
+        raise ValueError('output paths must not contain parent traversal')
+    path = path.absolute()
+    if any(part.is_symlink() for part in (path, *path.parents)):
+        raise ValueError('output paths must not contain symlinks')
+    path = path.resolve()
+    if root is not None and not path.is_relative_to(root.resolve()):
+        raise ValueError('CLI outputs must stay within the working directory')
+    if path.exists():
+        raise ValueError('refusing to overwrite output')
+    return path
+
+
 def build(destination, revision, epoch):
     if re.fullmatch('[0-9a-f]{40}', revision) is None or epoch < 0:
         raise ValueError('full source revision and nonnegative SOURCE_DATE_EPOCH required')
-    destination = Path(destination)
-    if destination.exists():
-        raise ValueError('refusing to overwrite package output')
+    destination = output_path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='cm3-board-') as directory:
         stage = Path(directory) / 'root'
@@ -94,7 +107,7 @@ def build(destination, revision, epoch):
                 path.chmod(0o755 if path.is_dir() or str(path.relative_to(stage)) in executable else 0o644)
         env = dict(os.environ, SOURCE_DATE_EPOCH=str(epoch))
         subprocess.run(['dpkg-deb', '--root-owner-group', '--uniform-compression', '-Zgzip',
-                        '--build', str(stage), str(destination)], env=env, check=True)
+                        '--build', '--', str(stage), str(destination)], env=env, check=True)
     return destination
 
 
@@ -117,19 +130,23 @@ def main():
         dirty = subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain', '--', *paths], text=True)
         if dirty:
             raise ValueError('package inputs must be clean and match the exact checked-out commit')
-        if args.manifest and args.manifest.exists():
-            raise ValueError('refusing to overwrite manifest output')
-        build(args.output, args.revision, args.epoch)
-        if args.manifest:
-            args.manifest.parent.mkdir(parents=True, exist_ok=True)
-            args.manifest.write_text(json.dumps({
-                'source_revision': args.revision, 'source_date_epoch': args.epoch,
-                'source_lock_sha256': hashlib.sha256((ROOT / 'project/cm3-cli/source-lock.json').read_bytes()).hexdigest(),
-                'packages': {'cm3-cli-board-support': {
-                    'version': VERSION, 'architecture': 'all',
-                    'sha256': hashlib.sha256(args.output.read_bytes()).hexdigest(),
-                }},
-            }, indent=2) + '\n')
+        # CLI paths are confined to the invocation workspace, including absolute paths.
+        output = output_path(args.output, Path.cwd())
+        manifest = output_path(args.manifest, Path.cwd()) if args.manifest else None
+        if manifest == output:
+            raise ValueError('package and manifest outputs must be distinct')
+        output = build(output, args.revision, args.epoch)
+        if manifest:
+            manifest.parent.mkdir(parents=True, exist_ok=True)
+            with manifest.open('x') as stream:
+                stream.write(json.dumps({
+                    'source_revision': args.revision, 'source_date_epoch': args.epoch,
+                    'source_lock_sha256': hashlib.sha256((ROOT / 'project/cm3-cli/source-lock.json').read_bytes()).hexdigest(),
+                    'packages': {'cm3-cli-board-support': {
+                        'version': VERSION, 'architecture': 'all',
+                        'sha256': hashlib.sha256(output.read_bytes()).hexdigest(),
+                    }},
+                }, indent=2) + '\n')
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'Board-support package build failed: {error}\n')
 

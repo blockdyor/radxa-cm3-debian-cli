@@ -6,7 +6,7 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Current integration: tenth-package validation pending
+## Latest completed run: attempt 10 passed the ten-package lifecycle fixture
 
 The workflow now builds `cm3-cli-board-support` separately from the nine locked
 BSP packages, binding its manifest and embedded provenance to the exact source
@@ -17,21 +17,47 @@ effective SSH policy and board remove/purge/restore checks are included, with
 policy revalidation after restore. Encrypted recovery retains all ten admitted
 packages, never plaintext payloads or signing/recipient keys.
 
-This changed integration has local regression coverage but no new external PASS
-yet. Attempt 9 at `878f197ee9c2a8e3de4f198b744b24524ad0bfd7` failed before
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40824823375
+
+Exact source revision: `d58c5db2088d12fee4bd605bcba29e3c6a881694`, run attempt 1.
+The standard job completed SUCCESS at 2026-10-29T06:41:04Z. Directly inspected
+source and ARM64 results report PASS; the latter still says full preflight is
+NOT COMPLETE and image NOT RUN. All ten selected packages configured; the final
+fixture manifest records 270 installed packages. Actual board policy, effective
+`sshd -t/-T`, configure/reinstall/remove/purge/restore, DKMS dummy module and 617
+DTBOs, gzip/extlinux/idempotence, ordinary APT upgrade, clean audit and Debian-only
+update after build-source removal passed. No target services were started.
+
+Diagnostics artifact `12878945706` has ZIP SHA256
+`7e2f87be2693ef430d37eb785b733be47ca200e725473ca6594e0b3ec538d54e`;
+encrypted recovery artifact `12878457706` has ZIP SHA256
+`e581bd91e878af67bbf5791810d1380b42de87af846a36f8bf1a1c0da75e0753`.
+Both digests match the live API and all 51 ZIP members pass CRC. Native artifact
+retention ends 2026-11-12. Local authenticated CMS AES-GCM decryption, exact
+run/SHA provenance and all 42 manifest hashes pass; ten debs were recovered
+privately, never installed/executed or redistributed. No target root, signing
+key or recipient private key was uploaded. These checks do not establish
+enduring update trust, license closure or authorization to distribute binaries.
+
+SonarCloud security acceptance is separate. At this source SHA it fails; the
+complete current PR inventory contains four open high-security path/argument
+findings and no hotspots. Minimal fixes and negative regressions must be followed
+by exact-head reanalysis; the package job does not waive this gate.
+
+Attempt 9 at `878f197ee9c2a8e3de4f198b744b24524ad0bfd7` failed before
 compilation: a policy test read generated `__pycache__` bytes as UTF-8. Exact run:
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40824419303
 The error was reproduced locally with Python bytecode overrides removed; the
 test now scans the explicit package input allowlist instead of generated files.
 CI ran 65 tests with one error and two explicit compiler-toolchain skips; no
 board/BSP build, admission or signed ARM64 install stage ran. This run stays in
-the cumulative ledger. A changed retry must validate the actual integration.
+the cumulative ledger. Attempt 10 fixes that failure and validates the integration.
 Attempt 8 below validated only the previous nine-BSP fixture. The exact-product
 authenticated RSDK profile and full security/update/license gates remain open;
 image assembly is held at 0/3. No target service, enrollment, boot or hardware
 result is implied by source or local tests.
 
-## Latest completed run: package attempt 8 passed the source/install fixture
+## Historical attempt 8: previous nine-BSP source/install fixture
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40808183234
 
@@ -91,8 +117,8 @@ hardware rows remain byte-identical. The separate image ledger remains 0/3, held
 
 The existing source baseline lane can now proceed from a successful dependency
 fixture, not from another research handoff. Before enabling an image job it must
-pass the newly integrated `cm3-cli-board-support` package checks,
-wire the exact-product authenticated CLI profile without upstream insecure trust
+retain the tenth-package checks validated in attempt 10, wire the exact-product
+authenticated CLI profile without upstream insecure trust
 hooks, implement/test secure owner enrollment and identity creation, and close
 the applicable update/trust/license prerequisites. Keep the image entrypoint held
 until those checks actually pass. Existing workflow integration must continue to
