@@ -38,14 +38,16 @@ class AdmissionTests(unittest.TestCase):
         cmd = run.call_args.args[0]
         for flag, value in {
             '--repo': 'blockdyor/radxa-cm3-debian-cli',
-            '--signer-workflow': 'blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml',
+            '--cert-identity': 'https://github.com/blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml@refs/heads/dev/cm3-debian-cli',
             '--source-digest': self.sha, '--signer-digest': self.sha,
             '--source-ref': 'refs/heads/dev/cm3-debian-cli',
             '--cert-oidc-issuer': 'https://token.actions.githubusercontent.com',
             '--predicate-type': 'https://slsa.dev/provenance/v1',
         }.items():
+            self.assertIn(flag, cmd)
             self.assertEqual(cmd[cmd.index(flag) + 1], value)
         self.assertIn('--deny-self-hosted-runners', cmd)
+        self.assertNotIn('--signer-workflow', cmd)  # gh forbids combining SAN selectors.
         self.assertTrue(run.call_args.kwargs['check'])
         self.assertEqual(receipt['ciphertext_sha256'], self.digest)
         self.assertEqual(receipt['scope'], 'ciphertext-only; no decryption, APT-key approval or import')
@@ -54,7 +56,8 @@ class AdmissionTests(unittest.TestCase):
     def test_official_policy_rejections_never_emit_receipt(self):
         # Reason labels describe gh failures; these are propagation tests only.
         for reason in ['wrong repository', 'wrong workflow', 'wrong source digest',
-                       'wrong signer digest', 'invalid signature', 'missing attestation']:
+                       'wrong signer digest', 'invalid signature', 'missing attestation',
+                       'workflow prefix build.yaml.other']:
             with self.subTest(reason=reason), patch.object(
                 self.admission.subprocess, 'run',
                 side_effect=subprocess.CalledProcessError(1, ['gh'], stderr=reason)):

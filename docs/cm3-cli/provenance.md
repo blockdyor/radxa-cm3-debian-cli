@@ -170,6 +170,20 @@ Selected-payload delivery records remain open (not additional development gates)
   packaging declaration and file-specific notices; do not apply wrapper terms
   indiscriminately to the installed source tree.
 
+At the pinned overlay revision, source-policy reconciliation selects 818 files,
+not the preliminary 819: `.github/local/rules.local` explicitly excludes
+`arch/arm64/boot/dts/rockchip/overlays/Makefile.rk3588-can` from installation.
+This is not an inspection of a built package. Six notice/delivery questions remain:
+four selected Makefiles declare GPL-2.0 rather than the wildcard GPL-3+;
+46 Qualcomm overlays declare BSD-3-Clause with full text delivery unresolved;
+one overlay declares `(GPL-2.0+ OR MIT)` and BayLibre/Radxa attribution;
+the dummy module's generic `MODULE_LICENSE("GPL")` specifies no version;
+766 files have no detected file-local notice, leaving root/wildcard scope
+unresolved; and final binary delivery of the license texts needs inspection.
+Absence of a file-local notice is not evidence that a file is unlicensed.
+Source: [pinned overlay packaging and notices](https://github.com/radxa-pkg/radxa-overlays/tree/a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6).
+No blanket license clearance or changed upstream terms are inferred.
+
 The pinned U-Boot notice is `Licenses/README` plus `Licenses/gpl-2.0.txt`, not
 a missing root LICENSE. Bootutils declares its terms in `debian/copyright`.
 The loader recipe replaces vendor SPL with compiled U-Boot SPL; the selected
@@ -223,6 +237,13 @@ no receipt. Its JSON receipt verifies ciphertext only: it neither approves the
 inner APT key nor authorizes decryption/import. Producer and later consumer
 revisions must not be conflated, and historical encrypted retention is not an
 attested update channel.
+The certificate SAN must equal the complete workflow URI ending in
+`build.yaml@refs/heads/dev/cm3-debian-cli`. Official gh 2.101's
+`--signer-workflow` matches a prefix, so both verification sites use exact
+`--cert-identity` instead; gh forbids combining those two selectors.
+Upstream signed-fixture checks reproduce prefix acceptance and exact-identity
+rejection of a truncated workflow, extra suffix and wrong ref. This verifies
+the CLI policy behavior, not the pending CM3 producer round-trip.
 If attestation fails/unavailable, stop; obtain an approved
 persistent signing-key mechanism instead of falling back to unsigned packages.
 No private key or enrollment secret may enter an artifact. There is no claimed
@@ -235,6 +256,15 @@ attestation trust, monotonic versions, distinct-version upgrades, known-good boo
 retention and rescue verification. Review Debian and vendor changes monthly and
 on urgent advisories; this is a required maintenance policy, not evidence that a
 maintainer or service already exists. Unassigned ownership remains a G2 blocker.
+
+Official [6.1.84-17 recipe metadata](https://github.com/radxa-pkg/linux-rk2410-nocsf/tree/10fe8d13a975faa185844e52185948d10f0c8103)
+identifies a real same-lineage recovery-fixture candidate with kernel gitlink
+`05e5b99dfa5ac568ab684ad83c1001491d1a70e5`; upstream
+[changes to -18](https://github.com/radxa-pkg/linux-rk2410-nocsf/compare/6.1.84-17...6.1.84-18)
+include source and configuration, not just a version rename. That does not establish
+an authenticated, coherent second BSP unit or DKMS compatibility. Current pins
+remain unchanged; no historical package download, build, downgrade or physical
+recovery is authorized or proven by this metadata.
 
 Current diagnostic retention is not a corresponding-source distribution: the
 diagnostic artifact deliberately excludes source trees and binaries. The separate

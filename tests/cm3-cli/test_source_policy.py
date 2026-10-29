@@ -174,8 +174,10 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertIn('timeout-minutes: 10', provenance)
         for forbidden in ['actions/checkout', 'docker run', 'openssl', 'private-key', 'contents: write']:
             self.assertNotIn(forbidden, provenance)
+        self.assertNotIn('--signer-workflow', provenance)  # Mutually exclusive with exact SAN.
         for required in ['id-token: write', 'attestations: write',
-                         '--signer-workflow', '--signer-digest', '--source-digest',
+                         '--signer-digest', '--source-digest',
+                         '--cert-identity "https://github.com/blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml@refs/heads/dev/cm3-debian-cli"',
                          '--source-ref', '--deny-self-hosted-runners',
                          'if gh attestation verify tampered.cms', 'exit 1',
                          'name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}']:

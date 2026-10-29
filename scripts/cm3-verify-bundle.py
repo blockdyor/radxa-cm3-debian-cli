@@ -44,7 +44,8 @@ def verify(artifact, attestation, approved_sha, expected_sha256):
         subprocess.run([
             'gh', 'attestation', 'verify', str(subject), '--bundle', str(bundle),
             '--hostname', 'github.com', '--repo', REPOSITORY,
-            '--signer-workflow', WORKFLOW, '--signer-digest', approved_sha,
+            '--signer-digest', approved_sha,
+            '--cert-identity', 'https://github.com/' + WORKFLOW + '@' + SOURCE_REF,
             '--source-digest', approved_sha, '--source-ref', SOURCE_REF,
             '--cert-oidc-issuer', 'https://token.actions.githubusercontent.com',
             '--predicate-type', 'https://slsa.dev/provenance/v1',

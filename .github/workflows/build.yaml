@@ -152,7 +152,7 @@ jobs:
           [[ "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$APPROVED_SHA"
           policy=(--repo "$GITHUB_REPOSITORY"
-            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/build.yaml"
+            --cert-identity "https://github.com/blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml@refs/heads/dev/cm3-debian-cli"
             --signer-digest "$APPROVED_SHA" --source-digest "$APPROVED_SHA"
             --source-ref refs/heads/dev/cm3-debian-cli --deny-self-hosted-runners)
           gh attestation verify provenance-input/cm3-recovery.cms "${policy[@]}" \
