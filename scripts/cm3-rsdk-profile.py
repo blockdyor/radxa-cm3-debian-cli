@@ -100,18 +100,15 @@ def verified_receipt(work, revision, run_id):
 
 
 def render(stage, receipt, output):
-    with tempfile.TemporaryDirectory(prefix='cm3-profile-') as temporary:
-        path = Path(temporary) / 'receipt.json'
-        path.write_text(json.dumps(receipt))
-        args = ['jsonnet', '--ext-code', 'sdboot=false',
-                '--tla-str', 'product=radxa-cm3-rpi-cm4-io', '--tla-str', 'suite=trixie',
-                '--tla-str', 'edition=cli', '--tla-str', 'build_date=',
-                '--tla-str', 'rootfs=' + str(stage / 'root'),
-                '--tla-str', 'rsdk_rev=' + receipt['source_revision'],
-                '--tla-str', 'temp_dir=' + str(stage), '--tla-str', 'output_dir=' + str(stage),
-                '--tla-code-file', 'cm3_preflight=' + str(path),
-                str(ROOT / 'src/share/rsdk/build/rootfs.jsonnet')]
-        config = subprocess.check_output(args, text=True)
+    args = ['jsonnet', '--ext-code', 'sdboot=false',
+            '--tla-str', 'product=radxa-cm3-rpi-cm4-io', '--tla-str', 'suite=trixie',
+            '--tla-str', 'edition=cli', '--tla-str', 'build_date=',
+            '--tla-str', 'rootfs=' + str(stage / 'root'),
+            '--tla-str', 'rsdk_rev=' + receipt['source_revision'],
+            '--tla-str', 'temp_dir=' + str(stage), '--tla-str', 'output_dir=' + str(stage),
+            '--tla-code', 'cm3_preflight=' + json.dumps(receipt),
+            str(ROOT / 'src/share/rsdk/build/rootfs.jsonnet')]
+    config = subprocess.check_output(args, text=True)
     parsed = json.loads(config)
     for key in ['essential-hooks', 'customize-hooks', 'cleanup-hooks']:
         for hook in parsed['mmdebstrap'].get(key, []):

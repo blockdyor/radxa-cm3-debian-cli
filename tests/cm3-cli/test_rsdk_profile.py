@@ -120,6 +120,20 @@ class ProfileRendering(unittest.TestCase):
         entry = (ROOT / 'src/libexec/rsdk/rsdk-build').read_text()
         self.assertIn('CM3 Trixie CLI image assembly is disabled', entry)
 
+    def test_receipt_is_json_data_not_a_file_path_or_injected_jsonnet(self):
+        data = receipt()
+        data['scope'] = '\" + (error "injected") + \" $(false) ../untrusted'
+        with tempfile.TemporaryDirectory() as temporary:
+            stage = Path(temporary)
+            output = stage / 'config.json'
+            with patch.object(profile.subprocess, 'check_output', wraps=subprocess.check_output) as invoke:
+                config = profile.render(stage, data, output)
+                args = invoke.call_args.args[0]
+                self.assertIn('--tla-code', args)
+                self.assertNotIn('--tla-code-file', args)
+            self.assertEqual(config['metadata']['signed_package_preflight']['scope'], data['scope'])
+            self.assertEqual(list(stage.iterdir()), [output])
+
 
 class ReceiptBoundary(unittest.TestCase):
     def test_wrong_admission_or_failed_probe_stops_before_repository(self):
