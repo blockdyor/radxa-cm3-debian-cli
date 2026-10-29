@@ -153,16 +153,18 @@ hash and the unmodified notice. Rockchip's notice permits use/copy/distribution
 and prohibits reverse engineering and notice removal; it is included in the
 loader package's docs without replacing the existing upstream copyright.
 This improves notice/input preservation but does not complete legal review or
-corresponding-source delivery. Actual packaging of this later correction remains
-unverified externally; attempt 12 predates it. No blob bytes are added to Git.
+corresponding-source delivery. Attempt 13 compiled the correction; its actual
+loader package contains the exact original rkbin notice bytes and retains its
+existing copyright. Attempt 12 predates it. No blob bytes are added to Git.
 
 Selected-payload delivery records remain open (not additional development gates):
 
 - CS-1: bind actual binary hashes to complete modified kernel/U-Boot sources,
   recipe patches, generated configs, board sources, build scripts and notices.
   Binary-only builds, diagnostics and encrypted retention are not that delivery.
-- NOTICE-1: inspect the later built loader package for the unchanged rkbin notice
-  alongside its existing copyright and selected-input provenance.
+- NOTICE-1 packaging check passed in attempt 13: the actual loader package's
+  `LICENSE` matches the pinned rkbin SHA256 and `loader-inputs.json` notice,
+  alongside its existing copyright. This is not full source/license clearance.
 - RADIO-1: before final-image delivery, record exact installed firmware versions,
   files/hashes and matching Debian source/copyright stanzas for the two selected
   radio packages; seed names alone do not establish file-level license closure.
@@ -227,8 +229,14 @@ signer digest and source digest; then use a temporary scoped `signed-by` APT
 source and remove it after authenticated import. The producer now has a separate
 trusted signing job that attests only the verified repository's encrypted bundle,
 then checks exact repository/workflow/source/signer identity and tamper rejection.
-The package builder itself still has read-only token scopes. Actual producer
-round-trip and later deliberate authenticated import are NOT yet verified.
+The package builder itself still has read-only token scopes. Attempt 13 at
+`c24ad2a0598d000727763803b8c678d6a3411fc0` now verifies the actual producer
+round-trip. The later exact-SAN consumer at `063d7fd5e309e585e229f2d7e0bef0c5e747b995`
+accepted that producer's ciphertext, with wrong-source/digest/subject rejection.
+Private authenticated decryption and manifest/key/signature/index/payload closure
+passed. Isolated ARM64 APT acquisition accepted all ten exact packages and rejected
+changed metadata, without installing packages or changing host trust. Deliberate
+imported-package installation and enduring update authority remain unverified.
 The standalone `scripts/cm3-verify-bundle.py` consumer requires a local public
 attestation bundle, independently approved full producer commit and ciphertext
 SHA256. It uses official `gh attestation verify` with fixed repository/workflow,
@@ -243,7 +251,7 @@ The certificate SAN must equal the complete workflow URI ending in
 `--cert-identity` instead; gh forbids combining those two selectors.
 Upstream signed-fixture checks reproduce prefix acceptance and exact-identity
 rejection of a truncated workflow, extra suffix and wrong ref. This verifies
-the CLI policy behavior, not the pending CM3 producer round-trip.
+the CLI policy behavior; attempt 13 separately validates the actual CM3 producer.
 If attestation fails/unavailable, stop; obtain an approved
 persistent signing-key mechanism instead of falling back to unsigned packages.
 No private key or enrollment secret may enter an artifact. There is no claimed

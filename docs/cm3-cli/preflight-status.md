@@ -6,7 +6,55 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Latest run: attempt 12 clean exact-product directory bootstrap passed
+## Latest run: attempt 13 actual attested repository verified
+
+Run attempt 1 completed SUCCESS at 2026-10-29T17:06:45Z:
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40899447213
+Producer source: `c24ad2a0598d000727763803b8c678d6a3411fc0`. The source build,
+signed ARM64 ten-package lifecycle and real exact-product clean directory bootstrap
+pass; both manifests contain 270 installed packages with exact BSP/board identities.
+Configuration hash, run/source/lock/signer/board receipts and cleanup reconcile.
+Services were NOT STARTED, enrollment NOT RUN and active target LSM NOT TESTED.
+
+The separate provenance job actually issued the ciphertext attestation. Consumer
+`063d7fd5e309e585e229f2d7e0bef0c5e747b995` verifies its exact certificate SAN,
+repository, approved producer source/signer digest and ref, issuer, SLSA predicate
+and hosted runner policy. The CMS digest also matches the independent package-job
+log. Wrong source, wrong digest and a changed signed subject are rejected.
+Producer and consumer revisions are not interchangeable.
+
+Diagnostics artifact `12916837556` ZIP SHA256:
+`087084d1db6a1c0d8ba9267740a87835f79061532befd3d7827790ac38487efb`.
+Encrypted recovery artifact `12917900210` ZIP SHA256:
+`1ae6797498ebfad947f8dad3a774c802a33ec2365aafb7a3adf5165fc7c0d721`.
+Attestation artifact `12917007147` ZIP SHA256:
+`d457d8ee7cacabc50e23e1fa634a04670d2e611f46050624f0f833f5637c4320`.
+All three match live API digests; all 57 ZIP members pass CRC. All thirteen
+completed runs reconcile, preserving the first twelve ledger records.
+
+Private CMS AES-GCM decryption authenticated before extraction. Every inner
+manifest hash, exact run/source, ten package identities and the retained public
+key/signed-release/index/payload closure pass. Changed index, pool payload,
+signed release and wrong fingerprint are rejected. A separate isolated ARM64
+APT configuration then authenticated the scoped `signed-by` source and downloaded
+all ten exact payloads; APT itself rejected changed index and signed-release
+fixtures. Its temporary source was removed. This is acquisition only: no packages
+were installed, no maintainer scripts/services ran, and no host APT trust changed.
+The key is approved only for this verified bundle, not as enduring update authority.
+
+The actual loader package retains its original copyright and exact rkbin notice
+bytes, matching `loader-inputs.json`; NOTICE-1's packaging check now passes.
+This does not close the complete corresponding-source/blob-license review.
+No private key, plaintext BSP, target root or private evidence was uploaded.
+No new workflow, image, checker or timer was dispatched for these checks.
+
+Next unmet execution gate: deliberate installation of the admitted bundle into a
+disposable external ARM64 fixture, followed by required provisioning/service/LSM
+checks. Download-only APT validation is not that installation. The image guard
+stays held at 0/3; source/input/license and distinct-version recovery requirements
+are unchanged. Attempt 13 does not validate later source or clear its Sonar gate.
+
+## Historical attempt 12 clean exact-product directory bootstrap passed
 
 Run attempt 1 completed SUCCESS at 2026-10-29T13:21:17Z:
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40868611520
@@ -37,8 +85,8 @@ services/active LSM remain unverified.
 
 The subsequent loader correction pins the actual rkbin input bytes and BL31 path,
 records the original Rockchip notice and adds it to the loader package's docs.
-It has not yet been compiled/installed externally; attempt 12 does not validate
-that later change or close the remaining corresponding-source/distribution review.
+Attempt 13 now validates its compilation and original notice packaging. Attempt 12
+does not validate that later change, and corresponding-source review remains open.
 
 ## Historical attempt 11 failed before profile bootstrap
 

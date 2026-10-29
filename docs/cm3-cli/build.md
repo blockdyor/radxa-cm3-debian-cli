@@ -190,9 +190,13 @@ the exact repository/workflow/source and signer digests, rejecting self-hosted
 runners and a tampered subject. Only that job gets `id-token: write` and
 `attestations: write`; the privileged package job retains read-only token scopes,
 and no source checkout or decryption/private signing key enters the signing job.
-Pinned official actions include pinned transitive actions. The producer round-trip
-is not yet externally executed. A successful attestation alone will not complete
-deliberate APT import, distinct-version recovery or license/source review.
+Pinned official actions include pinned transitive actions. Attempt 13 now verifies
+the actual producer round-trip and subsequent exact-SAN consumer, authenticated
+inner repository closure and isolated ARM64 APT acquisition; see `preflight-status.md`
+for exact source/run/digests and negative checks. Acquisition did not install or
+execute packages and does not finish deliberate APT installation, distinct-version
+recovery or license/source review. The consumer's receipt alone is not inner-key
+or enduring update authority.
 
 ## Changed next-stage package probe
 

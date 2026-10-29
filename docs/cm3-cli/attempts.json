@@ -156,7 +156,26 @@
       "encrypted_artifact_id": 12900446452,
       "encrypted_artifact_sha256": "12febbc80d1a6bf6ae32f1eb824b3b334ee04e9363d96391b8bc7cf82153f49b",
       "retained_payloads": "Both downloaded ZIP SHA256 values match live artifact API digests; all 54 ZIP members pass CRC. Exact run/source/lock admission, nine-BSP and board manifests, signed ARM64 lifecycle, rendered configuration and complete profile package identities verified. Encrypted recovery retained; authenticated decryption not attempted in this continuation. No target root, signing key or recipient private key uploaded."
+    },
+    {
+      "number": 13,
+      "commit": "c24ad2a0598d000727763803b8c678d6a3411fc0",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40899447213",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 13: signed ten-package encrypted bundle and exact-source isolated producer attestation with tamper rejection",
+      "result": "PASS: source, signed ARM64 ten-package lifecycle and exact-product clean directory bootstrap, both manifests containing 270 installed packages. Isolated provenance job issued an actual ciphertext attestation. Later exact-SAN consumer at 063d7fd5e309e585e229f2d7e0bef0c5e747b995 accepted approved producer c24ad2a and independently checked CMS digest; wrong source/digest and modified signed subject rejected. Private authenticated recovery and exact run/manifest/key/signature/index/pool closure passed; isolated signed-by ARM64 APT acquisition downloaded all ten exact payloads and rejected changed index/signed release. Acquisition did not install packages, execute scripts or exercise boot/services. Actual later loader notice packaging verified. Full preflight NOT COMPLETE: imported-package installation, target provisioning/active LSM, distinct-version BSP recovery and full source/input/license closure remain open. Image NOT RUN.",
+      "failure_stage": "none",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-29T17:06:45Z",
+      "artifact_id": 12916837556,
+      "artifact_sha256": "087084d1db6a1c0d8ba9267740a87835f79061532befd3d7827790ac38487efb",
+      "encrypted_artifact_id": 12917900210,
+      "encrypted_artifact_sha256": "1ae6797498ebfad947f8dad3a774c802a33ec2365aafb7a3adf5165fc7c0d721",
+      "attestation_artifact_id": 12917007147,
+      "attestation_artifact_sha256": "d457d8ee7cacabc50e23e1fa634a04670d2e611f46050624f0f833f5637c4320",
+      "ciphertext_sha256": "f9fdd3300b98517211b7ab4a37a72374ea812945bd6e7a1fb4a52e0717717f93",
+      "retained_payloads": "All three downloaded ZIP digests match live API digests; all 57 ZIP members pass CRC. Exact admission/source/board/profile receipts and all13 completed runs reconcile. Actual official-gh exact certificate identity, source/signer digest/ref/issuer/SLSA/hosted-runner checks pass. CMS AES-GCM authenticates before extraction; every inner file hash, ten package identities and signed metadata-to-payload closure checked privately. Public key authority is limited to this attested bundle, never installed as host/global trust. Original rkbin notice bytes match the loader-input record and existing copyright remains. No target root, signing key, recipient private key or plaintext BSP uploaded; no new workflow dispatched."
     }
   ],
-  "status": "Twelve completed workflow attempts recorded without resetting history. Attempt 12 passes source, signed ARM64 ten-package lifecycle and exact-product clean directory bootstrap at its recorded source SHA. This is not validation of later changes or Sonar security acceptance. Full preflight NOT COMPLETE: target provisioning/active LSM, attested update trust, distinct-version BSP recovery and complete source/blob-license/input closure remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
+  "status": "Thirteen completed workflow attempts recorded without resetting history. Attempt 13 passes source/signed ARM64/profile and actual attestation plus subsequent exact-SAN ciphertext/inner-repository verification and isolated authenticated APT acquisition. Acquisition is not imported-package installation or enduring update trust. Full preflight NOT COMPLETE: target provisioning/active LSM, distinct-version BSP recovery and complete source/blob-license/input closure remain open. Producer c24ad2a is distinct from later consumer/documentation revisions and Sonar acceptance. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
 }
