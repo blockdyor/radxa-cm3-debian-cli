@@ -33,6 +33,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0 # Pinned historical configuration parity tests need their baseline.
           persist-credentials: false
       - name: Check revision, lock and local tests
         run: |
@@ -77,7 +78,7 @@ jobs:
           docker run --privileged --rm --platform linux/amd64 \
             -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY -e GITHUB_RUN_ID -e GITHUB_SHA \
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
-            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates arch-test; arch-test arm64; python3 /src/scripts/cm3-source-preflight.py --workdir /work; mkdir /work/board-debs; cp /src/preflight-work/board-input/cm3-cli-board-support_0.1.0_all.deb /work/board-debs/; cp /src/preflight-work/board-manifest.json /work/evidence/; exec python3 /src/scripts/cm3-package-preflight.py --workdir /work' \
+            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates arch-test; arch-test arm64; python3 /src/scripts/cm3-source-preflight.py --workdir /work; mkdir /work/board-debs; cp /src/preflight-work/board-input/cm3-cli-board-support_0.1.0_all.deb /work/board-debs/; cp /src/preflight-work/board-manifest.json /work/evidence/; python3 /src/scripts/cm3-package-preflight.py --workdir /work; apt-get install -y --no-install-recommends jsonnet bdebstrap; exec python3 /src/scripts/cm3-rsdk-profile.py --workdir /work' \
             2>&1 | tee preflight-work/source-build.log
       - name: Encrypt allowlisted successful compilation for internal recovery
         if: always()

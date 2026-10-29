@@ -46,5 +46,9 @@ but no image installation or target execution is established. Local tests use
 isolated account fixtures. The ARM64 package probe denies service starts and
 does not test owner creation, first boot, SSH readiness, identity uniqueness or
 an active target LSM. Image integration must remove builder machine IDs and host
-keys; those checks and the exact-product image profile are not complete.
+keys; the exact-product profile now specifies this cleanup and a new external
+directory-bootstrap check enforces it. That new stage has not yet passed an
+external run, and neither it nor rendering proves first boot. The owner-group
+check rejects other accounts' primary-GID membership as well as supplementary
+members. No prior unauthorized SSH authentication was demonstrated.
 Hardware and secure first-boot gates remain open.

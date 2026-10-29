@@ -146,9 +146,11 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertIn('runs-on: ubuntu-24.04', workflow)
         self.assertIn('timeout-minutes: 180', workflow)
         self.assertIn('python3 /src/scripts/cm3-source-preflight.py --workdir /work;', workflow)
-        self.assertIn('exec python3 /src/scripts/cm3-package-preflight.py --workdir /work', workflow)
+        self.assertIn('python3 /src/scripts/cm3-package-preflight.py --workdir /work;', workflow)
         self.assertLess(workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work;'),
-                        workflow.index('exec python3 /src/scripts/cm3-package-preflight.py --workdir /work'))
+                        workflow.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work;'))
+        self.assertLess(workflow.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work;'),
+                        workflow.index('exec python3 /src/scripts/cm3-rsdk-profile.py --workdir /work'))
         self.assertNotIn('openssl x509', workflow)
         self.assertNotIn('rsdk build', workflow)
         self.assertNotIn('matrix:', workflow)

@@ -176,6 +176,21 @@ class EnrollmentTests(unittest.TestCase):
             self.put(name, previous, mode)
         enrollment.check(self.root)
 
+    def test_other_primary_owner_group_member_and_invalid_gid_fail_gate(self):
+        enrollment.enroll(self.root, self.command)
+        enrollment.check(self.root)
+        passwd = (self.root / 'etc/passwd').read_text()
+        for gid in ['999', '0999']:
+            self.put('etc/passwd', passwd + 'bob:x:1001:' + gid + '::/home/bob:/bin/bash\n')
+            with self.subTest(gid=gid), self.assertRaisesRegex(ValueError, 'SSH owner group'):
+                enrollment.check(self.root)
+        self.put('etc/passwd', passwd)
+        self.put('etc/group', 'root:x:0:\ncm3-cli-owner:x:not-a-gid:alice\n')
+        with self.assertRaisesRegex(ValueError, 'SSH owner group'):
+            enrollment.check(self.root)
+        self.put('etc/group', 'root:x:0:\ncm3-cli-owner:x:999:alice\n')
+        enrollment.check(self.root)
+
     def test_two_fresh_fixture_identities_have_distinct_ssh_keys(self):
         enrollment.enroll(self.root, self.command)
         before = (self.root / 'etc/ssh/ssh_host_ed25519_key.pub').read_bytes()

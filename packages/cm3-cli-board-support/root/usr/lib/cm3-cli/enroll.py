@@ -121,8 +121,14 @@ def check(root):
         raise ValueError('owner administrative policy changed')
     groups = [line.split(':') for line in (root / 'etc/group').read_text().splitlines()
               if line.startswith('cm3-cli-owner:')]
-    if len(groups) != 1 or len(groups[0]) != 4 or groups[0][3] != config['username']:
+    if (len(groups) != 1 or len(groups[0]) != 4 or not groups[0][2].isascii() or
+            not groups[0][2].isdigit() or groups[0][3] != config['username']):
         raise ValueError('SSH owner group changed')
+    for entry in (root / 'etc/passwd').read_text().splitlines():
+        fields = entry.split(':')
+        if (len(fields) != 7 or not fields[3].isascii() or not fields[3].isdigit() or
+                (fields[0] != config['username'] and int(fields[3]) == int(groups[0][2]))):
+            raise ValueError('SSH owner group has unsafe primary membership')
     machine_id = (root / 'etc/machine-id').read_text().strip()
     if re.fullmatch('[0-9a-f]{32}', machine_id) is None or machine_id == '0' * 32:
         raise ValueError('machine identity not initialized')

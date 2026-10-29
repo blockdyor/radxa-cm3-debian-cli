@@ -5,7 +5,8 @@ EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Board,
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
-The upstream product defaults have deliberately not been changed yet.
+Only the exact carrier's product defaults now select Trixie/CLI. Image assembly
+remains disabled; changing defaults does not enable the inherited image path.
 Latest result: attempt 10 at `d58c5db2088d12fee4bd605bcba29e3c6a881694`
 passes source compilation and the signed ARM64 ten-package install/DKMS/board-lifecycle
 fixture, including the actual board boot/SSH policy, removal, purge and restoration.
@@ -54,6 +55,24 @@ commit, not merely whichever revision the branch happens to contain:
 Git commit, not a dispatch input or permission to rebuild. Compiler-dependent
 tests may skip if their tools are unavailable; inspect the test output rather
 than treating a skipped regression as an executed compiler check.
+
+Profile rendering tests require Jsonnet; full legacy/sibling parity needs
+Jsonnet 0.22 or newer because the unchanged upstream routes use `std.contains`.
+Signed-index fixture tests require GnuPG and dpkg-deb. The exact CM3 route also
+renders with the builder's Trixie Jsonnet; rendering is not bootstrap validation.
+
+The next changed stage uses `scripts/cm3-rsdk-profile.py` after the signed ARM64
+probe in the same admitted external job. It verifies the ephemeral signature,
+index/payload closure and nine-plus-one manifests before staging the exact
+Trixie/ARM64/CLI Jsonnet route. Existing RSDK `bdebstrap` then exercises those
+rendered hooks in a fresh directory, not a disk image. The normal bootstrap
+installs CA/keyring prerequisites before the first customize hook performs signed
+BSP installation; the second removes the job-only feed/key. Board hash/unpack
+still precedes kernel configuration. The checker requires exact installed
+identities, clean audit and no builder machine IDs, SSH host keys, owner document
+or temporary feed. This new bootstrap stage has not yet passed an external run.
+No account enrollment, target service start, disk access or image assembly is
+authorized or implied; the normal `rsdk build` entrypoint stays held.
 
 The external workflow requires authenticated fork Actions access, the manual
 workflow registered on the default branch, a pushed/reviewed development SHA,

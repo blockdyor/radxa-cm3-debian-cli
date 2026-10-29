@@ -1,0 +1,75 @@
+// Exact experimental tuple only; never compose upstream task/first-boot hooks.
+local seeds = std.split('apt debian-archive-keyring ca-certificates systemd-sysv udev dbus kmod initramfs-tools u-boot-menu openssh-server sudo adduser passwd iproute2 iputils-ping network-manager wpasupplicant iw wireless-regdb systemd-timesyncd nftables e2fsprogs dosfstools util-linux tzdata locales less nano pciutils usbutils radxa-bootutils radxa-udev', ' ');
+local tools = std.split('apparmor apparmor-profiles firmware-brcm80211 firmware-realtek dkms gcc make libc6-dev libssl-dev libelf-dev device-tree-compiler file python3 gzip', ' ');
+local debian_sources = [
+    'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] https://deb.debian.org/debian trixie main non-free-firmware',
+    'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] https://deb.debian.org/debian trixie-updates main non-free-firmware',
+    'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] https://security.debian.org/debian-security trixie-security main non-free-firmware',
+];
+function(temp_dir, rootfs, rsdk_rev, preflight)
+assert preflight != null : 'CM3 requires verified same-job signed package preflight';
+assert preflight.status == 'PASS' && preflight.source_revision == rsdk_rev : 'CM3 preflight revision mismatch';
+assert std.length(preflight.packages) == 10 : 'CM3 requires all ten admitted packages';
+{
+    mmdebstrap: {
+        architectures: ['arm64'],
+        mode: 'root',
+        suite: 'trixie',
+        target: rootfs,
+        variant: 'minbase',
+        hostname: 'radxa-cm3-rpi-cm4-io',
+        components: ['main', 'non-free-firmware'],
+        mirrors: debian_sources,
+        keyrings: ['/usr/share/keyrings/debian-archive-keyring.gpg'],
+        aptopts: [
+            'APT::Install-Recommends "false"',
+            'APT::Install-Suggests "false"',
+            'APT::Update::Error-Mode "any"',
+        ],
+        packages: ['ca-certificates', 'debian-archive-keyring'],
+        'customize-hooks': [
+            |||
+                set -eu
+                install -d "$1/opt/cm3-repo" "$1/usr/share/keyrings"
+                cp -R %s/. "$1/opt/cm3-repo/"
+                cp "$1/opt/cm3-repo/archive-key.gpg" "$1/usr/share/keyrings/cm3-build.gpg"
+                printf '%%s\n' 'deb [signed-by=/usr/share/keyrings/cm3-build.gpg] file:/opt/cm3-repo ./' > "$1/etc/apt/sources.list.d/cm3-build.list"
+                printf '%%s\n' 'APT::Install-Recommends "false";' 'APT::Install-Suggests "false";' 'APT::Update::Error-Mode "any";' > "$1/etc/apt/apt.conf.d/99cm3-cli"
+                chroot "$1" apt-get -o APT::Update::Error-Mode=any update
+                chroot "$1" env DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends --no-install-suggests install -y %s
+                chroot "$1" env DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends --no-install-suggests install -y %s
+                install -d -m 0700 "$1/var/tmp/cm3-board"
+                chroot "$1" sh -ec 'cd /var/tmp/cm3-board; apt-get download cm3-cli-board-support=0.1.0'
+                printf '%%s  %%s\n' %s "$1/var/tmp/cm3-board/cm3-cli-board-support_0.1.0_all.deb" | sha256sum -c -
+                chroot "$1" dpkg --unpack /var/tmp/cm3-board/cm3-cli-board-support_0.1.0_all.deb
+                test "$(readlink "$1/etc/kernel/install.d/99-update-overlay.install")" = /dev/null
+                chroot "$1" env DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends --no-install-suggests install -y %s
+                chroot "$1" dpkg --configure -a
+                test -z "$(chroot "$1" dpkg --audit)"
+                rm -r "$1/var/tmp/cm3-board"
+            ||| % [
+                std.escapeStringBash(temp_dir + '/cm3-repository'),
+                std.join(' ', seeds + tools),
+                std.join(' ', std.map(std.escapeStringBash, preflight.headers)),
+                std.escapeStringBash(preflight.board_sha256),
+                std.join(' ', std.map(std.escapeStringBash, preflight.packages)),
+            ],
+            |||
+                set -eu
+                # No account/key enrollment or service start in the builder.
+                rm -f "$1/etc/apt/sources.list.d/cm3-build.list" "$1/usr/share/keyrings/cm3-build.gpg"
+                rm -r "$1/opt/cm3-repo"
+                chroot "$1" apt-get -o APT::Update::Error-Mode=any update
+                test -z "$(chroot "$1" dpkg --audit)"
+                rm -f "$1"/etc/ssh/ssh_host_*
+            |||,
+        ],
+    },
+    metadata: {
+        product: 'radxa-cm3-rpi-cm4-io', suite: 'trixie', edition: 'cli',
+        architecture: 'arm64', rsdk_rev: rsdk_rev,
+        source_lock_sha256: preflight.source_lock_sha256,
+        signed_package_preflight: preflight,
+        image_assembly: 'HELD: configuration rendering is not image authorization',
+    },
+}

@@ -39,10 +39,22 @@ privately, never installed/executed or redistributed. No target root, signing
 key or recipient private key was uploaded. These checks do not establish
 enduring update trust, license closure or authorization to distribute binaries.
 
-SonarCloud security acceptance is separate. At this source SHA it fails; the
-complete current PR inventory contains four open high-security path/argument
-findings and no hotspots. Minimal fixes and negative regressions must be followed
-by exact-head reanalysis; the package job does not waive this gate.
+SonarCloud security acceptance is separate. At the compiled source SHA it failed.
+At `5e840c7a3da935b9d7ff2dbfc32eb5c1006c4152`, the live PR analysis dated
+2026-10-29T07:48:00Z matches the exact GitHub head/check: gate OK, all four
+original high-security path/argument findings CLOSED/FIXED by analysis and zero
+hotspots. No rule suppression or manual false-positive disposition was used.
+Later changes require their own exact-head analysis; this result does not extend
+the historical package PASS to later source or waive remaining prerequisites.
+
+The next changed stage adds a separately checked exact-product RSDK profile and
+clean directory-bootstrap probe after same-job signed ARM64 acceptance. The
+signed install hook follows normal CA/keyring installation, before build-feed
+cleanup; source and index/payload closure are checked again. Local render,
+signature/tamper and hook-order fixtures are not an external bootstrap PASS.
+The image entrypoint stays held. The owner-group gate also now rejects other
+passwd accounts sharing its primary GID, not just supplementary membership;
+this is an isolated-fixture regression fix, not a demonstrated prior SSH bypass.
 
 Attempt 9 at `878f197ee9c2a8e3de4f198b744b24524ad0bfd7` failed before
 compilation: a policy test read generated `__pycache__` bytes as UTF-8. Exact run:
