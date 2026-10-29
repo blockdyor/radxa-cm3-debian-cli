@@ -22,6 +22,12 @@ def admit(ledger, runs, run_id, sha, hypothesis):
     if len(by_id) != len(runs) or run_id not in by_id:
         raise ValueError('duplicate or missing current workflow run')
     for item in ledger['package_attempts']:
+        if item['number'] > 7 and (
+                not isinstance(item.get('failure_stage'), str) or
+                not item['failure_stage'].strip() or
+                not isinstance(item.get('demonstrable_progress'), bool) or
+                not item.get('result')):
+            raise ValueError('new attempts require inspected stage, progress and result accounting')
         observed = by_id.get(int(item['run_url'].rsplit('/', 1)[1]))
         if (observed is None or observed['head_sha'] != item['commit'] or
                 observed['run_attempt'] != item['run_attempt']):
@@ -31,7 +37,8 @@ def admit(ledger, runs, run_id, sha, hypothesis):
         raise ValueError('reconcile every previous run before another attempt')
     recent = ledger['package_attempts'][-3:]
     if (len(recent) == 3 and all(a.get('demonstrable_progress') is False for a in recent) and
-            len({a.get('failure_stage') for a in recent}) == 1 and recent[0].get('failure_stage')):
+            len({a.get('failure_stage', '').strip() for a in recent}) == 1 and
+            recent[0].get('failure_stage', '').strip()):
         raise ValueError('three same-stage failures without progress; stop with diagnosis')
     current = by_id[run_id]
     if (current['head_sha'] != sha or current['run_attempt'] != 1 or

@@ -110,6 +110,32 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertNotIn('-Wno-', script)
         self.assertNotIn('KCFLAGS', script)
 
+    def test_source_admission_is_bound_to_current_authority_run_and_commit(self):
+        valid = dict(status='ADMITTED', maximum_attempts=None, cumulative_attempts=8,
+                     authorization='owner-2026-10-29-evidence-based-development',
+                     run_id=123, commit='a' * 40)
+        for field, value in [(None, None), ('authorization', 'old-seven-attempt-policy'),
+                             ('maximum_attempts', 7), ('run_id', 124), ('commit', 'b' * 40)]:
+            admission = dict(valid)
+            if field:
+                admission[field] = value
+            errors = io.StringIO()
+            with self.subTest(field=field), \
+                    patch.dict(preflight.os.environ, GITHUB_ACTIONS='true',
+                               GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli',
+                               GITHUB_RUN_ID='123', GITHUB_SHA='a' * 40), \
+                    patch.object(preflight.platform, 'machine', return_value='x86_64'), \
+                    patch.object(preflight.os, 'geteuid', return_value=0), \
+                    patch.object(preflight.Path, 'is_file', return_value=True), \
+                    patch.object(preflight.Path, 'read_text',
+                                 side_effect=[json.dumps(self.lock), json.dumps(admission)]), \
+                    patch.object(sys, 'argv', ['cm3-source-preflight.py']), \
+                    contextlib.redirect_stderr(errors):
+                with self.assertRaises(SystemExit):
+                    preflight.main()
+            expected = 'admission does not match' if field else 'absolute, empty workdir'
+            self.assertIn(expected, errors.getvalue())
+
     def test_manual_only_fixed_concurrency_and_no_image_command(self):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
         self.assertIn('  workflow_dispatch:', workflow)
@@ -117,6 +143,11 @@ class SourcePolicyTests(unittest.TestCase):
             self.assertNotIn(trigger, workflow)
         self.assertIn('group: cm3-phase-b-exclusive', workflow)
         self.assertIn('cancel-in-progress: false', workflow)
+        self.assertIn('runs-on: ubuntu-24.04', workflow)
+        self.assertIn('timeout-minutes: 180', workflow)
+        self.assertIn('python3 /src/scripts/cm3-source-preflight.py --workdir /work; '
+                      'exec python3 /src/scripts/cm3-package-preflight.py --workdir /work', workflow)
+        self.assertNotIn('openssl x509', workflow)
         self.assertNotIn('rsdk build', workflow)
         self.assertNotIn('matrix:', workflow)
         self.assertNotIn('contents: write', workflow)

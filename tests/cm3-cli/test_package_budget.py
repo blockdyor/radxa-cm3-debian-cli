@@ -61,6 +61,21 @@ class PackageBudgetTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'stop with diagnosis'):
             budget.admit(self.ledger, self.runs, run_id, 'a' * 40, 'New hypothesis')
 
+    def test_new_history_requires_inspected_outcome(self):
+        run_id = self.append()
+        self.runs[-1]['status'] = 'completed'
+        self.ledger['package_attempts'].append(dict(
+            number=8, commit='a' * 40, run_url=f'https://github.com/example/runs/{run_id}',
+            run_attempt=1, hypothesis='Previous changed hypothesis'))
+        next_run = self.append()
+        with self.assertRaisesRegex(ValueError, 'inspected stage'):
+            budget.admit(self.ledger, self.runs, next_run, 'a' * 40, 'New hypothesis')
+        for stage in ['', ' \t']:
+            self.ledger['package_attempts'][-1].update(
+                failure_stage=stage, demonstrable_progress=False, result='FAIL')
+            with self.assertRaisesRegex(ValueError, 'inspected stage'):
+                budget.admit(self.ledger, self.runs, next_run, 'a' * 40, 'New hypothesis')
+
     def test_rerun_deleted_history_sha_mismatch_and_overlap_fail_closed(self):
         run_id = self.append()
         for change in ['rerun', 'deleted', 'wrong_sha', 'overlap', 'wrong_workflow']:
