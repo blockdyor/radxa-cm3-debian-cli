@@ -118,7 +118,7 @@ class SignedPackagePolicyTests(unittest.TestCase):
         self.assertNotIn('package-work/signed-repository/', workflow)
         self.assertNotIn('package-work/arm64-root/', workflow)
         self.assertNotIn('contents: write', workflow)
-        self.assertNotIn('id-token: write', workflow)
+        self.assertNotIn('id-token: write', workflow.split('\n  provenance:\n')[0])
 
 
 if __name__ == '__main__':

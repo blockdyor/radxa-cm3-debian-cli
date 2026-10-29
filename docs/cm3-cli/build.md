@@ -182,6 +182,18 @@ GCM integrity is not producer authentication: anyone with the public certificate
 can encrypt a replacement. No automatic cross-run reuse or uncounted rebuild is
 enabled; loss of the private recipient key makes the ciphertext unrecoverable.
 
+The next changed stage also seals the exact verified signed repository (public
+key, signed metadata and whitelisted payloads) inside this ciphertext. A separate
+unprivileged `provenance` job, only after the package job succeeds on the manual
+development ref, attests that ciphertext and runs `gh attestation verify` with
+the exact repository/workflow/source and signer digests, rejecting self-hosted
+runners and a tampered subject. Only that job gets `id-token: write` and
+`attestations: write`; the privileged package job retains read-only token scopes,
+and no source checkout or decryption/private signing key enters the signing job.
+Pinned official actions include pinned transitive actions. The producer round-trip
+is not yet externally executed. A successful attestation alone will not complete
+deliberate APT import, distinct-version recovery or license/source review.
+
 ## Changed next-stage package probe
 
 ### Changed attempt 7 (source/install/DKMS passed; gzip check failed)

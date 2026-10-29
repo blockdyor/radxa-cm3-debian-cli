@@ -161,6 +161,24 @@ class SourcePolicyTests(unittest.TestCase):
             if 'uses:' in line:
                 self.assertRegex(line, r'@[0-9a-f]{40}(?:\s|$)')
 
+    def test_attestation_is_isolated_from_privileged_package_build(self):
+        workflow = (ROOT / '.github/workflows/build.yaml').read_text()
+        packages, provenance = workflow.split('\n  provenance:\n')
+        self.assertNotIn('id-token: write', packages)
+        self.assertNotIn('attestations: write', packages)
+        self.assertIn('needs: packages', provenance)
+        self.assertIn("github.event_name == 'workflow_dispatch'", provenance)
+        self.assertIn("github.ref == 'refs/heads/dev/cm3-debian-cli'", provenance)
+        self.assertIn('timeout-minutes: 10', provenance)
+        for forbidden in ['actions/checkout', 'docker run', 'openssl', 'private-key', 'contents: write']:
+            self.assertNotIn(forbidden, provenance)
+        for required in ['id-token: write', 'attestations: write',
+                         '--signer-workflow', '--signer-digest', '--source-digest',
+                         '--source-ref', '--deny-self-hosted-runners',
+                         'if gh attestation verify tampered.cms', 'exit 1',
+                         'name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}']:
+            self.assertIn(required, provenance)
+
     def test_kernel_configuration_precedes_parallel_compile_and_arm64_flags(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

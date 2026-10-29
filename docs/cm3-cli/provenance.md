@@ -189,8 +189,12 @@ The planned no-server experiment uses an ephemeral job-only APT signing key and
 signed whitelist repository bundle. Trust a future bundle/key only after verifying
 its GitHub attestation against the exact repository, signer workflow, approved
 signer digest and source digest; then use a temporary scoped `signed-by` APT
-source and remove it after authenticated import. This round-trip is NOT yet
-implemented or verified. If attestation fails/unavailable, stop; obtain an approved
+source and remove it after authenticated import. The producer now has a separate
+trusted signing job that attests only the verified repository's encrypted bundle,
+then checks exact repository/workflow/source/signer identity and tamper rejection.
+The package builder itself still has read-only token scopes. Actual producer
+round-trip and later deliberate authenticated import are NOT yet verified.
+If attestation fails/unavailable, stop; obtain an approved
 persistent signing-key mechanism instead of falling back to unsigned packages.
 No private key or enrollment secret may enter an artifact. There is no claimed
 existing maintained online BSP feed.

@@ -1,15 +1,44 @@
+import contextlib
 import importlib.util
+import io
 import json
 from pathlib import Path
+import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('retention', ROOT / 'scripts/cm3-retain-packages.py')
 retention = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(retention)
+
+
+class RetentionCliBoundary(unittest.TestCase):
+    def test_cli_rejects_paths_outside_workflow_before_reading_inputs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            outside = Path(temporary)
+            result = subprocess.run(['python3', str(ROOT / 'scripts/cm3-retain-packages.py'),
+                                     '--workdir', str(outside), '--output', str(outside / 'out.cms')],
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('requires the checked-out', result.stderr)
+            self.assertEqual(list(outside.iterdir()), [])
+
+    def test_workflow_paths_remain_accepted_without_a_complete_source_build(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            output = io.StringIO()
+            args = ['retention', '--workdir', str(root / 'package-work'),
+                    '--output', str(root / 'preflight-work/cm3-recovery.cms')]
+            with patch.object(retention, 'ROOT', root), patch.object(sys, 'argv', args), \
+                    contextlib.redirect_stdout(output):
+                retention.main()
+            self.assertIn('No complete source build', output.getvalue())
+            self.assertEqual(list(root.iterdir()), [])
 
 
 class RetentionTests(unittest.TestCase):
@@ -106,6 +135,59 @@ class RetentionTests(unittest.TestCase):
         (self.work / 'evidence/unsafe.json').symlink_to(self.work / 'private-key')
         with self.assertRaisesRegex(ValueError, 'non-symlink'):
             retention.seal(self.work, self.certificate, self.root / 'recovery.cms', {})
+
+
+    @unittest.skipUnless(all(shutil.which(tool) for tool in ['gpg', 'gpg-agent', 'gpgv']),
+                         'GnuPG required for real signed repository retention')
+    def test_signed_repository_roundtrip_and_payload_or_private_file_rejection(self):
+        home = self.root / 'gpg'
+        home.mkdir(mode=0o700)
+        gpg = ['gpg', '--homedir', str(home), '--batch', '--pinentry-mode', 'loopback',
+               '--passphrase', '', '--agent-program', shutil.which('gpg-agent')]
+        subprocess.run(gpg + ['--quick-generate-key', 'CM3 RETENTION FIXTURE', 'ed25519', 'sign', '1d'],
+                       check=True, capture_output=True)
+        listing = subprocess.check_output(gpg + ['--with-colons', '--fingerprint'], text=True)
+        fingerprint = next(line.split(':')[9] for line in listing.splitlines() if line.startswith('fpr:'))
+        repo = self.work / 'signed-repository'
+        (repo / 'pool').mkdir(parents=True)
+        paragraphs = []
+        for name, item in self.manifest.items():
+            deb = self.work / 'selected-debs' / (name + '.deb')
+            shutil.copyfile(deb, repo / 'pool' / deb.name)
+            paragraphs.append(f'Package: {name}\nVersion: {item["version"]}\nArchitecture: {item["architecture"]}\n'
+                              f'Filename: pool/{deb.name}\nSize: {deb.stat().st_size}\nSHA256: {item["sha256"]}\n')
+        (repo / 'Packages').write_text('\n'.join(paragraphs))
+        release = repo / 'Release'
+        release.write_text('Origin: CM3-RETENTION-FIXTURE\nSHA256:\n '
+                           + retention.packages.digest(repo / 'Packages') + ' '
+                           + str((repo / 'Packages').stat().st_size) + ' Packages\n')
+        subprocess.run(gpg + ['--output', str(repo / 'archive-key.gpg'), '--export', fingerprint],
+                       check=True, capture_output=True)
+        for name, mode in [('InRelease', '--clearsign'), ('Release.gpg', '--detach-sign')]:
+            subprocess.run(gpg + ['--output', str(repo / name), mode, str(release)],
+                           check=True, capture_output=True)
+        (self.work / 'evidence/local-repository.json').write_text(json.dumps({'fingerprint': fingerprint}))
+        output, plain = self.root / 'signed.cms', self.root / 'signed.tar.gz'
+        retention.seal(self.work, self.certificate, output, {})
+        subprocess.run(['openssl', 'cms', '-decrypt', '-binary', '-inform', 'DER',
+                        '-in', str(output), '-recip', str(self.certificate), '-inkey', str(self.key),
+                        '-out', str(plain)], check=True)
+        with tarfile.open(plain) as archive:
+            manifest = json.load(archive.extractfile('retention-manifest.json'))
+            for path in repo.rglob('*'):
+                if path.is_file():
+                    name = str(path.relative_to(self.work))
+                    self.assertEqual(archive.extractfile(name).read(), path.read_bytes())
+                    self.assertEqual(manifest['files'][name], retention.packages.digest(path))
+        deb = next((repo / 'pool').iterdir())
+        original = deb.read_bytes()
+        deb.write_bytes(original + b'tampered')
+        with self.assertRaisesRegex(ValueError, 'payload hash'):
+            retention.seal(self.work, self.certificate, self.root / 'reject.cms', {})
+        deb.write_bytes(original)
+        (repo / 'private-key').write_text('synthetic forbidden sentinel')
+        with self.assertRaisesRegex(ValueError, 'repository contents'):
+            retention.seal(self.work, self.certificate, self.root / 'reject.cms', {})
 
 
 if __name__ == '__main__':

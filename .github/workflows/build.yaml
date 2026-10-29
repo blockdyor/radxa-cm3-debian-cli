@@ -117,3 +117,57 @@ jobs:
             package-work/evidence/dkms-status.txt
             package-work/evidence/header-helper-elf.txt
             package-work/evidence/extlinux-fixture.conf
+
+  provenance:
+    needs: packages
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev/cm3-debian-cli'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download only this successful run's encrypted repository bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: provenance-input
+      - name: Attest encrypted bytes without a source checkout or decryption key
+        id: attest
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0, transitively pinned
+        with:
+          subject-path: provenance-input/cm3-recovery.cms
+          push-to-registry: false
+          show-summary: false
+      - name: Verify exact repository workflow source and signer before acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APPROVED_SHA: ${{ inputs.expected_sha }}
+          ATTESTATION_BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          [[ "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$APPROVED_SHA"
+          policy=(--repo "$GITHUB_REPOSITORY"
+            --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/build.yaml"
+            --signer-digest "$APPROVED_SHA" --source-digest "$APPROVED_SHA"
+            --source-ref refs/heads/dev/cm3-debian-cli --deny-self-hosted-runners)
+          gh attestation verify provenance-input/cm3-recovery.cms "${policy[@]}" \
+            --format json > attestation-verification.json
+          cp provenance-input/cm3-recovery.cms tampered.cms
+          printf '\000' | dd of=tampered.cms bs=1 count=1 conv=notrunc status=none
+          if gh attestation verify tampered.cms --bundle "$ATTESTATION_BUNDLE" "${policy[@]}" > /dev/null 2>&1; then
+            printf 'Tampered subject was accepted\n' >&2
+            exit 1
+          fi
+      - name: Retain public verification and signature bundle only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-attestation-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            attestation-verification.json
+            ${{ steps.attest.outputs.bundle-path }}
