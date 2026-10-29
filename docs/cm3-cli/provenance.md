@@ -55,8 +55,8 @@ commit is asserted against the manual workflow's `expected_sha`.
   `0.2.6+cm3cli1`: retain Rockchip decompression behavior. Declared build tools
   include debhelper/devscripts/lintian/dh-exec/pandoc/shellcheck; runtime declares
   `file` and also needs Bash/coreutils/gzip/kernel-hook environment. Its overlay
-  install hook uses the running device tree and systemd-boot; the future CLI
-  package must guard/replace it for deterministic cross-built extlinux updates.
+  install hook uses the running device tree and systemd-boot; the CLI board
+  package masks it before kernel configuration and owns extlinux regeneration.
 - `radxa-pkg/radxa-udev@f729fd128fcabd84b5f301335016e5e2b3347423`,
   `0.1.4+cm3cli1`: retain reviewed GPIO/SPI/PWM group permissions, not universal
   group membership. Build needs debhelper/devscripts/lintian. Audit group
@@ -89,8 +89,14 @@ These are expected package identities, not a final installed image manifest.
 | radxa-udev | 0.1.4+cm3cli1 | all |
 
 The first seven close the missing BSP/overlay binary path; rebuilding bootutils
-and udev makes nine selected binaries from five source projects. The proposed
-board-support package is not a tenth completed package. Audited profile sources
+and udev makes nine selected binaries from five source projects. The separate
+`cm3-cli-board-support` package is version `0.1.0`, architecture `all`; its manifest
+binds the executing fork revision, commit timestamp, source-lock hash and payload
+hash. It is not an upstream BSP binary and does not change the nine-package lock.
+Attempt 10 at `d58c5db2088d12fee4bd605bcba29e3c6a881694` validated all ten
+packages in the signed ARM64 lifecycle fixture; see `preflight-status.md` for
+the exact run and limits. Later source still needs its own validation.
+Audited profile sources
 are `radxa-pkg/radxa-profiles@fd5c4cd7e1fede8cb44f3b7788d78a20c2363e2a`
 and `radxa-pkg/vendor-profiles@f60785267aca74af42b303fe0b8f19da525b1e15`;
 neither task umbrella is installed by this probe.
@@ -108,9 +114,11 @@ above is the compatibility candidate, not generic Debian kernel, legacy 5.10,
 latest-named U-Boot, CM3 IO, CM3J, RK3568, or a Bookworm userspace substitution.
 
 `radxa-system-config@263af2c8c241430e994ffd18bbb8ddfbebf36434` is a configuration
-reference, not an installed umbrella. A future `cm3-cli-board-support` package
-must own serial, exact DTB/extlinux/initramfs/module and secure provisioning
-functions. No empty Provides package may fake satisfaction of the board task.
+reference, not an installed umbrella. The source-owned `cm3-cli-board-support`
+package supplies serial, exact DTB/extlinux/initramfs/module policy and gated
+owner enrollment. Its lifecycle fixture does not start target services or prove
+first-boot enrollment, boot or active LSM behavior. No empty Provides package
+may fake satisfaction of the board task.
 Do not copy generic sysctl/governor tuning, default accounts, arbitrary on-boot
 commands, or desktop/media/NPU umbrellas. The module's Ethernet is gmac1/RTL8211F;
 PCIe r8125 is conditional on an actual added NIC, not a board requirement.

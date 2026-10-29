@@ -124,7 +124,23 @@
       "encrypted_artifact_id": 12878457706,
       "encrypted_artifact_sha256": "e581bd91e878af67bbf5791810d1380b42de87af846a36f8bf1a1c0da75e0753",
       "retained_payloads": "Both downloaded ZIP SHA256 values match live artifact API digests; all 51 ZIP members pass CRC. Exact source lock/run admission, nine-BSP plus separate board manifest and 270 installed-package identities verified. CMS AES-GCM authenticated decryption, exact run/SHA provenance and all 42 file hashes pass; ten debs recovered privately, not installed/executed or redistributed. No root, signing key or recipient private key uploaded."
+    },
+    {
+      "number": 11,
+      "commit": "9d265e09427299fcff0c2fbac7f89acf03cb313d",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40846835210",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 11: exact signed RSDK directory bootstrap after CA setup; verify package closure and identity cleanup",
+      "result": "FAIL after source build and signed ARM64 ten-package lifecycle PASS: builder APT cannot locate bdebstrap, which is absent from Trixie. Exact-product profile generator/bootstrap NOT RUN; no profile result produced. This is a builder dependency failure, not a /dev/pts failure or target configuration failure. Full package preflight NOT COMPLETE; image NOT RUN.",
+      "failure_stage": "builder-profile-tool-install",
+      "demonstrable_progress": false,
+      "completed_at": "2026-10-29T10:48:16Z",
+      "artifact_id": 12890458690,
+      "artifact_sha256": "a00dfacd17d39d38e1032f2b852e074d3b7e0bdc64433f70c63b16892b6b68a0",
+      "encrypted_artifact_id": 12891176792,
+      "encrypted_artifact_sha256": "d6471b904b867659c7e957957f0402d9eebc3c2dd65f896e01cb1935196acf7a",
+      "retained_payloads": "Both downloaded ZIP SHA256 values match live artifact API digests; all 51 ZIP members pass CRC. Exact source lock/run admission, nine-BSP plus separate board manifest, signed ARM64/lifecycle results and 270 installed-package identities verified. Encrypted recovery preserved; authenticated decryption not attempted in this continuation. No target root, signing key or recipient private key uploaded."
     }
   ],
-  "status": "Ten workflow attempts recorded without resetting history. Attempt 10 passes the signed ARM64 ten-package lifecycle fixture at its exact source SHA, not later changes or Sonar security acceptance. Full preflight NOT COMPLETE: exact-product profile, secure provisioning/active target LSM, distinct-version update/recovery and update trust remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
+  "status": "Eleven workflow attempts recorded without resetting history. Attempt 11 passes source and signed ARM64 ten-package lifecycle at its exact source SHA, then fails because builder bdebstrap is unavailable from Trixie; exact-product profile NOT RUN. This is not validation of later changes or Sonar security acceptance. Full preflight NOT COMPLETE: exact-product profile, secure provisioning/active target LSM, distinct-version update/recovery and update trust remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
 }

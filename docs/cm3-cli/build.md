@@ -7,14 +7,14 @@ Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branc
 currently implements the prerequisite source-package probe, not a usable image.
 Only the exact carrier's product defaults now select Trixie/CLI. Image assembly
 remains disabled; changing defaults does not enable the inherited image path.
-Latest result: attempt 10 at `d58c5db2088d12fee4bd605bcba29e3c6a881694`
+Latest result: attempt 11 at `9d265e09427299fcff0c2fbac7f89acf03cb313d`
 passes source compilation and the signed ARM64 ten-package install/DKMS/board-lifecycle
-fixture, including the actual board boot/SSH policy, removal, purge and restoration.
+fixture, then fails before profile bootstrap because Trixie lacks `bdebstrap`.
 This is not the complete package/security preflight or an image: see the latest
 section in `preflight-status.md` for remaining integration requirements.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. All ten historical attempts remain recorded.
+not full signed ARM64 preflight. All eleven historical attempts remain recorded.
 On 2026-10-29 the owner superseded the package cap and authorized evidence-based
 source builds and same-job validation retries on the existing standard runner.
 Attempt 5 rebuilt all nine packages and verified
@@ -73,6 +73,16 @@ identities, clean audit and no builder machine IDs, SSH host keys, owner documen
 or temporary feed. This new bootstrap stage has not yet passed an external run.
 No account enrollment, target service start, disk access or image assembly is
 authorized or implied; the normal `rsdk build` entrypoint stays held.
+
+`scripts/cm3-bootstrap-tools.py` qualifies the profile tools before compilation.
+Debian Trixie does not include `bdebstrap`; the builder installs the exact Debian
+`0.8.1-2/all` package from the official pool, SHA256
+`43631e6a5628654e9be4407287c3c385f034818d1d6fe5bb2b5509a8894722e9`.
+The pin was verified against Debian's signed sid index on 2026-10-29. The helper
+checks hash and package/version/architecture before installation; dependencies
+and Jsonnet use the existing signed Trixie APT sources, with no sid feed added.
+This frontend is builder-only, not a target input or a target-suite change.
+Do not replace the pin with an unverified moving version if the download fails.
 
 The external workflow requires authenticated fork Actions access, the manual
 workflow registered on the default branch, a pushed/reviewed development SHA,

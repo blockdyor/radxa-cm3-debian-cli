@@ -6,7 +6,33 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Latest completed run: attempt 10 passed the ten-package lifecycle fixture
+## Latest run: attempt 11 failed before profile bootstrap
+
+Attempt 11, run attempt 1, completed FAILURE at 2026-10-29T10:48:16Z:
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40846835210
+Exact source: `9d265e09427299fcff0c2fbac7f89acf03cb313d`. Source and signed
+ARM64 ten-package lifecycle receipts PASS, with 270 installed identities matching
+the nine-BSP and separate board manifests. The terminal failure is
+`E: Unable to locate package bdebstrap`; Debian does not ship it in Trixie.
+The profile generator was never invoked; no profile result/configuration exists.
+Earlier `/dev/pts` warnings were not the terminal failure.
+
+Diagnostics artifact `12890458690` ZIP SHA256:
+`a00dfacd17d39d38e1032f2b852e074d3b7e0bdc64433f70c63b16892b6b68a0`.
+Encrypted recovery artifact `12891176792` ZIP SHA256:
+`d6471b904b867659c7e957957f0402d9eebc3c2dd65f896e01cb1935196acf7a`.
+Both match live API digests; all 51 ZIP members pass CRC and exact run/SHA/lock
+admission and manifest checks pass. Recovery decryption was not repeated.
+
+The correction installs the exact-byte Debian `bdebstrap 0.8.1-2/all` frontend
+only in the disposable builder, before compilation. Its SHA256 and identity
+are verified before APT executes it; dependencies resolve from existing signed
+Trixie sources. No testing/unstable feed or package enters the target. Official
+Debian archive signature -> index -> package hash/size and an isolated AMD64
+Trixie APT dependency simulation passed locally. This is not an actual external
+install/bootstrap PASS; a changed counted validation is still required.
+
+## Historical attempt 10: ten-package lifecycle fixture passed
 
 The workflow now builds `cm3-cli-board-support` separately from the nine locked
 BSP packages, binding its manifest and embedded provenance to the exact source
@@ -39,11 +65,13 @@ privately, never installed/executed or redistributed. No target root, signing
 key or recipient private key was uploaded. These checks do not establish
 enduring update trust, license closure or authorization to distribute binaries.
 
-SonarCloud security acceptance is separate. At the compiled source SHA it failed.
-At `5e840c7a3da935b9d7ff2dbfc32eb5c1006c4152`, the live PR analysis dated
-2026-10-29T07:48:00Z matches the exact GitHub head/check: gate OK, all four
-original high-security path/argument findings CLOSED/FIXED by analysis and zero
-hotspots. No rule suppression or manual false-positive disposition was used.
+SonarCloud security acceptance is separate. At attempt 10's compiled source SHA it failed.
+At `9d265e09427299fcff0c2fbac7f89acf03cb313d`, the live PR analysis dated
+2026-10-29T09:00:56Z matches the exact GitHub head/check: gate OK, all five
+findings CLOSED/FIXED by analysis, zero open issues and zero hotspots. This
+includes the four original high-security path/argument findings and the later
+receipt-file path finding; the unnecessary receipt file was removed. No rule
+suppression or manual false-positive disposition was used.
 Later changes require their own exact-head analysis; this result does not extend
 the historical package PASS to later source or waive remaining prerequisites.
 
@@ -55,6 +83,9 @@ signature/tamper and hook-order fixtures are not an external bootstrap PASS.
 The image entrypoint stays held. The owner-group gate also now rejects other
 passwd accounts sharing its primary GID, not just supplementary membership;
 this is an isolated-fixture regression fix, not a demonstrated prior SSH bypass.
+
+Attempt 11's result and its builder dependency correction are recorded above.
+It does not validate the profile or later source changes.
 
 Attempt 9 at `878f197ee9c2a8e3de4f198b744b24524ad0bfd7` failed before
 compilation: a policy test read generated `__pycache__` bytes as UTF-8. Exact run:
