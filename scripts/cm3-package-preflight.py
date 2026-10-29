@@ -3,6 +3,7 @@
 
 import argparse
 from contextlib import contextmanager
+import gzip
 import hashlib
 import importlib.util
 import json
@@ -192,6 +193,60 @@ def prepare_target(work, evidence):
             command('umount', path)
 
 
+def verify_gzip_initramfs(path):
+    """Check compression/integrity and main newc magic, not complete cpio contents."""
+    # Debian 0.148.4 prepends newc archives for already-compressed modules/firmware.
+    with path.open('rb') as stream:
+        size = path.stat().st_size
+        early_archives = 0
+        while True:
+            start = stream.tell()
+            magic = stream.read(6)
+            stream.seek(start)
+            if magic.startswith(b'\x1f\x8b'):
+                break
+            if magic != b'070701':
+                raise ValueError('initramfs requires newc prefixes followed by gzip')
+            while True:
+                header = stream.read(110)
+                if (len(header) != 110 or header[:6] != b'070701' or
+                        re.fullmatch(b'[0-9a-fA-F]{104}', header[6:]) is None):
+                    raise ValueError('invalid early initramfs newc header')
+                length = int(header[94:102], 16)
+                payload = int(header[54:62], 16)
+                if not 1 <= length <= 4096:
+                    raise ValueError('invalid early initramfs name length')
+                name = stream.read(length)
+                if len(name) != length or name[-1:] != b'\0' or b'\0' in name[:-1]:
+                    raise ValueError('invalid early initramfs name')
+                end = (stream.tell() + 3) & ~3
+                end = (end + payload + 3) & ~3
+                if end > size:
+                    raise ValueError('truncated early initramfs payload')
+                stream.seek(end)
+                if name == b'TRAILER!!!\0':
+                    if payload:
+                        raise ValueError('invalid early initramfs trailer')
+                    break
+            early_archives += 1
+            # cpio may pad archives to a block boundary before the next archive.
+            while True:
+                byte = stream.read(1)
+                if not byte:
+                    raise ValueError('initramfs has no gzip main archive')
+                if byte != b'\0':
+                    stream.seek(-1, os.SEEK_CUR)
+                    break
+        offset = stream.tell()
+        with gzip.GzipFile(fileobj=stream) as compressed:
+            if compressed.read(6) != b'070701':
+                raise ValueError('gzip initramfs main archive is not newc')
+            while compressed.read(1024 * 1024):
+                pass  # Read through EOF to validate gzip CRC and truncation.
+    return {'compression': 'gzip', 'main_offset': offset,
+            'early_archives': early_archives, 'gzip_integrity': 'PASS'}
+
+
 def test_target(root, lock, evidence):
     expected = source.expected_packages(lock)
     kernel = next(name.removeprefix('linux-image-') for name, (_, arch) in expected.items()
@@ -233,9 +288,8 @@ def test_target(root, lock, evidence):
         raise ValueError('missing real dummy kernel module or DTBO output')
     chroot(root, 'modinfo', '-k', kernel, 'radxa-overlays')
     chroot(root, 'update-initramfs', '-u', '-k', kernel)
-    with (root / f'boot/initrd.img-{kernel}').open('rb') as stream:
-        if stream.read(2) != b'\x1f\x8b':
-            raise ValueError('initramfs is not gzip compressed')
+    initramfs = verify_gzip_initramfs(root / f'boot/initrd.img-{kernel}')
+    (evidence / 'initramfs-format.json').write_text(json.dumps(initramfs, indent=2) + '\n')
     config = (root / f'boot/config-{kernel}').read_text()
     source.verify_kernel_config(config)
     chroot(root, 'u-boot-update')
