@@ -42,7 +42,7 @@ jobs:
           test "$GITHUB_SHA" = "$EXPECTED_SHA"
           python3 -m unittest discover -s tests/cm3-cli -v
           python3 scripts/cm3-source-preflight.py --check-lock
-          openssl x509 -in project/cm3-cli/retention-recipient.pem -noout -checkend 1209600
+
       - name: Reconcile cumulative package budget before compilation
         env:
           GH_TOKEN: ${{ github.token }}

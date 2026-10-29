@@ -13,8 +13,7 @@ SPEC.loader.exec_module(budget)
 class PackageBudgetTests(unittest.TestCase):
     def setUp(self):
         self.ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
-        # Exercise admission from the fixed six-consumed-attempt baseline.
-        self.ledger['package_attempts'] = self.ledger['package_attempts'][:6]
+        # Preserve every historical attempt; the former cap is not current authority.
         self.runs = [dict(id=int(a['run_url'].rsplit('/', 1)[1]), head_sha=a['commit'],
                           run_attempt=a['run_attempt'], event='workflow_dispatch',
                           workflow_id=budget.WORKFLOW, status='completed', conclusion='failure')
@@ -29,7 +28,7 @@ class PackageBudgetTests(unittest.TestCase):
         return self.runs[-1]['id']
 
     def test_historical_three_remain_consumed(self):
-        self.assertEqual(self.ledger['maximum_package_attempts'], 7)
+        self.assertIsNone(self.ledger['maximum_package_attempts'])
         self.assertEqual([a['number'] for a in self.ledger['package_attempts'][:3]], [1, 2, 3])
         self.assertEqual([a['run_url'].rsplit('/', 1)[1]
                           for a in self.ledger['package_attempts'][:3]],
@@ -37,18 +36,30 @@ class PackageBudgetTests(unittest.TestCase):
         self.assertEqual(self.ledger['maximum_full_image_attempts'], 3)
         self.assertEqual(self.ledger['full_image_attempts'], [])
 
-    def test_seventh_allowed_and_eighth_rejected_without_ledger_refresh(self):
-        while len(self.runs) < 7:
-            for run in self.runs:
-                run['status'] = 'completed'
-            run_id = self.append()
-            result = budget.admit(self.ledger, self.runs, run_id, 'a' * 40)
-            self.assertEqual(result['cumulative_attempts'], len(self.runs))
+    def test_eighth_allowed_but_unreconciled_next_run_rejected(self):
+        run_id = self.append()
+        result = budget.admit(self.ledger, self.runs, run_id, 'a' * 40, 'Test corrected archive parser')
+        self.assertEqual(result['cumulative_attempts'], len(self.runs))
+        self.assertEqual(result['authorization'], budget.AUTHORIZATION)
         for run in self.runs:
             run['status'] = 'completed'
         run_id = self.append()
-        with self.assertRaisesRegex(ValueError, 'eighth attempt prohibited'):
-            budget.admit(self.ledger, self.runs, run_id, 'a' * 40)
+        with self.assertRaisesRegex(ValueError, 'reconcile every previous run'):
+            budget.admit(self.ledger, self.runs, run_id, 'a' * 40, 'Next hypothesis')
+
+    def test_missing_authority_unchanged_hypothesis_and_three_stalled_failures_rejected(self):
+        run_id = self.append()
+        for hypothesis in ['', self.ledger['package_attempts'][-1]['hypothesis']]:
+            with self.assertRaisesRegex(ValueError, 'hypothesis'):
+                budget.admit(self.ledger, self.runs, run_id, 'a' * 40, hypothesis)
+        invalid = copy.deepcopy(self.ledger)
+        invalid['maximum_package_attempts'] = 7
+        with self.assertRaisesRegex(ValueError, 'authorization'):
+            budget.admit(invalid, self.runs, run_id, 'a' * 40, 'New hypothesis')
+        for attempt in self.ledger['package_attempts'][-3:]:
+            attempt.update(failure_stage='initramfs', demonstrable_progress=False)
+        with self.assertRaisesRegex(ValueError, 'stop with diagnosis'):
+            budget.admit(self.ledger, self.runs, run_id, 'a' * 40, 'New hypothesis')
 
     def test_rerun_deleted_history_sha_mismatch_and_overlap_fail_closed(self):
         run_id = self.append()
@@ -66,7 +77,7 @@ class PackageBudgetTests(unittest.TestCase):
                 else:
                     runs[-1]['workflow_id'] = 123
                 with self.assertRaises(ValueError):
-                    budget.admit(self.ledger, runs, run_id, 'a' * 40)
+                    budget.admit(self.ledger, runs, run_id, 'a' * 40, 'New correction')
 
 
 if __name__ == '__main__':

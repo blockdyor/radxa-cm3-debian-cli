@@ -236,15 +236,14 @@ def main():
             os.environ.get('GITHUB_REPOSITORY') != 'blockdyor/radxa-cm3-debian-cli' or
             platform.machine() != 'x86_64' or os.geteuid() != 0):
         parser.error('package builds are restricted to the external AMD64 CI container')
-    ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
-    if len(ledger['package_attempts']) >= ledger['maximum_package_attempts']:
-        parser.error('package attempt budget exhausted; explicit owner extension required')
+
     admission_path = ROOT / 'preflight-work/evidence/package-admission.json'
     if not admission_path.is_file():
         parser.error('verified Actions package admission required before compilation')
     admission = json.loads(admission_path.read_text())
-    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 7 or
-            not 1 <= admission['cumulative_attempts'] <= 7 or
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] is not None or
+            admission.get('authorization') != 'owner-2026-10-29-evidence-based-development' or
+            admission['cumulative_attempts'] < 1 or
             str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
             admission['commit'] != os.environ.get('GITHUB_SHA')):
         parser.error('package admission does not match this run/revision/budget')

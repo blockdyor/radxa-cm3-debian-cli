@@ -80,20 +80,18 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('restricted to the external AMD64 CI container', result.stderr)
 
-    def test_package_budget_refuses_external_eighth_compile_before_workdir(self):
+    def test_source_refuses_missing_admission_even_with_new_authorization(self):
         errors = io.StringIO()
-        exhausted = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
-        exhausted['package_attempts'] = [{}] * 7
         with patch.dict(preflight.os.environ, GITHUB_ACTIONS='true',
                         GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli'), \
                 patch.object(preflight.platform, 'machine', return_value='x86_64'), \
                 patch.object(preflight.os, 'geteuid', return_value=0), \
-                patch.object(preflight.json, 'loads', side_effect=[self.lock, exhausted]), \
+                patch.object(preflight.Path, 'is_file', return_value=False), \
                 patch.object(sys, 'argv', ['cm3-source-preflight.py']), \
                 contextlib.redirect_stderr(errors):
             with self.assertRaises(SystemExit):
                 preflight.main()
-        self.assertIn('package attempt budget exhausted', errors.getvalue())
+        self.assertIn('verified Actions package admission required', errors.getvalue())
 
     def test_loader_initialization_patch_is_narrow_and_fail_closed(self):
         with tempfile.TemporaryDirectory() as directory:

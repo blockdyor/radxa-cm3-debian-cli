@@ -363,8 +363,9 @@ def main():
     if result['status'] != 'PASS':
         parser.error('successful source build in this job is required')
     admission = json.loads((ROOT / 'preflight-work/evidence/package-admission.json').read_text())
-    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] != 7 or
-            not 1 <= admission['cumulative_attempts'] <= 7 or
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] is not None or
+            admission.get('authorization') != 'owner-2026-10-29-evidence-based-development' or
+            admission['cumulative_attempts'] < 1 or
             str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
             admission['commit'] != os.environ.get('GITHUB_SHA')):
         parser.error('missing matching cumulative package admission')

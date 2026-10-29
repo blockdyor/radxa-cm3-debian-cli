@@ -4,8 +4,9 @@
   "maximum_full_image_attempts": 3,
   "maximum_concurrent_full_images": 1,
   "full_image_attempts": [],
-  "maximum_package_attempts": 7,
-  "package_budget_authorization": "Owner extension 2026-10-28: authorize attempt seven only, cumulative seven; all six consumed attempts retained; eighth and reruns prohibited",
+  "maximum_package_attempts": null,
+  "package_development_authorization": "owner-2026-10-29-evidence-based-development",
+  "package_budget_authorization": "Owner direction 2026-10-29 supersedes seven-attempt cap and validation-only restriction: evidence-based development on the existing standard GitHub runner, one heavyweight job at a time, 180 minutes per job, no paid resources. Inspect failures before retries; stop after three consecutive same-stage failures without progress. Historical attempts remain consumed; image limit remains three.",
   "package_attempts": [
     {
       "number": 1,
@@ -73,9 +74,14 @@
       "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034",
       "run_attempt": 1,
       "hypothesis": "Attempt 7/7: supported boot drop-in enables signed ARM64 install DKMS DTBO; preserve encrypted compilation",
-      "result": "IN PROGRESS: exact revision/tests/admission/runner qualification passed; source and signed ARM64 stage running, no outcome yet",
-      "retained_payloads": "Encrypted allowlisted compilation recovery configured; actual upload and recovery NOT YET VERIFIED"
+      "result": "FAIL: source build PASS; signed ARM64 bootstrap/tamper rejection and all nine packages configured; exact DTB, native ARM64 header helper and real DKMS dummy module/DTBO checks passed; stopped at gzip-at-offset-zero assertion. Generated initrd not retained; archive-layout hypothesis not yet externally validated. Extlinux/idempotence/reinstall/upgrade/remove/audit checks not reached",
+      "completed_at": "2026-10-28T18:37:14Z",
+      "artifact_id": 12842575543,
+      "artifact_sha256": "e3e5de3c6ef5faae207f39056e8a8091d3aa601939d38cb720eb2ea5b19e71d2",
+      "encrypted_artifact_id": 12842325969,
+      "encrypted_artifact_sha256": "ca0a7f96e0876aa6b0446754bf0302bb7b57e847e7c5a873883c88c405c06a4e",
+      "retained_payloads": "Verified actual encrypted recovery: API digests, ZIP CRC, CMS authenticated decryption, exact run/SHA provenance and all 36 file hashes pass; nine compiled debs privately recovered, not installed or redistributed; no target root/initrd/signing key retained"
     }
   ],
-  "status": "All seven cumulative source attempts reserved/used: six completed and changed attempt seven running at its recorded SHA. No eighth or rerun authorized. Attempts 4-6 compiled all nine packages; attempt 6 passed ARM64 bootstrap and tamper rejection but failed initial seed installation at a u-boot-menu conffile prompt. Corrected attempt-seven installation, source result and encrypted retention remain unverified pending completion. Source PASS is not complete package preflight. Read-only admission preserves full history under shared exclusive concurrency. Image stage not implemented or enabled; zero full-image attempts."
+  "status": "Seven historical package attempts retained. Owner now authorizes evidence-based source compilation and same-job validation retries, without a cumulative package cap. The corrected archive-aware gzip validator has local fixture coverage; complete external package validation remains pending. Private recovery is optional, not a build prerequisite. Three-image limit and all security/hardware gates unchanged; image stage remains disabled."
 }

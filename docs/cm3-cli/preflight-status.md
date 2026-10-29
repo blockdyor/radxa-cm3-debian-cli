@@ -2,7 +2,8 @@
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
-Inspected 2026-10-28 UTC. Draft implementation PR:
+Historical runs inspected 2026-10-28 UTC; development authorization updated
+2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
 ## Workflow repair (completed, not a package pass)
@@ -180,6 +181,44 @@ No recoverable compiled payload exists, so complete external verification needs
 an owner-authorized counted rebuild. The later explicit extension below resolves
 only that budget blocker, not the failed install or remaining readiness gates.
 
+## Package attempt 7 (configured BSP/DKMS passed; gzip assertion failed)
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034
+Checked-out commit: `e2a51296f58f0269a9218154e648a99ea1a93cd8`, run attempt 1.
+Package job completed FAILURE at 2026-10-28T18:37:14Z. Source `result.json` is PASS
+(4858.74 seconds); signed ARM64 `arm64-result.json` is FAIL (710.02 seconds).
+The conffile correction works: signed bootstrap/tamper rejection and all nine
+package configurations completed. Exact DTB compatible, native AArch64 header
+helper, installed DKMS dummy module and DTBO-output assertions passed.
+This does not establish booted hardware, active LSM or full package preflight.
+
+The probe stopped at `initramfs is not gzip compressed`, an assertion requiring
+gzip magic at byte zero. Debian initramfs-tools-core 0.148.4 `mkinitramfs`
+prepends an uncompressed newc archive for already-compressed `.xz`/`.zst` files
+before the compressed main archive. The installed module was `.ko.xz`, making
+that layout a likely explanation, not a verified inspection of this initrd:
+neither initrd nor target root was retained. The local correction parses newc
+prefix records and still requires a CRC-valid, nontruncated gzip main archive.
+It checks main newc magic, not complete cpio contents. Plain gzip, padded/multiple
+prefixes and malformed/truncated/corrupt/non-gzip fixtures are covered; the
+corrected checker has not run against an actual generated target initrd.
+Extlinux/idempotence/reinstall/upgrade/remove/audit checks were not reached.
+The log also records a missing `rockchip/dptx.bin` firmware warning, fixture-root
+fsck identification warning and lack of kernel module signing; none is hidden
+or evidence of a hardware/security PASS.
+
+Diagnostic artifact ID `12842575543`, ZIP SHA256
+`e3e5de3c6ef5faae207f39056e8a8091d3aa601939d38cb720eb2ea5b19e71d2`,
+has 38 CRC-valid members. Encrypted recovery artifact ID `12842325969`, ZIP SHA256
+`ca0a7f96e0876aa6b0446754bf0302bb7b57e847e7c5a873883c88c405c06a4e`,
+has one CRC-valid member. Both downloaded archives match their API digests.
+Successful CMS authenticated decryption, exact approved run/SHA provenance and
+all 36 manifest file hashes are verified. All nine compiled packages were
+recovered privately, not installed or redistributed. Retention ends
+2026-11-11T18:37:10Z (encrypted) / 18:37:11Z (diagnostics).
+No target root/initrd/private signing key was uploaded. Recovery does not grant
+reuse authorization, license closure or enduring update trust.
+
 ## Admission and remaining work
 
 The fifth-attempt implementation adds a signed whitelist/Essential-inclusive
@@ -187,26 +226,28 @@ ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full
 image or a competing workflow. Its source PASS and bootstrap failure are above.
 See `build.md` for exact scope and remaining gates.
 
-Package-only budget: SEVEN cumulative attempts following explicit owner approval
-on 2026-10-28. All six historical runs remain consumed and reconcile with the
+Historical package-only budget: SEVEN cumulative attempts following owner approval
+on 2026-10-28, superseded by the 2026-10-29 development authorization. All six earlier runs remain consumed and reconcile with the
 ledger: five workflow failures and one source-only workflow PASS. Only changed
-attempt 7 was newly authorized and is now reserved/used by run
+attempt 7 was newly authorized and is now consumed by run
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034
 at `e2a51296f58f0269a9218154e648a99ea1a93cd8`, run attempt 1.
-Checkout/tests, cumulative admission and runner qualification passed; source and
-signed ARM64 work is IN PROGRESS, not a PASS. No attempt remains; an eighth
-attempt or any rerun needs a new decision. Encrypted recovery is configured,
-not yet verified on actual compiled outputs.
+Source and configured BSP/DKMS success do not turn the failed signed ARM64 job
+into a PASS. The owner now authorizes evidence-based compilation and validation
+retries in the existing standard GitHub-hosted job: one at a time, 180 minutes,
+free/already-authorized resources only. Inspect actual failures before retrying;
+stop after three consecutive same-stage failures without demonstrable progress.
+Encrypted recovery remains optional; no private transfer or key upload is required.
 A read-only Actions admission step reconciles full
 history and run_attempt values under the existing shared exclusive concurrency,
-rejects reruns, missing records and an eighth attempt, and binds its result to
+rejects reruns, missing records and unchanged hypotheses, and binds its result to
 the current run/SHA. Reservations still belong on the existing implementation
 card before each dispatch. Historical revisions/helper tasks are not bypasses.
 See `attempts.json` and `build.md`; image budget/prerequisites are unchanged.
 
 A successful source compile is NOT full package preflight. Ephemeral signatures,
 bootstrap and tamper checks above do not pass the remaining complete clean ARM64
-configuration/update, real DKMS/DTBO, exact boot integration, secure enrollment
+configuration/update, exact boot integration, secure enrollment
 and attested update requirements.
 Image assembly is disabled; no full-image attempt has run in the inspected
 repository. Check the phase-wide ledger before any future image stage. Both

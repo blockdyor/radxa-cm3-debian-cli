@@ -8,17 +8,18 @@ currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. The owner extended the cumulative package limit
-to SEVEN on 2026-10-28; attempts 1–6 remain consumed and only attempt 7 is newly
-authorized and now reserved/used by the running probe below. No attempt remains.
+not full signed ARM64 preflight. Seven historical attempts remain recorded.
+On 2026-10-29 the owner superseded the package cap and authorized evidence-based
+source builds and same-job validation retries on the existing standard runner.
 Attempt 5 rebuilt all nine packages and verified
 the ephemeral repository signature, then failed before ARM64 bootstrap because
 `arch-test` was not installed. Do not rerun it. The final changed attempt 6 passed
 compilation, ARM64 bootstrap and APT tamper rejection, then failed at a dpkg
 conffile prompt for the fixture's pre-created `/etc/default/u-boot`. The correction
 uses the supported config-fragment directory without overwriting that conffile;
-it has local coverage, not external installation validation. An eighth attempt
-or any rerun is prohibited. See
+attempt 7 validates that conffile correction but fails a later initramfs check.
+Do not repeat unchanged failures. Stop after three consecutive same-stage
+failures without demonstrable progress. See
 `preflight-status.md` for actual run evidence and precise resume requirements.
 
 ## Prerequisites and reproduction boundary
@@ -61,8 +62,8 @@ or authorized by these instructions.
 
 The exact historical dispatches below and `.github/workflows/build.yaml` record
 the implemented invocation. The changed seventh source attempt was reserved and
-dispatched once at its reviewed, verified pushed SHA. No next dispatch is permitted.
-Admission policy and the retained ledger enforce the cumulative seven-attempt ceiling. Full-image assembly
+dispatched once at its reviewed, verified pushed SHA. Further changed probes are
+authorized under the 2026-10-29 development policy, not a reset of history. Full-image assembly
 remains held. Changing `expected_sha`, invoking a
 helper directly or cloning a fresh checkout does not reset either budget.
 
@@ -99,12 +100,13 @@ package-probe admission checks require x86_64, 2 CPUs, 7 GB RAM and 24 GiB free
 workspace; this is a bounded probe allowance, not proof the entire compile fits.
 Compilation uses two jobs. Timeout is 180 minutes. Resource failure is evidence
 to retain and diagnose, not permission to use the production machine.
-Package-only admission is limited to SEVEN cumulative attempts, separate from the
-full-image budget; all seven are now reserved/used. Reserve on the
+Package-only admission has no cumulative ceiling under the current owner policy;
+the separate three-image budget is unchanged. Reserve on the
 existing implementation card before dispatch and reconcile `attempts.json` with
 the entire Actions workflow history. The read-only admission step counts all
-observed run attempts under shared concurrency and refuses an eighth attempt,
-reruns, missing historical runs, revision drift and overlapping compilation.
+observed run attempts under shared concurrency and refuses unaccounted prior runs,
+reruns, unchanged hypotheses, revision drift and overlapping compilation.
+Three consecutive same-stage failures without progress require a technical diagnosis.
 It writes a run/SHA-bound admission record checked again by the source driver.
 Do not delete runs, invoke old revisions, use another workflow/repository or a
 helper task to bypass this coordinator. This is not protection against an owner
@@ -124,8 +126,11 @@ and seals only selected packages plus allowlisted JSON/diff/config/buildinfo/cha
 with OpenSSL CMS AES-256-GCM to `project/cm3-cli/retention-recipient.pem`.
 The recipient private key stays outside the checkout and CI; roots, signing keys,
 ordinary logs and arbitrary source trees are excluded. Local real encryption,
-decryption, tamper rejection and matching-recipient checks pass; external upload
-and actual compiled-payload recovery are not yet verified. This is internal
+decryption, tamper rejection and matching-recipient checks pass. Actual attempt-7
+upload/recovery is now verified against both API digests, ZIP CRCs, successful
+authenticated decryption, exact run/SHA provenance and all 36 manifest file hashes,
+including all nine compiled packages. No recovered package has been installed or
+redistributed. This is internal
 recovery, not plaintext distribution, source-license closure or update trust.
 Before reuse, verify the artifact API digest and exact approved run/SHA, decrypt
 to a disposable directory, require successful authenticated decryption before
@@ -136,22 +141,35 @@ enabled; loss of the private recipient key makes the ciphertext unrecoverable.
 
 ## Changed next-stage package probe
 
-### Changed attempt 7 (running, result not yet established)
+### Changed attempt 7 (source/install/DKMS passed; gzip check failed)
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40732092034
 
 Dispatched once at reviewed source commit `e2a51296f58f0269a9218154e648a99ea1a93cd8`.
-Checkout/revision tests, cumulative admission and runner qualification passed;
-source/signed ARM64 compilation and installation are still in progress. The
+Package job completed FAILURE at 2026-10-28T18:37:14Z. Source compilation, signed ARM64
+bootstrap/tamper rejection, all nine package configurations, exact DTB, native
+ARM64 header helper and real DKMS dummy module plus DTBO checks passed. The
+probe then rejected the generated initramfs because gzip was not at offset zero;
+extlinux/idempotence/reinstall/upgrade/remove/audit checks were not reached.
+Debian initramfs-tools 0.148.4 emits uncompressed newc prefixes for already-compressed
+modules/firmware before the compressed main archive. This makes the old assertion
+invalid for that layout, but the failed initrd was not retained, so its actual
+layout remains unknown. The narrow correction parses newc prefixes structurally,
+requires gzip for the main archive and drains it to validate CRC/truncation.
+Local fixtures pass; this is not external revalidation or a complete cpio-content
+validation. No package/image readiness claim follows. The
 following exact command is a historical dispatch record, NOT permission to rerun:
 
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \
       --ref dev/cm3-debian-cli -f expected_sha=e2a51296f58f0269a9218154e648a99ea1a93cd8 \
       -f hypothesis='Attempt 7/7: supported boot drop-in enables signed ARM64 install DKMS DTBO; preserve encrypted compilation'
 
-All seven cumulative attempts are reserved/used; no eighth or rerun is authorized.
-Source, ARM64 integration and encrypted-output recovery require separate actual
-results before any PASS claim. Later documentation commits are not the compiled SHA.
+All seven historical attempts remain consumed; the former cap is superseded.
+Encrypted output recovery passed; full ARM64/boot/update integration did not.
+Later source or documentation commits are not the compiled SHA. Any future
+external probe may compile and validate in the existing job under current owner
+authorization. Recovered packages and private-transfer infrastructure are optional,
+not prerequisites. The image entrypoint remains held pending real prerequisites.
 
 The fifth-attempt development revision extends this SAME admitted manual job
 with `scripts/cm3-package-preflight.py`, after successful compilation. Since
