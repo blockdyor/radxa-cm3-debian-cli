@@ -13,8 +13,9 @@ to freeze with the owner before testing; they are not measurements/vendor rating
 
 G0: no device writes performed, safety/correctness not demonstrated on hardware.
 G1: no fresh install/boot/provisioning/expansion/rescue test; not demonstrated.
-G2: not met. Source/dependency metadata is not signed full closure, real DKMS,
-active LSM, provisioning, update/reboot/rescue or assigned vendor maintenance.
+G2: not met. Signed ARM64 installation, real DKMS and boot-fixture checks pass,
+but active LSM, provisioning, distinct-version update/reboot/rescue, complete
+input/license closure and assigned vendor maintenance remain unverified.
 G3: thermal/electrical/power untested.
 G4: no B0 baseline or comparative performance measurements.
 G5: no loaded responsiveness measurements.
@@ -29,22 +30,23 @@ of record rather than a shortened feature list.
 
 ## Evidence levels and open blockers
 
-Status as of 2026-10-28; exact historical commits, runs and diagnostic digests are
+Status as of 2026-10-29; exact historical commits, runs and diagnostic digests are
 in `preflight-status.md` and `attempts.json`.
 
 | Evidence level | Established | Not established |
 | --- | --- | --- |
 | Static/local | Lock validation, original gate/matrix integrity and local policy/regression checks | Complete input snapshot, target execution, image or hardware acceptance |
-| External source compilation | Attempts 4–6 recorded all nine selected packages at their own commits | Compilation of later corrections or source-to-binary reproducibility |
-| External signed ARM64 fixture | Attempt 6 bootstrapped ARM64 and rejected tampered APT metadata | Completed seed/BSP configuration, header/DKMS/DTBO and boot/update fixture checks; run failed during seed installation |
+| External source compilation | Attempt 8 compiled all nine selected packages at its recorded revision | Source-to-binary reproducibility or compilation of later changes |
+| External signed ARM64 fixture | Attempt 8 passed signed/tamper-negative installation, exact DTB, native headers, real DKMS/DTBO, initramfs/extlinux/idempotence, reinstall/remove/restore and audit checks | Real board-support package, provisioning, active target LSM, distinct-version BSP update or boot/recovery |
 | Boot/security/update | Owner-input validator and boot fixture code exist | Real board-support package, secure first boot, active target LSM, distinct-version BSP upgrade/reboot/rescue, attested update trust and maintenance ownership |
 | Hardware/performance | No physical tests or B0 measurements | All H01–H28 remain UNTESTED; no boot, compatibility, speed, power or sustained-performance claim |
 
-The supported u-boot-menu config-fragment correction has local coverage only.
-No retained compiled payload is available for completing external integration
-without another counted source build. The owner approved only changed attempt 7;
-its result is not yet established. Image assembly remains guarded off, and licensing/full-input
-closure is incomplete. A source PASS, a dependency simulation, or the absence of
+The config-fragment and archive-aware initramfs corrections now have external
+coverage in run 40808183234. Its diagnostics and encrypted allowlisted compilation
+are retained as native GitHub artifacts; recovery is optional. Current owner
+authorization permits evidence-based same-job compile/validation retries.
+Image assembly remains guarded off, and licensing/full-input
+closure is incomplete. A fixture PASS, a dependency simulation, or the absence of
 device writes cannot satisfy a gate. Static checks do not certify the remaining
 security defaults: installing nftables does not establish firewall policy, and
 compiled AppArmor support does not establish an active intended LSM.

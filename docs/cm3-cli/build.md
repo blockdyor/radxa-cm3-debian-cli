@@ -6,6 +6,10 @@ Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Boa
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
 The upstream product defaults have deliberately not been changed yet.
+Latest result: attempt 8 at `c9478e31c1859c9ce818ef1e23b500c2feae869b`
+passes source compilation and the signed ARM64 install/DKMS/boot-fixture probe.
+This is not the complete package/security preflight or an image: see the latest
+section in `preflight-status.md` for remaining integration requirements.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
 not full signed ARM64 preflight. Seven historical attempts remain recorded.
@@ -156,8 +160,9 @@ modules/firmware before the compressed main archive. This makes the old assertio
 invalid for that layout, but the failed initrd was not retained, so its actual
 layout remains unknown. The narrow correction parses newc prefixes structurally,
 requires gzip for the main archive and drains it to validate CRC/truncation.
-Local fixtures pass; this is not external revalidation or a complete cpio-content
-validation. No package/image readiness claim follows. The
+Local fixtures pass; attempt 8 also validates the actual generated archive with
+one early newc archive and gzip beginning at byte 2912256. This is not complete
+cpio-content validation or package/image readiness. The
 following exact command is a historical dispatch record, NOT permission to rerun:
 
     gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli \

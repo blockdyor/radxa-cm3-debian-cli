@@ -13,7 +13,8 @@ SPEC.loader.exec_module(budget)
 class PackageBudgetTests(unittest.TestCase):
     def setUp(self):
         self.ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
-        # Preserve every historical attempt; the former cap is not current authority.
+        # Exercise the fixed seven-run baseline, not the moving live run count.
+        self.ledger['package_attempts'] = self.ledger['package_attempts'][:7]
         self.runs = [dict(id=int(a['run_url'].rsplit('/', 1)[1]), head_sha=a['commit'],
                           run_attempt=a['run_attempt'], event='workflow_dispatch',
                           workflow_id=budget.WORKFLOW, status='completed', conclusion='failure')

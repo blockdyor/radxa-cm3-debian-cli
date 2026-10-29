@@ -6,6 +6,76 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
+## Latest: package attempt 8 passed the source/install fixture
+
+Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40808183234
+
+Compiled and validated revision: `c9478e31c1859c9ce818ef1e23b500c2feae869b`.
+The standard `ubuntu-24.04` job completed SUCCESS at 2026-10-29T04:22:47Z,
+within the unchanged 180-minute timeout. No other heavyweight job was started.
+Later accounting/test/documentation commits are not the binary-producing SHA.
+
+Directly inspected `result.json` and `arm64-result.json` both report PASS.
+The latter still says `full_package_preflight: NOT COMPLETE`; neither reports
+an image build. The nine package identities match the unchanged source lock.
+The complete final fixture manifest contains 269 installed packages, including
+Essential packages and the retained CLI seeds, firmware and DKMS toolchain.
+
+Performed checks:
+
+- Authenticated Debian/bootstrap and ephemeral signed whitelist APT repository;
+  deliberately tampered metadata rejected and restored signed metadata accepted.
+- All nine BSP packages configured; exact carrier/SoC DTB and loader file present.
+  Loader setup was never executed. Native AArch64 header helper verified.
+- Real DKMS dummy module installed and 617 DTBO outputs found, not dtc-only success.
+- Generated initramfs has one early newc archive followed by gzip at byte 2912256;
+  gzip CRC/truncation validation passes. Exact DTB, serial console, AppArmor intent
+  and fixture OS UUID appear in extlinux; unchanged regeneration is idempotent.
+- Same-version BSP reinstall, ordinary APT upgrade, clean dpkg audit, overlay
+  removal/full-whitelist restoration, and Debian-only APT update after removal
+  of the temporary build source/key all passed. No distinct-version BSP upgrade
+  or active target-kernel LSM test is implied.
+
+Retained native artifacts (expiry 2026-11-12):
+
+- Diagnostics ID `12872747471`, SHA256
+  `bfdc5ed070681a86e116e5b66fa51cb58dbb7c53f5b1ecb833643a6bddabb193`.
+- Encrypted compilation ID `12872099361`, ZIP SHA256
+  `ec097c400eb4c784f14fc911a5f825d594bf60c95744b1cb9203ed1e5f67efd3`.
+
+Both downloaded ZIP digests match the live artifact API; all 47 diagnostic
+members and the one encrypted artifact member pass CRC. Admission binds run 8
+to its exact commit, policy and full history. No plaintext recovery was attempted.
+No private key, credentials, local private evidence or full workspace was uploaded.
+Plaintext BSP distribution remains held pending license/corresponding-source review.
+
+### Source milestone and next integration boundary
+
+This continuation changed `scripts/cm3-{package-budget,source-preflight,package-preflight}.py`,
+their budget/source-policy tests and `.github/workflows/build.yaml`, plus project
+status/accounting documentation. The corrected initramfs validator was already
+committed before this continuation. Source pins, patches, upstream licenses,
+required kernel configuration and package identities were not changed.
+
+Requirements mapping: exact-target/source lineage stays in `source-lock.json`
+and `provenance.md`; the admission script preserves historical runs and current
+retry authority; both compile/validation consumers require a matching run/SHA;
+the workflow retains exclusive concurrency, standard runner, 180 minutes, pinned
+actions/containers and same-job validation. Original gate texts and all 28 UNTESTED
+hardware rows remain byte-identical. The separate image ledger remains 0/3, held.
+
+The existing source baseline lane can now proceed from a successful dependency
+fixture, not from another research handoff. Before enabling an image job it must
+replace the boot fixtures with the reviewed `cm3-cli-board-support` package,
+wire the exact-product authenticated CLI profile without upstream insecure trust
+hooks, implement/test secure owner enrollment and identity creation, and close
+the applicable update/trust/license prerequisites. Keep the image entrypoint held
+until those checks actually pass. Existing workflow integration must continue to
+build and validate the intended revision in one admitted job; do not reuse this
+run's PASS as proof of later source, provisioning, image or hardware behavior.
+No new accounts, transfer infrastructure, release publication or routine owner
+reapproval is required for ordinary development already authorized.
+
 ## Workflow repair (completed, not a package pass)
 
 The historical HTTP 404 occurred despite a workflow blob existing on main:

@@ -81,7 +81,23 @@
       "encrypted_artifact_id": 12842325969,
       "encrypted_artifact_sha256": "ca0a7f96e0876aa6b0446754bf0302bb7b57e847e7c5a873883c88c405c06a4e",
       "retained_payloads": "Verified actual encrypted recovery: API digests, ZIP CRC, CMS authenticated decryption, exact run/SHA provenance and all 36 file hashes pass; nine compiled debs privately recovered, not installed or redistributed; no target root/initrd/signing key retained"
+    },
+    {
+      "number": 8,
+      "commit": "c9478e31c1859c9ce818ef1e23b500c2feae869b",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40808183234",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 8: corrected Debian newc-prefix gzip validator; compile pinned packages and validate signed ARM64 boot reinstall audit in same job",
+      "result": "PASS: five pinned source projects/nine packages; signed ARM64 installation and tamper rejection; exact DTB/loader presence; native header helper, real DKMS dummy module and DTBOs; archive-aware gzip, extlinux/idempotence, reinstall/upgrade/remove/restore and clean dpkg audit. Full package preflight NOT COMPLETE: board support/provisioning, active target LSM, distinct-version BSP update/recovery and update trust remain open. Image NOT RUN.",
+      "failure_stage": "none",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-29T04:22:47Z",
+      "artifact_id": 12872747471,
+      "artifact_sha256": "bfdc5ed070681a86e116e5b66fa51cb58dbb7c53f5b1ecb833643a6bddabb193",
+      "encrypted_artifact_id": 12872099361,
+      "encrypted_artifact_sha256": "ec097c400eb4c784f14fc911a5f825d594bf60c95744b1cb9203ed1e5f67efd3",
+      "retained_payloads": "Native GitHub diagnostics and allowlisted encrypted compilation retained through 2026-11-12; both downloaded ZIP SHA256 values match live API digests and all ZIP members pass CRC. Exact nine-package manifest, source lock and run admission verified. No plaintext recovery attempted; no private key or local evidence uploaded."
     }
   ],
-  "status": "Seven historical package attempts retained. Owner now authorizes evidence-based source compilation and same-job validation retries, without a cumulative package cap. The corrected archive-aware gzip validator has local fixture coverage; complete external package validation remains pending. Private recovery is optional, not a build prerequisite. Three-image limit and all security/hardware gates unchanged; image stage remains disabled."
+  "status": "Eight package attempts recorded without resetting history. Attempt 8 passes source compilation and the signed ARM64 install/DKMS/boot-fixture probe, including external confirmation of the newc-prefix gzip correction. Full package preflight remains NOT COMPLETE; secure board support, active target LSM, distinct-version update/recovery and update trust remain open. Current owner policy permits evidence-based development retries, not unchanged failures or three consecutive same-stage failures without progress. Private recovery optional; image0/3 held and all hardware gates unchanged."
 }
