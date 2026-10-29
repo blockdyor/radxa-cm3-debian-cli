@@ -1,0 +1,59 @@
+EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
+
+Source package for radxa-cm3-rpi-cm4-io only, version 0.1.0.
+Build without installing: python3 packages/cm3-cli-board-support/build.py
+  --output <new-file.deb> --revision <exact-40-hex-source-commit> --epoch <commit-epoch>
+No BSP compilation, image assembly or device access occurs in this builder.
+The source is this directory plus scripts/cm3-owner-config.py, source-lock.json
+and LICENSE at the recorded fork revision. All new code is GPL-3.0-only.
+Boot intent derives from radxa-pkg/radxa-system-config at
+263af2c8c241430e994ffd18bbb8ddfbebf36434, not its broad umbrella packages.
+
+Before first boot of separately authorized sacrificial media, an administrator
+must create /etc/cm3-cli/owner.json as root:root mode0600 (real directories,
+no symlinks). Fields are exactly version:1, username:<non-system lowercase
+name>, authorized_key:<one plain ssh-ed25519 public key>. No password, shell,
+command, Wi-Fi secret or personal key is included in this package.
+
+Missing/invalid enrollment keeps SSH closed. Correct the file offline and reboot;
+serial boot diagnostics stay enabled independently of HDMI. There is no universal
+serial login password. Offline sacrificial-OS access is the recovery path.
+The sole enrolled owner receives passwordless sudo deliberately: a password-locked
+key-only account otherwise cannot administer the system. No hardware-access groups
+are granted. Local changes to identity/key/policy require offline review, not
+automatic adoption or silent key rotation. Other accounts cannot SSH.
+The public key is root-owned, not writable from the user's home.
+An interruption inside the system account tool itself (passwd entry but missing
+shadow entry) fails closed and requires offline account-database recovery. The
+enroller deliberately does not rewrite global password databases or delete homes.
+Normal interrupted steps resume from the recorded pending owner without adoption.
+
+Per-boot readiness requires enrollment, host identity creation and active target
+AppArmor. Systemd generates the machine ID before this unit; ssh-keygen -A creates
+missing host keys, never overwrites existing ones. Image integration MUST remove
+builder machine IDs and SSH host keys before shipping. Package configuration only
+enables units, never starts services. SSH socket activation is masked.
+NetworkManager is the only network owner. The project-owned IPv4/IPv6 input/forward
+default-drop firewall permits SSH, DHCP clients, ICMP/ICMPv6, loopback and
+established traffic, with outbound allowed. It never globally flushes rules.
+Real nft/systemd/SSH/ARM64 execution remains an external validation requirement.
+Removal stops/gates SSH and retains a DenyUsers sentinel, even after purge; a
+successful reinstall removes that sentinel only after restoring the service gates.
+The NetworkManager dependency drop-in is not a conffile and leaves with the package.
+
+Boot selects the exact DTB without consulting the running host, keeps ttyFIQ0
+1500000, gzip initramfs, AppArmor and kernel protections. The vendor systemd-boot
+overlay hook is masked for this extlinux-only route; no overlays are enabled.
+Overlay selection is intentionally not offered: a requested overlay requires
+reviewed compatible/target checks and tests before enabling it. Kernel install
+and removal regenerate extlinux when the OS fstab exists, never invoke loader
+setup and do not grow filesystems or scan attached disks.
+
+The nine BSP pins remain in project/cm3-cli/source-lock.json. This is a tenth,
+project-owned configuration package. It must enter the signed whitelist with an
+exact revision/hash manifest and pass clean ARM64 install/configure/reinstall/
+removal and provisioning checks before image assembly. Full package preflight
+and image readiness remain incomplete: distinct-version update/recovery,
+attested scoped update trust, source/blob/license/maintenance closure and
+physical qualification are still gates. No public binary redistribution,
+release or production installation is implied.

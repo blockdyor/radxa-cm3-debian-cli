@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
+    # Remain closed even if Debian socket activation is enabled after purge.
+    printf 'DenyUsers *\n' > /etc/ssh/sshd_config.d/00-cm3-cli-removed.conf
+    # Stop all SSH entrypoints before removing the service gate or its validator.
+    if [ -d /run/systemd/system ]; then
+        systemctl stop ssh.socket ssh.service
+    fi
+    systemctl --root=/ disable ssh.service cm3-cli-enroll.service
+    rm -f /run/cm3-cli/enrolled.json
+fi

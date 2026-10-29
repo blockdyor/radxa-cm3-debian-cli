@@ -1,0 +1,14 @@
+[Unit]
+Description=Enroll the CM3 owner before permitting SSH
+Requires=cm3-cli-firewall.service apparmor.service
+After=local-fs.target cm3-cli-firewall.service apparmor.service
+Before=ssh.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/lib/cm3-cli/enroll.py
+RemainAfterExit=yes
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
