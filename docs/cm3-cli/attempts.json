@@ -140,7 +140,23 @@
       "encrypted_artifact_id": 12891176792,
       "encrypted_artifact_sha256": "d6471b904b867659c7e957957f0402d9eebc3c2dd65f896e01cb1935196acf7a",
       "retained_payloads": "Both downloaded ZIP SHA256 values match live artifact API digests; all 51 ZIP members pass CRC. Exact source lock/run admission, nine-BSP plus separate board manifest, signed ARM64/lifecycle results and 270 installed-package identities verified. Encrypted recovery preserved; authenticated decryption not attempted in this continuation. No target root, signing key or recipient private key uploaded."
+    },
+    {
+      "number": 12,
+      "commit": "12ad8dcd6d1457260b53c25dcff4f476bd327009",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40868611520",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 12: qualify pinned builder frontend before compilation; validate signed exact-product directory bootstrap",
+      "result": "PASS: source compilation, signed ARM64 ten-package lifecycle and exact-product Trixie/ARM64/CLI clean directory bootstrap. Both installed manifests contain 270 configured packages and match exact nine-BSP plus separate board identities; rendered configuration digest, run/revision/lock/signer/board receipt and cleanup checks verified. Services NOT STARTED, enrollment NOT RUN, active target LSM NOT TESTED. Full package preflight NOT COMPLETE: attested update trust, distinct-version BSP recovery and complete source/blob-license/input closure remain open. Image NOT RUN.",
+      "failure_stage": "none",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-29T13:21:17Z",
+      "artifact_id": 12899169959,
+      "artifact_sha256": "2f38468d4231395badcc964477fefb99e692b5777665afdea0ff285d7dc7def2",
+      "encrypted_artifact_id": 12900446452,
+      "encrypted_artifact_sha256": "12febbc80d1a6bf6ae32f1eb824b3b334ee04e9363d96391b8bc7cf82153f49b",
+      "retained_payloads": "Both downloaded ZIP SHA256 values match live artifact API digests; all 54 ZIP members pass CRC. Exact run/source/lock admission, nine-BSP and board manifests, signed ARM64 lifecycle, rendered configuration and complete profile package identities verified. Encrypted recovery retained; authenticated decryption not attempted in this continuation. No target root, signing key or recipient private key uploaded."
     }
   ],
-  "status": "Eleven workflow attempts recorded without resetting history. Attempt 11 passes source and signed ARM64 ten-package lifecycle at its exact source SHA, then fails because builder bdebstrap is unavailable from Trixie; exact-product profile NOT RUN. This is not validation of later changes or Sonar security acceptance. Full preflight NOT COMPLETE: exact-product profile, secure provisioning/active target LSM, distinct-version update/recovery and update trust remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
+  "status": "Twelve completed workflow attempts recorded without resetting history. Attempt 12 passes source, signed ARM64 ten-package lifecycle and exact-product clean directory bootstrap at its recorded source SHA. This is not validation of later changes or Sonar security acceptance. Full preflight NOT COMPLETE: target provisioning/active LSM, attested update trust, distinct-version BSP recovery and complete source/blob-license/input closure remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
 }

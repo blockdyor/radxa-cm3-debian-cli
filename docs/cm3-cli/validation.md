@@ -36,9 +36,10 @@ in `preflight-status.md` and `attempts.json`.
 | Evidence level | Established | Not established |
 | --- | --- | --- |
 | Static/local | Lock validation, original gate/matrix integrity and local policy/regression checks | Complete input snapshot, target execution, image or hardware acceptance |
-| External source compilation | Attempt 8 compiled all nine selected packages at its recorded revision | Source-to-binary reproducibility or compilation of later changes |
-| External signed ARM64 fixture | Attempt 8 passed signed/tamper-negative installation, exact DTB, native headers, real DKMS/DTBO, initramfs/extlinux/idempotence, reinstall/remove/restore and audit checks | Real board-support package, provisioning, active target LSM, distinct-version BSP update or boot/recovery |
-| Boot/security/update | Owner-input validator and boot fixture code exist | Real board-support package, secure first boot, active target LSM, distinct-version BSP upgrade/reboot/rescue, attested update trust and maintenance ownership |
+| External source compilation | Attempt 12 compiled all nine selected BSP packages plus the separately sourced board package at its recorded revision | Source-to-binary reproducibility or compilation of later changes |
+| External signed ARM64 fixture | Attempt 12 passed ten-package signed/tamper-negative installation, actual board lifecycle/effective SSH policy, native headers, real DKMS/DTBO, initramfs/extlinux/idempotence, reinstall/remove/restore and audit checks | Target provisioning, active target LSM, distinct-version BSP update or boot/recovery |
+| Exact-product RSDK bootstrap | Attempt 12 bootstrapped the actual Trixie/ARM64/CLI profile in a fresh directory; 270 configured packages, clean audit and builder-identity/feed cleanup | Disk image, target services, enrollment, kernel boot or hardware compatibility |
+| Boot/security/update | Board package, owner-input validator and boot fixture code exist | Secure target first boot, active target LSM, distinct-version BSP upgrade/reboot/rescue, attested update trust and maintenance ownership |
 | Hardware/performance | No physical tests or B0 measurements | All H01–H28 remain UNTESTED; no boot, compatibility, speed, power or sustained-performance claim |
 
 The config-fragment and archive-aware initramfs corrections now have external

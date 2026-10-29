@@ -96,6 +96,10 @@ hash. It is not an upstream BSP binary and does not change the nine-package lock
 Attempt 10 at `d58c5db2088d12fee4bd605bcba29e3c6a881694` validated all ten
 packages in the signed ARM64 lifecycle fixture; see `preflight-status.md` for
 the exact run and limits. Later source still needs its own validation.
+Attempt 12 at `12ad8dcd6d1457260b53c25dcff4f476bd327009` additionally passes the
+actual exact-product clean RSDK directory bootstrap, with 270 installed identities
+and verified run/lock/signer/board/configuration receipts. Neither result proves
+boot, target firstboot/active LSM, distinct-version recovery or enduring trust.
 Audited profile sources
 are `radxa-pkg/radxa-profiles@fd5c4cd7e1fede8cb44f3b7788d78a20c2363e2a`
 and `radxa-pkg/vendor-profiles@f60785267aca74af42b303fe0b8f19da525b1e15`;
@@ -139,6 +143,18 @@ kernel/U-Boot sources, patches, generated configs and build scripts must accompa
 any later public binary delivery. rkbin and radio blobs need per-file license
 review; wrapper GPL text is not a blanket blob redistribution grant. No wholly
 FOSS, secure-boot or source-to-binary equivalence claim is made.
+
+The subsequent loader correction checks the exact DDR v1.25, USB helper v1.17,
+BL31 v1.46, boot_merger tool, RK3566 packing INI and original rkbin LICENSE bytes
+against SHA256 pins before tool execution. The upstream RK3566 BL31 name is a
+symlink to `rk3568_bl31_v1.46.elf`, not a different SoC target; the recipe now uses
+that same verified file explicitly. `loader-inputs.json` records every checked
+hash and the unmodified notice. Rockchip's notice permits use/copy/distribution
+and prohibits reverse engineering and notice removal; it is included in the
+loader package's docs without replacing the existing upstream copyright.
+This improves notice/input preservation but does not complete legal review or
+corresponding-source delivery. Actual packaging of this later correction remains
+unverified externally; attempt 12 predates it. No blob bytes are added to Git.
 
 The first source probe pins OCI manifests and Git sources but resolves fresh
 signed Trixie build dependencies. It records installed source/package versions,

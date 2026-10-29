@@ -7,14 +7,15 @@ Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branc
 currently implements the prerequisite source-package probe, not a usable image.
 Only the exact carrier's product defaults now select Trixie/CLI. Image assembly
 remains disabled; changing defaults does not enable the inherited image path.
-Latest result: attempt 11 at `9d265e09427299fcff0c2fbac7f89acf03cb313d`
-passes source compilation and the signed ARM64 ten-package install/DKMS/board-lifecycle
-fixture, then fails before profile bootstrap because Trixie lacks `bdebstrap`.
+Latest result: attempt 12 at `12ad8dcd6d1457260b53c25dcff4f476bd327009`
+passes source compilation, the signed ARM64 ten-package install/DKMS/board-lifecycle
+fixture and the real exact-product RSDK clean directory bootstrap (270 installed
+packages, clean audit and builder-identity/feed cleanup). It does not boot a kernel.
 This is not the complete package/security preflight or an image: see the latest
 section in `preflight-status.md` for remaining integration requirements.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. All eleven historical attempts remain recorded.
+not full signed ARM64 preflight. All twelve historical attempts remain recorded.
 On 2026-10-29 the owner superseded the package cap and authorized evidence-based
 source builds and same-job validation retries on the existing standard runner.
 Attempt 5 rebuilt all nine packages and verified
@@ -61,7 +62,7 @@ Jsonnet 0.22 or newer because the unchanged upstream routes use `std.contains`.
 Signed-index fixture tests require GnuPG and dpkg-deb. The exact CM3 route also
 renders with the builder's Trixie Jsonnet; rendering is not bootstrap validation.
 
-The next changed stage uses `scripts/cm3-rsdk-profile.py` after the signed ARM64
+The workflow uses `scripts/cm3-rsdk-profile.py` after the signed ARM64
 probe in the same admitted external job. It verifies the ephemeral signature,
 index/payload closure and nine-plus-one manifests before staging the exact
 Trixie/ARM64/CLI Jsonnet route. Existing RSDK `bdebstrap` then exercises those
@@ -70,7 +71,7 @@ installs CA/keyring prerequisites before the first customize hook performs signe
 BSP installation; the second removes the job-only feed/key. Board hash/unpack
 still precedes kernel configuration. The checker requires exact installed
 identities, clean audit and no builder machine IDs, SSH host keys, owner document
-or temporary feed. This new bootstrap stage has not yet passed an external run.
+or temporary feed. Attempt 12 passes this stage at its exact recorded revision.
 No account enrollment, target service start, disk access or image assembly is
 authorized or implied; the normal `rsdk build` entrypoint stays held.
 
@@ -83,6 +84,14 @@ checks hash and package/version/architecture before installation; dependencies
 and Jsonnet use the existing signed Trixie APT sources, with no sid feed added.
 This frontend is builder-only, not a target input or a target-suite change.
 Do not replace the pin with an unverified moving version if the download fails.
+
+The subsequent loader-input correction verifies six exact rkbin file SHA256s
+before executing its tool, validates the upstream RK3566-to-RK3568 BL31 alias and
+replaces the recipe's latest-file selection with that same explicit BL31 path.
+It adds Rockchip's original notice to the loader package through dh_installdocs,
+records the notice and hashes in `loader-inputs.json`, and includes the added docs
+file in the retained recipe diff. These are source-level corrections, not yet an
+external package/install PASS or complete license/corresponding-source closure.
 
 The external workflow requires authenticated fork Actions access, the manual
 workflow registered on the default branch, a pushed/reviewed development SHA,

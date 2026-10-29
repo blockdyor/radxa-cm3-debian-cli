@@ -21,6 +21,15 @@ TARGET = {
 }
 RECIPES = {'linux-rk2410-nocsf', 'u-boot-rk2601', 'radxa-overlays',
            'radxa-bootutils', 'radxa-udev'}
+# Exact inputs at the locked rkbin commit, including the proprietary tool/notice.
+RKBIN_INPUTS = {
+    'LICENSE': 'd2765124a2c24d71aba3cbc6cdd6975a5a297821264eb6c26378a4c16cd16e92',
+    'RKBOOT/RK3566MINIALL.ini': 'fd2deb59cc2f5b0aeae8a2b035fdbde289944897c7014adb9f359db8f9c8ef16',
+    'bin/rk35/rk3566_ddr_1056MHz_v1.25.bin': 'c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26',
+    'bin/rk35/rk356x_usbplug_v1.17.bin': '4038b7857b840f539760decc0daf1601b8ff61cc17798101e93b11128a7f333e',
+    'bin/rk35/rk3568_bl31_v1.46.elf': 'c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749',
+    'tools/boot_merger': 'a431921abe40207cda19c271fc7b47144c735172f542a0153754601802704f58',
+}
 
 
 def load_lock(path):
@@ -152,6 +161,29 @@ def prepare_kernel_recipe(source, evidence):
                 '\t\t\t\t     sizeof(*sctx->clone_roots),')
 
 
+def verify_loader_inputs(source, evidence):
+    rkbin = source / 'rkbin'
+    for name, expected in RKBIN_INPUTS.items():
+        relative = Path('rkbin') / name
+        path = source / relative
+        if (any((source / p).is_symlink() for p in [relative, *relative.parents]) or
+                not path.is_file()):
+            raise ValueError('loader inputs must be regular non-symlink files')
+        with path.open('rb') as stream:
+            if hashlib.file_digest(stream, 'sha256').hexdigest() != expected:
+                raise ValueError('loader input hash drift: ' + name)
+    alias = rkbin / 'bin/rk35/rk3566_bl31_v1.46.elf'
+    if not alias.is_symlink() or os.readlink(alias) != 'rk3568_bl31_v1.46.elf':
+        raise ValueError('unexpected RK3566 BL31 alias')
+    # dh_installdocs preserves Rockchip's notice alongside the existing GPL copyright.
+    with (source / 'debian/u-boot-rk2601.docs').open('x') as stream:
+        stream.write('rkbin/LICENSE\n')
+    report = {'sha256': RKBIN_INPUTS, 'bl31_alias': os.readlink(alias),
+              'license_text': (rkbin / 'LICENSE').read_text(),
+              'distribution_review': 'INCOMPLETE: full corresponding-source and payload review required'}
+    (evidence / 'loader-inputs.json').write_text(json.dumps(report, indent=2) + '\n')
+
+
 def build_recipe(recipe, lock, work, evidence):
     source = work / recipe['name']
     checkout(recipe, source)
@@ -172,6 +204,8 @@ def build_recipe(recipe, lock, work, evidence):
             if not (source / 'src/arch/arm64/configs' / name).is_file():
                 raise ValueError('required kernel configuration patch not applied')
     if recipe['name'] == 'u-boot-rk2601':
+        verify_loader_inputs(source, evidence)
+        run('git', '-C', source, 'add', '--intent-to-add', 'debian/u-boot-rk2601.docs')
         # The first successful fuel-gauge poll still gates display/boot decisions.
         # Explicit zero defaults let GCC 14 prove the cached diagnostic values safe.
         local_patch(source, 'src/drivers/power/charge_animation.c',
@@ -183,6 +217,9 @@ def build_recipe(recipe, lock, work, evidence):
         if not separator:
             raise ValueError('loader recipe shape changed')
         path.write_text('UBOOT_PRODUCTS := radxa-cm3-rpi-cm4-io\n\nPACKING_VARIANTS :=' + rest)
+        local_patch(source, '.github/local/Makefile.local',
+                    'BL31=$(call find_latest_file,rkbin/bin,"$(1)_bl31_v*.elf")',
+                    'BL31=$(abspath rkbin/bin/rk35/rk3568_bl31_v1.46.elf)')
         local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
         run('file', source / 'rkbin/tools/boot_merger')
         run('readelf', '-l', source / 'rkbin/tools/boot_merger')

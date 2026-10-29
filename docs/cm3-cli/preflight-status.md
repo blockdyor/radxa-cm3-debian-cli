@@ -6,7 +6,41 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Latest run: attempt 11 failed before profile bootstrap
+## Latest run: attempt 12 clean exact-product directory bootstrap passed
+
+Run attempt 1 completed SUCCESS at 2026-10-29T13:21:17Z:
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40868611520
+Exact source: `12ad8dcd6d1457260b53c25dcff4f476bd327009`. Source and signed
+ARM64 ten-package lifecycle PASS; the real RSDK Trixie/ARM64/CLI route also
+bootstrapped a fresh directory with all 270 installed packages configured.
+The manifest includes every retained userspace seed and DKMS tool, and all ten
+selected identities match the BSP and board manifests. The rendered configuration
+hash and its exact run/revision/lock/signer/board receipt match. Its cleanup
+checks passed: no builder machine identity, SSH host keys, owner document or
+temporary build feed/key remained. Services were NOT STARTED, owner enrollment
+NOT RUN, and active target LSM NOT TESTED; no boot or hardware result is implied.
+
+Diagnostics artifact `12899169959` ZIP SHA256:
+`2f38468d4231395badcc964477fefb99e692b5777665afdea0ff285d7dc7def2`.
+Encrypted recovery artifact `12900446452` ZIP SHA256:
+`12febbc80d1a6bf6ae32f1eb824b3b334ee04e9363d96391b8bc7cf82153f49b`.
+Both match live API digests; all 54 ZIP members pass CRC. All twelve completed
+runs reconcile with the ledger, without reruns or reset history. Recovery
+decryption was not repeated. This is not enduring update trust or license closure.
+
+SonarCloud analysis at this exact source (2026-10-29T11:50:13Z) matches the GitHub
+SUCCESS check: gate OK, all five findings CLOSED/FIXED, zero open issues and zero
+hotspots. This does not clear subsequent code or satisfy physical gates.
+The image entrypoint remains held at 0/3. Attested bundle import, distinct-version
+BSP recovery, complete input/source/blob-license closure and target firstboot/
+services/active LSM remain unverified.
+
+The subsequent loader correction pins the actual rkbin input bytes and BL31 path,
+records the original Rockchip notice and adds it to the loader package's docs.
+It has not yet been compiled/installed externally; attempt 12 does not validate
+that later change or close the remaining corresponding-source/distribution review.
+
+## Historical attempt 11 failed before profile bootstrap
 
 Attempt 11, run attempt 1, completed FAILURE at 2026-10-29T10:48:16Z:
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40846835210
@@ -29,8 +63,8 @@ only in the disposable builder, before compilation. Its SHA256 and identity
 are verified before APT executes it; dependencies resolve from existing signed
 Trixie sources. No testing/unstable feed or package enters the target. Official
 Debian archive signature -> index -> package hash/size and an isolated AMD64
-Trixie APT dependency simulation passed locally. This is not an actual external
-install/bootstrap PASS; a changed counted validation is still required.
+Trixie APT dependency simulation passed locally. Attempt 12 then validates the
+actual builder-tool install and exact-product directory bootstrap, as recorded above.
 
 ## Historical attempt 10: ten-package lifecycle fixture passed
 
@@ -75,11 +109,11 @@ suppression or manual false-positive disposition was used.
 Later changes require their own exact-head analysis; this result does not extend
 the historical package PASS to later source or waive remaining prerequisites.
 
-The next changed stage adds a separately checked exact-product RSDK profile and
+Attempt 12 validates the separately checked exact-product RSDK profile and
 clean directory-bootstrap probe after same-job signed ARM64 acceptance. The
 signed install hook follows normal CA/keyring installation, before build-feed
 cleanup; source and index/payload closure are checked again. Local render,
-signature/tamper and hook-order fixtures are not an external bootstrap PASS.
+signature/tamper and hook-order fixtures alone were not an external bootstrap PASS.
 The image entrypoint stays held. The owner-group gate also now rejects other
 passwd accounts sharing its primary GID, not just supplementary membership;
 this is an isolated-fixture regression fix, not a demonstrated prior SSH bypass.
@@ -95,8 +129,7 @@ test now scans the explicit package input allowlist instead of generated files.
 CI ran 65 tests with one error and two explicit compiler-toolchain skips; no
 board/BSP build, admission or signed ARM64 install stage ran. This run stays in
 the cumulative ledger. Attempt 10 fixes that failure and validates the integration.
-Attempt 8 below validated only the previous nine-BSP fixture. The exact-product
-authenticated RSDK profile and full security/update/license gates remain open;
+Attempt 8 below validated only the previous nine-BSP fixture. The full security/update/license gates remain open;
 image assembly is held at 0/3. No target service, enrollment, boot or hardware
 result is implied by source or local tests.
 
