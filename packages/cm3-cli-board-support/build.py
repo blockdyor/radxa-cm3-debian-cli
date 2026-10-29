@@ -103,15 +103,33 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     parser.add_argument('--revision', required=True)
     parser.add_argument('--epoch', required=True, type=int)
+    parser.add_argument('--manifest', type=Path, help='Separate signed-probe input manifest')
     args = parser.parse_args()
     try:
         current = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
+        if args.revision != current:
+            raise ValueError('package inputs must match the exact checked-out commit')
+        commit_epoch = int(subprocess.check_output(['git', '-C', str(ROOT), 'show', '-s', '--format=%ct', 'HEAD'], text=True))
+        if args.epoch != commit_epoch:
+            raise ValueError('SOURCE_DATE_EPOCH must match the exact source commit timestamp')
         paths = ['packages/cm3-cli-board-support', 'scripts/cm3-owner-config.py',
                  'project/cm3-cli/source-lock.json', 'LICENSE']
         dirty = subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain', '--', *paths], text=True)
-        if args.revision != current or dirty:
+        if dirty:
             raise ValueError('package inputs must be clean and match the exact checked-out commit')
+        if args.manifest and args.manifest.exists():
+            raise ValueError('refusing to overwrite manifest output')
         build(args.output, args.revision, args.epoch)
+        if args.manifest:
+            args.manifest.parent.mkdir(parents=True, exist_ok=True)
+            args.manifest.write_text(json.dumps({
+                'source_revision': args.revision, 'source_date_epoch': args.epoch,
+                'source_lock_sha256': hashlib.sha256((ROOT / 'project/cm3-cli/source-lock.json').read_bytes()).hexdigest(),
+                'packages': {'cm3-cli-board-support': {
+                    'version': VERSION, 'architecture': 'all',
+                    'sha256': hashlib.sha256(args.output.read_bytes()).hexdigest(),
+                }},
+            }, indent=2) + '\n')
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'Board-support package build failed: {error}\n')
 

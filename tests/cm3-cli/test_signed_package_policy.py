@@ -85,19 +85,19 @@ class SignedPackagePolicyTests(unittest.TestCase):
         self.assertLess(container_command.index('arch-test arm64;'),
                         container_command.index('python3 /src/scripts/cm3-source-preflight.py'))
 
-    def test_boot_fixture_uses_supported_dropin_not_package_conffile(self):
+    def test_boot_policy_is_owned_by_admitted_package_not_synthetic_fixture(self):
         text = (ROOT / 'scripts/cm3-package-preflight.py').read_text()
         tree = ast.parse(text)
         puts = {node.args[1].value: node for node in ast.walk(tree)
                 if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
                 and node.func.id == 'put' and isinstance(node.args[1], ast.Constant)}
         self.assertNotIn('etc/default/u-boot', puts)
-        fragment = 'etc/u-boot-menu/conf.d/99-cm3-preflight.conf'
-        self.assertIn(fragment, puts)
-        content = ast.get_source_segment(text, puts[fragment].args[2])
-        assert content is not None
-        self.assertIn('console=ttyFIQ0,1500000n8 apparmor=1 security=apparmor', content)
-        self.assertIn('rockchip/{DTB}', content)
+        for fragment in ['etc/u-boot-menu/conf.d/99-cm3-preflight.conf',
+                         'etc/initramfs-tools/conf.d/cm3-gzip',
+                         'etc/kernel/install.d/99-update-overlay.install']:
+            self.assertNotIn(fragment, puts)
+        self.assertIn('exec apt-get download cm3-cli-board-support=0.1.0', text)
+        self.assertIn("'--unpack'", text)
         self.assertNotIn('--force-conf', text)
 
     def test_probe_is_not_image_or_update_trust_pass(self):
@@ -105,7 +105,7 @@ class SignedPackagePolicyTests(unittest.TestCase):
         for prohibited in ['trusted=yes', 'allow-unauthenticated', 'allow-insecure',
                            'allow-downgrades', 'bookworm', 'parted', 'mkfs', 'resize2fs']:
             self.assertNotIn(prohibited, text)
-        for required in ['NOT COMPLETE', 'NOT IMPLEMENTED: boot configuration is a test fixture',
+        for required in ['NOT COMPLETE', 'authenticated package configuration; services/boot NOT TESTED',
                          'NOT TESTED: chroot is not a target kernel boot',
                          'NOT TESTED: reinstall only', '--variant=minbase',
                          '--sign', 'signed-by=/usr/share/keyrings/cm3-preflight.gpg']:

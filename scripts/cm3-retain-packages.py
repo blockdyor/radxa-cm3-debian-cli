@@ -21,6 +21,9 @@ def seal(work, recipient, output, provenance):
     if json.loads((work / 'evidence/result.json').read_text())['status'] != 'PASS':
         raise ValueError('only a complete verified source build can be retained')
     inputs = packages.inspect_inputs(work, lock)
+    # Historical nine-BSP bundles remain readable; new runs retain board input too.
+    if (work / 'evidence/board-manifest.json').exists():
+        inputs.update(packages.inspect_board_input(work, provenance['GITHUB_SHA']))
     # Explicit allowlist: no target roots, repository keys, logs or arbitrary trees.
     files = list(inputs.values())
     for pattern in ['*.json', '*.diff', '*.config', '*.buildinfo', '*.changes']:

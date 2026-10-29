@@ -22,7 +22,7 @@ source = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(source)
 DTB = 'rk3566-radxa-cm3-rpi-cm4-io.dtb'
 # Original 33 seeds, except the standalone vendor ttyFIQ0 configuration package.
-# Its replacement board-support package is a later gate, not faked by this fixture.
+# The separately verified board package supplies boot/security policy.
 SEEDS = '''apt debian-archive-keyring ca-certificates systemd-sysv udev dbus kmod
 initramfs-tools u-boot-menu openssh-server sudo adduser passwd iproute2 iputils-ping
 network-manager wpasupplicant iw wireless-regdb systemd-timesyncd nftables e2fsprogs
@@ -45,7 +45,7 @@ def digest(path):
 
 def verify_manifest(manifest, expected):
     if set(manifest) != set(expected):
-        raise ValueError('exact nine-package manifest required')
+        raise ValueError('exact package manifest required')
     for name, (version, arch) in expected.items():
         item = manifest[name]
         if ((item['version'], item['architecture']) != (version, arch) or
@@ -73,6 +73,37 @@ def inspect_inputs(work, lock):
     if set(found) != set(expected):
         raise ValueError('incomplete selected package closure')
     return found
+
+
+def inspect_board_input(work, revision):
+    """Admit the configuration package separately; never widen the BSP lock."""
+    manifest = json.loads((work / 'evidence/board-manifest.json').read_text())
+    expected = {'cm3-cli-board-support': ('0.1.0', 'all')}
+    verify_manifest(manifest['packages'], expected)
+    if (re.fullmatch('[0-9a-f]{40}', revision) is None or
+            manifest['source_revision'] != revision or
+            manifest['source_lock_sha256'] != digest(ROOT / 'project/cm3-cli/source-lock.json') or
+            type(manifest['source_date_epoch']) is not int or manifest['source_date_epoch'] < 0):
+        raise ValueError('board source provenance mismatch')
+    files = list((work / 'board-debs').iterdir())
+    if (len(files) != 1 or files[0].is_symlink() or not files[0].is_file() or
+            files[0].name != 'cm3-cli-board-support_0.1.0_all.deb'):
+        raise ValueError('exact regular board package required')
+    path = files[0]
+    identity = command('dpkg-deb', '--show', '--showformat=${Package}\t${Version}\t${Architecture}',
+                       path, capture=True)
+    if (identity != 'cm3-cli-board-support\t0.1.0\tall' or
+            digest(path) != manifest['packages']['cm3-cli-board-support']['sha256']):
+        raise ValueError('board package identity/hash mismatch')
+    with tempfile.TemporaryDirectory(prefix='cm3-board-inspect-') as directory:
+        command('dpkg-deb', '--extract', path, directory)
+        provenance = json.loads((Path(directory) / 'usr/share/doc/cm3-cli-board-support/source.json').read_text())
+    for field in ['source_revision', 'source_date_epoch', 'source_lock_sha256']:
+        if provenance[field] != manifest[field]:
+            raise ValueError('embedded board provenance mismatch')
+    if provenance['target'] != 'radxa-cm3-rpi-cm4-io':
+        raise ValueError('board target mismatch')
+    return {'cm3-cli-board-support': path}
 
 
 def signed_repo(packages, destination, keyhome, evidence):
@@ -156,15 +187,7 @@ def prepare_target(work, evidence):
             raise ValueError('target is not ARM64')
         # A fixture OS root, never a real disk or the builder root from /proc/cmdline.
         put(root, 'etc/fstab', 'UUID=11111111-1111-4111-8111-111111111111 / ext4 defaults 0 1\n')
-        # Use u-boot-menu's supported fragment; do not pre-create its dpkg conffile.
-        put(root, 'etc/u-boot-menu/conf.d/99-cm3-preflight.conf',
-            'U_BOOT_PARAMETERS="ro console=ttyFIQ0,1500000n8 apparmor=1 security=apparmor"\n'
-            f'U_BOOT_FDT="rockchip/{DTB}"\nU_BOOT_FDT_DIR="/usr/lib/linux-image-"\n'
-            'U_BOOT_FDT_OVERLAYS_DIR="/boot/cm3-no-enabled-overlays/"\n')
-        put(root, 'etc/initramfs-tools/conf.d/cm3-gzip', 'COMPRESS=gzip\n')
-        # Avoid running-host board detection and systemd-boot entry mutation in this fixture.
-        # The final board-support package must own this override before image enablement.
-        put(root, 'etc/kernel/install.d/99-update-overlay.install', '#!/bin/sh\nexit 0\n', 0o755)
+
         repo = root / 'opt/cm3-repo'
         shutil.copytree(work / 'signed-repository', repo)
         shutil.copyfile(repo / 'archive-key.gpg', root / 'usr/share/keyrings/cm3-preflight.gpg')
@@ -247,7 +270,31 @@ def verify_gzip_initramfs(path):
             'early_archives': early_archives, 'gzip_integrity': 'PASS'}
 
 
-def test_target(root, lock, evidence):
+def install_board_policy(root, board):
+    # APT authenticates and copies even file:// inputs; no dependency configure yet.
+    chroot(root, 'sh', '-ec', 'cd /var/cache/apt/archives; exec apt-get download cm3-cli-board-support=0.1.0')
+    cached = root / 'var/cache/apt/archives/cm3-cli-board-support_0.1.0_all.deb'
+    if not cached.is_file() or cached.is_symlink() or digest(cached) != digest(board):
+        raise ValueError('authenticated board download differs from admitted input')
+    chroot(root, 'dpkg', '--unpack', '/' + str(cached.relative_to(root)))
+    mask = root / 'etc/kernel/install.d/99-update-overlay.install'
+    if not mask.is_symlink() or os.readlink(mask) != '/dev/null':
+        raise ValueError('board-owned overlay mask missing before kernel configuration')
+    chroot(root, 'dpkg-query', '-S', '/etc/kernel/install.d/99-update-overlay.install')
+
+
+def verify_ssh_policy(root):
+    (root / 'run/sshd').mkdir(mode=0o755, exist_ok=True)
+    chroot(root, 'sshd', '-t')
+    ssh = chroot(root, 'sshd', '-T', capture=True)
+    for setting in ['permitrootlogin no', 'passwordauthentication no',
+                    'kbdinteractiveauthentication no', 'authenticationmethods publickey',
+                    'allowgroups cm3-cli-owner']:
+        if setting not in ssh.splitlines():
+            raise ValueError('effective SSH policy mismatch: ' + setting)
+
+
+def test_target(root, lock, evidence, board):
     expected = source.expected_packages(lock)
     kernel = next(name.removeprefix('linux-image-') for name, (_, arch) in expected.items()
                   if name.startswith('linux-image-') and arch == 'arm64')
@@ -255,12 +302,18 @@ def test_target(root, lock, evidence):
     headers = [f'{name}={version}' for name, (version, _) in expected.items()
                if name.startswith('linux-headers-')]
     apt(root, 'install', '-y', *headers)
+    install_board_policy(root, board)
+    expected = dict(expected, **{'cm3-cli-board-support': ('0.1.0', 'all')})
     apt(root, 'install', '-y', *[f'{name}={version}' for name, (version, _) in expected.items()])
     for name, (version, arch) in expected.items():
         actual = chroot(root, 'dpkg-query', '-W', '-f=${Version}\t${Architecture}\t${db:Status-Status}',
                         name, capture=True).strip()
         if actual != f'{version}\t{arch}\tinstalled':
             raise ValueError('package not fully configured: ' + name)
+    verify_ssh_policy(root)
+    (evidence / 'ssh-policy.json').write_text(json.dumps({
+        'effective_sshd_policy': 'PASS', 'service_started': False,
+    }, indent=2) + '\n')
     dtb = root / f'usr/lib/linux-image-{kernel}/rockchip/{DTB}'
     if not dtb.is_file():
         raise ValueError('missing exact-carrier DTB')
@@ -324,13 +377,14 @@ def test_target(root, lock, evidence):
         'dummy_module_count': len(modules), 'dtbo_count': len(overlays),
         'active_lsm': 'NOT TESTED: chroot is not a target kernel boot',
         'distinct_version_bsp_upgrade': 'NOT TESTED: reinstall only',
-        'board_support': 'NOT IMPLEMENTED: boot configuration is a test fixture',
+        'board_support': 'authenticated package configuration; services/boot NOT TESTED',
     }, indent=2) + '\n')
     for path in (root / 'var/lib/apt/lists').glob('*InRelease'):
         shutil.copyfile(path, evidence / ('target-' + path.name))
     # Exercise DKMS removal and reinstall, without running loader/media scripts.
     apt(root, 'remove', '-y', 'radxa-overlays-dkms')
     # Removal also removes the dependent image alias; restore the entire whitelist.
+    install_board_policy(root, board)
     apt(root, 'install', '-y', *[f'{name}={version}' for name, (version, _) in expected.items()])
     chroot(root, 'dkms', 'autoinstall', '-k', kernel)
     if chroot(root, 'dpkg', '--audit', capture=True).strip():
@@ -340,6 +394,32 @@ def test_target(root, lock, evidence):
                         name, capture=True).strip()
         if actual != f'{version}\t{arch}\tinstalled':
             raise ValueError('whitelist not restored after removal: ' + name)
+    # Exercise the real removal fail-closed policy and purge, without starting SSH.
+    apt(root, 'remove', '-y', 'cm3-cli-board-support')
+    denial = root / 'etc/ssh/sshd_config.d/00-cm3-cli-removed.conf'
+    if denial.read_text() != 'DenyUsers *\n':
+        raise ValueError('board removal did not leave SSH closed')
+    apt(root, 'purge', '-y', 'cm3-cli-board-support')
+    if not denial.is_file() or (root / 'etc/sudoers.d/cm3-cli-owner').exists():
+        raise ValueError('board purge did not preserve fail-closed SSH policy')
+    install_board_policy(root, board)
+    apt(root, 'install', '-y', 'cm3-cli-board-support=0.1.0')
+    if denial.exists() or chroot(root, 'dpkg', '--audit', capture=True).strip():
+        raise ValueError('board package not cleanly restored after purge')
+    if chroot(root, 'dpkg-query', '-W', '-f=${Version}\t${Architecture}\t${db:Status-Status}',
+              'cm3-cli-board-support', capture=True).strip() != '0.1.0\tall\tinstalled':
+        raise ValueError('board package not configured after purge/restore')
+    verify_ssh_policy(root)
+    chroot(root, 'u-boot-update')
+    if menu.read_bytes() != before:
+        raise ValueError('boot policy changed after board purge/restore')
+    verify_gzip_initramfs(root / f'boot/initrd.img-{kernel}')
+    (evidence / 'board-lifecycle.json').write_text(json.dumps({
+        'package': 'cm3-cli-board-support', 'version': '0.1.0',
+        'configure_reinstall_remove_purge_restore': 'PASS',
+        'service_execution': 'NOT TESTED: policy-rc.d denies starts; no target boot',
+        'owner_enrollment': 'NOT TESTED: no owner credentials in this fixture',
+    }, indent=2) + '\n')
     (root / 'etc/apt/sources.list.d/cm3-preflight.list').unlink()
     (root / 'usr/share/keyrings/cm3-preflight.gpg').unlink()
     apt(root, 'update')
@@ -375,6 +455,8 @@ def main():
               'full_package_preflight': 'NOT COMPLETE', 'image_build': 'NOT RUN'}
     try:
         packages = inspect_inputs(work, lock)
+        board = inspect_board_input(work, os.environ['GITHUB_SHA'])
+        packages.update(board)
         command('apt-get', 'install', '--no-install-recommends', '-y', 'apt-utils', 'gnupg',
                 'gpgv', 'mmdebstrap', 'arch-test', 'debian-archive-keyring', 'mount')
         # Private key lives outside /work and all upload paths, and is always deleted.
@@ -382,7 +464,7 @@ def main():
             Path(keydir).chmod(0o700)
             signed_repo(packages, work / 'signed-repository', keydir, evidence)
         with prepare_target(work, evidence) as root:
-            test_target(root, lock, evidence)
+            test_target(root, lock, evidence, board['cm3-cli-board-support'])
         status['status'] = 'PASS'
     finally:
         status['elapsed_seconds'] = round(time.time() - started, 2)

@@ -71,6 +71,31 @@ class RetentionTests(unittest.TestCase):
                                            stderr=subprocess.DEVNULL).returncode, 0)
         self.assertFalse(list(self.work.glob('cm3-retention-*')))
 
+    def test_tenth_package_and_separate_manifest_are_retained_without_keys(self):
+        spec = importlib.util.spec_from_file_location('board_builder', ROOT / 'packages/cm3-cli-board-support/build.py')
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        deb = self.work / 'board-debs/cm3-cli-board-support_0.1.0_all.deb'
+        revision = 'a' * 40
+        builder.build(deb, revision, 1700000000)
+        (self.work / 'evidence/board-manifest.json').write_text(json.dumps({
+            'source_revision': revision, 'source_date_epoch': 1700000000,
+            'source_lock_sha256': retention.packages.digest(ROOT / 'project/cm3-cli/source-lock.json'),
+            'packages': {'cm3-cli-board-support': {'version': '0.1.0', 'architecture': 'all',
+                                                  'sha256': retention.packages.digest(deb)}},
+        }))
+        output, plain = self.root / 'ten.cms', self.root / 'ten.tar.gz'
+        retention.seal(self.work, self.certificate, output, {'GITHUB_SHA': revision})
+        subprocess.run(['openssl', 'cms', '-decrypt', '-binary', '-inform', 'DER',
+                        '-in', str(output), '-recip', str(self.certificate), '-inkey', str(self.key),
+                        '-out', str(plain)], check=True)
+        with tarfile.open(plain) as archive:
+            names = archive.getnames()
+            self.assertEqual(len([n for n in names if n.endswith('.deb')]), 10)
+            self.assertIn('evidence/board-manifest.json', names)
+            self.assertNotIn('private-key', names)
+            self.assertEqual(archive.extractfile(str(deb.relative_to(self.work))).read(), deb.read_bytes())
+
     def test_changed_package_and_evidence_symlink_rejected(self):
         deb = next((self.work / 'selected-debs').iterdir())
         original = deb.read_bytes()

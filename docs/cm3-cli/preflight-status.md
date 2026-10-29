@@ -6,7 +6,24 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Latest: package attempt 8 passed the source/install fixture
+## Current integration: tenth-package validation pending
+
+The workflow now builds `cm3-cli-board-support` separately from the nine locked
+BSP packages, binding its manifest and embedded provenance to the exact source
+revision, commit timestamp and unchanged source lock. The signed ARM64 probe
+uses its actual boot/security policy, not synthetic boot fragments. Authenticated
+download/hash verification and package unpack precede kernel configuration;
+effective SSH policy and board remove/purge/restore checks are included, with
+policy revalidation after restore. Encrypted recovery retains all ten admitted
+packages, never plaintext payloads or signing/recipient keys.
+
+This changed integration has local regression coverage but no new external PASS
+yet. Attempt 8 below validated only the previous nine-BSP fixture. The exact-product
+authenticated RSDK profile and full security/update/license gates remain open;
+image assembly is held at 0/3. No target service, enrollment, boot or hardware
+result is implied by source or local tests.
+
+## Latest completed run: package attempt 8 passed the source/install fixture
 
 Run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40808183234
 
@@ -66,7 +83,7 @@ hardware rows remain byte-identical. The separate image ledger remains 0/3, held
 
 The existing source baseline lane can now proceed from a successful dependency
 fixture, not from another research handoff. Before enabling an image job it must
-replace the boot fixtures with the reviewed `cm3-cli-board-support` package,
+pass the newly integrated `cm3-cli-board-support` package checks,
 wire the exact-product authenticated CLI profile without upstream insecure trust
 hooks, implement/test secure owner enrollment and identity creation, and close
 the applicable update/trust/license prerequisites. Keep the image entrypoint held

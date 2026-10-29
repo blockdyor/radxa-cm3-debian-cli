@@ -214,7 +214,8 @@ attempt 7 under the limits above; this historical command is not reusable.
 
 Intended full probe behavior (NOT an end-to-end PASS): it creates an ephemeral
 Ed25519 job-only key outside retained output,
-signs a nine-package whitelist APT repository, verifies it, then bootstraps a
+signs the nine locked BSP packages plus the separately admitted board package,
+verifies that whitelist APT repository, then bootstraps a
 new Essential-inclusive ARM64 minbase directory from authenticated Debian
 Trixie/update/security repositories. It adds the BSP through scoped signed-by,
 requires signature failure on deliberately tampered metadata, installs the
@@ -224,7 +225,15 @@ and checks exact DTB/loader files, gzip initramfs, serial/AppArmor boot argument
 and idempotent extlinux generation in a fixture. It exercises BSP reinstallation,
 ordinary Debian upgrade, overlay removal/reinstallation and dpkg audit; records
 the complete final package/source manifest and candidate origins; then removes
-the build-only APT source/key. Loader setup is hashed, NEVER executed.
+the build-only APT source/key. The workflow builds `cm3-cli-board-support` from
+the exact checked-out revision and commit timestamp, with a separate identity,
+hash and embedded-source manifest; it does not alter the nine-BSP source lock.
+The probe uses authenticated `apt-get download`, compares admitted bytes, and
+unpacks the board-owned boot policy/mask before kernel configuration. It checks
+effective SSH policy without starting services and exercises board removal,
+purge and restore, including restored SSH/boot policy. These newly added checks
+are pending external execution, not covered by attempt 8's historical PASS.
+Loader setup is hashed, NEVER executed.
 
 Only the disposable external container is privileged for mmdebstrap and isolated
 proc/sys/tmpfs-dev mounts, with guaranteed unmount cleanup. It receives no GitHub
@@ -234,8 +243,8 @@ jobs and a 180-minute total bound. Keys, target directory and signed package
 payloads are NOT uploaded in plaintext. Diagnostic retention remains allowlisted;
 the separate encrypted recovery artifact described above retains compiled output.
 
-Even a PASS here is NOT the full package gate: deterministic configuration is
-a probe fixture, not `cm3-cli-board-support`; no target kernel boots in chroot,
+Even a PASS here is NOT the full package gate: the OS UUID is a test fixture,
+although boot/security policy now comes from `cm3-cli-board-support`; no target kernel boots in chroot,
 so active LSM/first boot/enrollment/update recovery are untested. Reinstalling
 the same version is NOT distinct-version BSP upgrade validation. Attested update
 trust, secure CLI integration and input-snapshot/license closure remain pending.

@@ -1,11 +1,12 @@
-# Owner/key enrollment contract (validation only)
+# Owner/key enrollment contract (experimental source)
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
 The independent validator is `scripts/cm3-owner-config.py`. It reads one JSON
 file, validates it and returns success/failure without creating accounts,
-changing SSH, writing keys, starting services or touching disks. It is not yet
-connected to first boot, and is not a secure-provisioning PASS.
+changing SSH, writing keys, starting services or touching disks. The project-owned
+board package uses this validator in its separate first-boot enroller. Source and
+fixture tests are not a secure-provisioning or boot PASS.
 
 Version 1 has exactly three fields:
 
@@ -32,16 +33,18 @@ automatically nor evaluates any file as a shell script.
 
 ## Remaining integration requirements
 
-A later reviewed `cm3-cli-board-support` package must enforce file ownership,
-regular-file/no-symlink checks and single-owner account collision policy before
-using this contract. It must gate SSH on completed provisioning independent of
-HDMI, lock password authentication and root SSH, create unique host/machine
-identities, preserve serial recovery and provide transactional/idempotent
-interruption handling. No default accounts/passwords, arbitrary `/config` command
-execution or data-disk scanning/expansion may be introduced. Root-only sudo policy
-must be explicitly documented and tested before account creation is enabled.
+The `cm3-cli-board-support` source enforces root-owned mode0600 regular input at
+`/etc/cm3-cli/owner.json`, no symlinks/hardlinks and single-owner collision checks.
+Its service gates SSH on enrollment, identity creation, firewall and active
+AppArmor, independent of HDMI; passwords and root SSH are disabled. The enrolled
+key owner deliberately receives passwordless sudo because its password is locked.
+No default owner/key, arbitrary `/config` shell command or disk expansion exists.
+See the package README for offline recovery and interrupted-account boundaries.
 
-No provisioning service or account-mutating code is installed by this revision.
-The current ARM64 package probe uses boot fixtures only and does not test owner
-creation, first boot, SSH readiness, identity uniqueness or an active target LSM.
+The source package now contains a provisioning service and account-mutating code,
+but no image installation or target execution is established. Local tests use
+isolated account fixtures. The ARM64 package probe denies service starts and
+does not test owner creation, first boot, SSH readiness, identity uniqueness or
+an active target LSM. Image integration must remove builder machine IDs and host
+keys; those checks and the exact-product image profile are not complete.
 Hardware and secure first-boot gates remain open.
