@@ -18,7 +18,15 @@ policy revalidation after restore. Encrypted recovery retains all ten admitted
 packages, never plaintext payloads or signing/recipient keys.
 
 This changed integration has local regression coverage but no new external PASS
-yet. Attempt 8 below validated only the previous nine-BSP fixture. The exact-product
+yet. Attempt 9 at `878f197ee9c2a8e3de4f198b744b24524ad0bfd7` failed before
+compilation: a policy test read generated `__pycache__` bytes as UTF-8. Exact run:
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40824419303
+The error was reproduced locally with Python bytecode overrides removed; the
+test now scans the explicit package input allowlist instead of generated files.
+CI ran 65 tests with one error and two explicit compiler-toolchain skips; no
+board/BSP build, admission or signed ARM64 install stage ran. This run stays in
+the cumulative ledger. A changed retry must validate the actual integration.
+Attempt 8 below validated only the previous nine-BSP fixture. The exact-product
 authenticated RSDK profile and full security/update/license gates remain open;
 image assembly is held at 0/3. No target service, enrollment, boot or hardware
 result is implied by source or local tests.

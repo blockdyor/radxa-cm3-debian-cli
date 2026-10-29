@@ -97,7 +97,18 @@
       "encrypted_artifact_id": 12872099361,
       "encrypted_artifact_sha256": "ec097c400eb4c784f14fc911a5f825d594bf60c95744b1cb9203ed1e5f67efd3",
       "retained_payloads": "Native GitHub diagnostics and allowlisted encrypted compilation retained through 2026-11-12; both downloaded ZIP SHA256 values match live API digests and all ZIP members pass CRC. Exact nine-package manifest, source lock and run admission verified. No plaintext recovery attempted; no private key or local evidence uploaded."
+    },
+    {
+      "number": 9,
+      "commit": "878f197ee9c2a8e3de4f198b744b24524ad0bfd7",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40824419303",
+      "run_attempt": 1,
+      "hypothesis": "Attempt 9: authenticated tenth board policy before kernel hooks; validate SSH boot and purge restore",
+      "result": "FAIL before budget admission/compilation: policy test recursively read generated __pycache__ bytecode as UTF-8. Reproduced locally with bytecode environment overrides removed. No BSP or board compilation stage, signed ARM64 install, image or hardware execution occurred. Diagnostic upload found no files because runner/admission/source stages were not reached; actual job logs retained separately.",
+      "failure_stage": "local-policy-tests",
+      "demonstrable_progress": false,
+      "completed_at": "2026-10-29T05:37:12Z"
     }
   ],
-  "status": "Eight package attempts recorded without resetting history. Attempt 8 passes source compilation and the signed ARM64 install/DKMS/boot-fixture probe, including external confirmation of the newc-prefix gzip correction. Full package preflight remains NOT COMPLETE; secure board support, active target LSM, distinct-version update/recovery and update trust remain open. Current owner policy permits evidence-based development retries, not unchanged failures or three consecutive same-stage failures without progress. Private recovery optional; image0/3 held and all hardware gates unchanged."
+  "status": "Nine workflow attempts recorded without resetting history. Attempt 8 passed the nine-BSP fixture; attempt 9 stopped at a generated-bytecode policy-test error before any compilation. A changed retry must fix that reproduced failure and still validate the tenth board package. Full preflight NOT COMPLETE: exact-product profile, secure provisioning/active target LSM, distinct-version update/recovery and update trust remain open. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
 }

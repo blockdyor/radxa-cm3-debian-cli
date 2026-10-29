@@ -259,11 +259,11 @@ class BoardPackageTests(unittest.TestCase):
         self.assertNotIn('flush ruleset', firewall)
         self.assertEqual(firewall.count('policy drop'), 2)
         self.assertIn('ipv6-icmp accept', firewall)
-        for path in root.rglob('*'):
-            if path.is_file():
-                text = path.read_text()
-                for prohibited in ['resize2fs', 'mkfs', '/dev/nvme', 'setup.sh', 'eval ', 'shell=True']:
-                    self.assertNotIn(prohibited, text)
+        # Scan actual package inputs, not generated import bytecode on CI hosts.
+        for name in builder.PAYLOAD:
+            text = (root / name).read_text()
+            for prohibited in ['resize2fs', 'mkfs', '/dev/nvme', 'setup.sh', 'eval ', 'shell=True']:
+                self.assertNotIn(prohibited, text)
 
 
 if __name__ == '__main__':
