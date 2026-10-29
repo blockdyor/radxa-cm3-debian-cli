@@ -12,9 +12,7 @@ on:
         required: true
         type: string
 
-permissions:
-  contents: read
-  actions: read
+permissions: {}
 
 concurrency:
   group: cm3-phase-b-exclusive
@@ -23,6 +21,9 @@ concurrency:
 jobs:
   packages:
     if: github.repository == 'blockdyor/radxa-cm3-debian-cli'
+    permissions:
+      contents: read
+      actions: read
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:

@@ -164,6 +164,8 @@ class SourcePolicyTests(unittest.TestCase):
     def test_attestation_is_isolated_from_privileged_package_build(self):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
         packages, provenance = workflow.split('\n  provenance:\n')
+        self.assertIn('permissions: {}', packages)
+        self.assertIn('    permissions:\n      contents: read\n      actions: read', packages)
         self.assertNotIn('id-token: write', packages)
         self.assertNotIn('attestations: write', packages)
         self.assertIn('needs: packages', provenance)
