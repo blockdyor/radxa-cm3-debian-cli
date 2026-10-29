@@ -86,6 +86,12 @@ def build(destination, revision, epoch):
         conffiles = sorted('/' + str(path.relative_to(stage)) for path in (stage / 'etc').rglob('*')
                            if path.is_file() and not path.is_symlink())
         (control / 'conffiles').write_text('\n'.join(conffiles) + '\n')
+        executable = {'DEBIAN/postinst', 'DEBIAN/prerm', 'DEBIAN/postrm',
+                      'usr/lib/cm3-cli/enroll.py', 'usr/lib/cm3-cli/boot-update'}
+        stage.chmod(0o755)
+        for path in stage.rglob('*'):
+            if not path.is_symlink():
+                path.chmod(0o755 if path.is_dir() or str(path.relative_to(stage)) in executable else 0o644)
         env = dict(os.environ, SOURCE_DATE_EPOCH=str(epoch))
         subprocess.run(['dpkg-deb', '--root-owner-group', '--uniform-compression', '-Zgzip',
                         '--build', str(stage), str(destination)], env=env, check=True)

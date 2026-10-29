@@ -191,8 +191,12 @@ class BoardPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             first, second = directory / 'first.deb', directory / 'second.deb'
-            for output in [first, second]:
-                builder.build(output, 'a' * 40, 1700000000)  # explicit synthetic provenance fixture
+            for output, mask in [(first, 0o022), (second, 0o077)]:
+                previous = os.umask(mask)
+                try:
+                    builder.build(output, 'a' * 40, 1700000000)  # synthetic provenance fixture
+                finally:
+                    os.umask(previous)
             self.assertEqual(first.read_bytes(), second.read_bytes())
             identity = subprocess.check_output(['dpkg-deb', '-f', str(first), 'Package', 'Version', 'Architecture'], text=True)
             self.assertIn('cm3-cli-board-support', identity)
@@ -214,6 +218,8 @@ class BoardPackageTests(unittest.TestCase):
             self.assertEqual(list((root / 'etc/ssh').glob('ssh_host_*')), [])
             self.assertNotIn('Provides:', (root / 'DEBIAN/control').read_text())
             self.assertNotIn('NetworkManager', (root / 'DEBIAN/conffiles').read_text())
+            self.assertIn('update-initramfs -u -k all', (root / 'DEBIAN/postinst').read_text())
+            self.assertIn('/usr/lib/cm3-cli/boot-update', (root / 'DEBIAN/postinst').read_text())
             self.assertTrue((root / 'usr/lib/systemd/system/NetworkManager.service.d/cm3-cli.conf').is_file())
             self.assertEqual(list(root.rglob('__pycache__')), [])
             allowed = set(builder.PAYLOAD) | {'usr/lib/cm3-cli/owner_config.py',
