@@ -8,8 +8,15 @@ https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
 ## Current implementation checkpoint — experimental pipeline not yet executed
 
-Public image dispatch/delivery is currently withheld for the specific unresolved
-OVERLAY-1 distribution scope below, not for hardware tests or an agent-count gate.
+Public image delivery remains withheld for unresolved OVERLAY-1. The owner's
+later build-only decision allows engineering assembly and inspection without
+payload publication; it does not grant redistribution rights or hardware approval.
+The manual workflow defaults `public_distribution=false` and rejects true before
+compilation. Build-only runs disable recovery ciphertext and inherited broad
+diagnostic uploads, retaining only explicitly staged diagnostics and their
+exact-source attestation. Payloads and source bundles stay runner-local and are
+discarded with that disposable runner; there is no approved private retention
+destination and no downloadable image from this mode.
 At the locked overlay commit `a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6`,
 the root `LICENSE` contains GPLv2 while `debian/copyright` declares `Files: *`
 GPL-3+. The dummy module source `debian/radxa-overlays.c` declares
@@ -20,7 +27,9 @@ silently relicense or remove board support. Obtain an upstream file-scope
 clarification covering the overlay sources and dummy module before public upload.
 This is an unresolved permission question, not a finding that all overlays are
 undistributable. Exact source links and the existing file-level inventory are
-in `provenance.md` (OVERLAY-1). No new image attempt is spent on this blocker.
+in `provenance.md` (OVERLAY-1). Upstream clarification requested once:
+https://github.com/radxa-pkg/radxa-overlays/issues/606
+Engineering build/inspection and redistribution clearance are separate outcomes.
 
 Source delivery now requires both actual kernel/U-Boot build configurations,
 checks kernel configuration against the retained build evidence, and exports the

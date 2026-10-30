@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage only verified image bytes and hashed source/notice materials for public CI upload."""
+"""Stage build-only diagnostics; public payload delivery is held for OVERLAY-1."""
 import importlib.util
 import json
 import os
@@ -35,6 +35,11 @@ def checked_materials(directory, manifest):
 
 
 def stage(work):
+    # An owner build-only approval is not a copyright-holder distribution grant.
+    raise ValueError('OVERLAY-1 unresolved: public payload distribution blocked')
+
+
+def diagnostics(work):
     revision = assembly.boundary(work)
     run_id = os.environ['GITHUB_RUN_ID']
     image_dir = work / 'image-output'
@@ -49,22 +54,19 @@ def stage(work):
     image = assembly.regular(image_dir / (assembly.NAME + '.xz'))
     if assembly.profile.probe.digest(image) != result['compressed_sha256']:
         raise ValueError('verified image changed before upload')
-    materials = checked_materials(delivery_dir, delivery)
-    destination = work / 'public-image'
+    checked_materials(delivery_dir, delivery)
+    destination = work / 'public-diagnostics'
     destination.mkdir()
-    for name in [assembly.NAME + '.xz', 'packages.tsv', 'verification.json']:
+    for name in ['packages.tsv', 'verification.json']:
         shutil.copyfile(assembly.regular(image_dir / name), destination / name)
-    for name in materials:
-        output = destination / 'sources-and-notices' / name
-        output.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(assembly.regular(delivery_dir / name), output)
-    for name in ['image-stage-a.json', 'image-admission.json', 'image-offline-tests.json', 'image-assembly.guestfish']:
+    for name in ['image-stage-a.json', 'image-admission.json', 'image-offline-tests.json']:
         shutil.copyfile(assembly.regular(work / 'evidence' / name), destination / name)
     notes = (LABEL + '\n\nDebian Trixie / ARM64 / CLI / radxa-cm3-rpi-cm4-io / 512-byte sectors.\n'
              'Source: ' + revision + '\nRun: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/' + run_id + '\n'
              'Raw image SHA256: ' + result['image_sha256'] + '\nRaw image bytes: ' + str(result['image_bytes']) + '\n'
              'Compressed image SHA256: ' + result['compressed_sha256'] + '\nCompressed bytes: ' + str(result['compressed_bytes']) + '\n\n'
-             'Verify SHA256SUMS before decompressing with xz --decompress --keep.\n'
+             'BUILD-ONLY: payloads are not uploaded or retained; discarded with the disposable runner.\n'
+             'Redistribution clearance: BLOCKED (OVERLAY-1); upstream radxa-pkg/radxa-overlays#606.\n'
              'No default owner, passwords, SSH host keys or private credentials are supplied.\n'
              'Owner document schema/validation: scripts/cm3-owner-config.py in corresponding builder sources.\n'
              'See the preserved board README and build/provenance/limitations records for offline preparation.\n'
@@ -73,21 +75,34 @@ def stage(work):
              'Physical firstboot, enrollment, services, active LSM, update/rollback, compatibility and sustained performance remain UNTESTED.\n'
              'Neither source/package checks nor read-only image inspection prove boot success.\n'
              'Original G0-G7 criteria and hardware matrix remain unchanged; stable release BLOCKED.\n'
-             'Sources and original per-file notices accompany the image; no license is replaced by a wrapper license.\n'
+             'Source materials and original notices remain runner-local; no relicensing.\n'
              'Rockchip proprietary DDR/BL31/helper terms prohibit reverse engineering; see original rkbin LICENSE.\n')
     (destination / 'README.txt').write_text(notes)
     (destination / 'RAW-SHA256SUMS').write_text(result['image_sha256'] + '  ' + assembly.NAME + '\n')
+    (destination / 'IMAGE-XZ-SHA256SUMS').write_text(result['compressed_sha256'] + '  ' + assembly.NAME + '.xz\n')
+    engineering = dict(label=LABEL, source_revision=revision, run_id=run_id,
+                       engineering='PASS', redistribution='BLOCKED: OVERLAY-1',
+                       payload='NOT RETAINED; discarded with disposable runner',
+                       image_sha256=result['image_sha256'], compressed_sha256=result['compressed_sha256'],
+                       image_bytes=result['image_bytes'], compressed_bytes=result['compressed_bytes'],
+                       hardware='UNTESTED',
+                       files={path.name: assembly.profile.probe.digest(assembly.regular(path))
+                              for path in sorted(destination.iterdir())})
+    (destination / 'engineering-result.json').write_text(json.dumps(engineering, indent=2) + '\n')
     with (destination / 'SHA256SUMS').open('x') as stream:
         for path in sorted(destination.rglob('*')):
             if path.is_file() and path.name != 'SHA256SUMS':
                 stream.write(assembly.profile.probe.digest(assembly.regular(path)) + '  ' + str(path.relative_to(destination)) + '\n')
-    print('Verified sanitized experimental delivery:', destination)
+    print('Verified build-only engineering diagnostics; no payload publication:', destination)
 
 
 def main():
-    if len(sys.argv) != 1:
-        raise SystemExit('no path arguments accepted; fixed external /work only')
-    stage(Path('/work'))
+    if sys.argv[1:] == ['--diagnostics']:
+        diagnostics(Path('/work'))
+    elif len(sys.argv) == 1:
+        stage(Path('/work'))
+    else:
+        raise SystemExit('usage: cm3-publish-image.py [--diagnostics]; fixed external /work only')
 
 
 if __name__ == '__main__':

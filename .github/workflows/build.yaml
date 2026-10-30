@@ -16,6 +16,11 @@ on:
         required: true
         type: boolean
         default: false
+      public_distribution:
+        description: Publish image payloads (blocked pending OVERLAY-1 clarification)
+        required: true
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -43,11 +48,17 @@ jobs:
           fetch-depth: 0 # Pinned historical configuration parity tests need their baseline.
           persist-credentials: false
       - name: Check revision, lock and local tests
+        env:
+          PUBLIC_DISTRIBUTION: ${{ inputs.public_distribution }}
         run: |
           set -euo pipefail
           [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           test "$GITHUB_SHA" = "$EXPECTED_SHA"
+          if test "$PUBLIC_DISTRIBUTION" != false; then
+            printf 'OVERLAY-1 unresolved; public payload distribution is blocked\n' >&2
+            exit 1
+          fi
           python3 -m unittest discover -s tests/cm3-cli -v
           python3 scripts/cm3-source-preflight.py --check-lock
 
@@ -110,9 +121,15 @@ jobs:
         run: |
           set -euo pipefail
           docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-verify-image.py
+      - name: Stage reviewed engineering diagnostics without payloads
+        if: inputs.experimental_image && !inputs.public_distribution
+        run: docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-publish-image.py --diagnostics
+      - name: Stage cleared public payloads
+        if: inputs.experimental_image && inputs.public_distribution
+        run: |
           docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-publish-image.py
       - name: Upload reviewed EXPERIMENTAL image and corresponding materials
-        if: inputs.experimental_image
+        if: inputs.experimental_image && inputs.public_distribution
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cm3-EXPERIMENTAL-${{ github.sha }}-${{ github.run_id }}
@@ -120,6 +137,14 @@ jobs:
           if-no-files-found: error
           compression-level: 0
           path: package-work/public-image/
+      - name: Retain reviewed engineering diagnostics only
+        if: inputs.experimental_image && !inputs.public_distribution
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-engineering-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 14
+          if-no-files-found: error
+          path: package-work/public-diagnostics/
       - name: Remove only this run's disposable builder
         if: always()
         run: |
@@ -129,10 +154,10 @@ jobs:
             docker container rm --force "$name"
           fi
       - name: Encrypt allowlisted successful compilation for internal recovery
-        if: always()
+        if: always() && !inputs.experimental_image
         run: python3 scripts/cm3-retain-packages.py --workdir package-work --output preflight-work/cm3-recovery.cms
       - name: Retain encrypted recovery output (no plaintext binaries or keys)
-        if: always()
+        if: always() && !inputs.experimental_image
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}
@@ -141,7 +166,7 @@ jobs:
           compression-level: 0
           path: preflight-work/cm3-recovery.cms
       - name: Retain allowlisted diagnostic evidence only
-        if: always()
+        if: always() && !inputs.experimental_image
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cm3-source-preflight-${{ github.run_id }}-${{ github.run_attempt }}
@@ -178,15 +203,22 @@ jobs:
       attestations: write
     steps:
       - name: Download only this successful run's encrypted repository bundle
+        if: '!inputs.experimental_image'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: provenance-input
+      - name: Download only reviewed build-only engineering diagnostics
+        if: inputs.experimental_image && !inputs.public_distribution
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cm3-engineering-${{ github.run_id }}-${{ github.run_attempt }}
           path: provenance-input
       - name: Attest encrypted bytes without a source checkout or decryption key
         id: attest
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0, transitively pinned
         with:
-          subject-path: provenance-input/cm3-recovery.cms
+          subject-path: ${{ inputs.experimental_image && 'provenance-input/engineering-result.json' || 'provenance-input/cm3-recovery.cms' }}
           push-to-registry: false
           show-summary: false
       - name: Verify exact repository workflow source and signer before acceptance
@@ -194,6 +226,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           APPROVED_SHA: ${{ inputs.expected_sha }}
           ATTESTATION_BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+          SUBJECT: ${{ inputs.experimental_image && 'provenance-input/engineering-result.json' || 'provenance-input/cm3-recovery.cms' }}
         run: |
           set -euo pipefail
           [[ "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]
@@ -202,9 +235,9 @@ jobs:
             --cert-identity "https://github.com/blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml@refs/heads/dev/cm3-debian-cli"
             --signer-digest "$APPROVED_SHA" --source-digest "$APPROVED_SHA"
             --source-ref refs/heads/dev/cm3-debian-cli --deny-self-hosted-runners)
-          gh attestation verify provenance-input/cm3-recovery.cms "${policy[@]}" \
+          gh attestation verify "$SUBJECT" "${policy[@]}" \
             --format json > attestation-verification.json
-          cp provenance-input/cm3-recovery.cms tampered.cms
+          cp "$SUBJECT" tampered.cms
           printf '\000' | dd of=tampered.cms bs=1 count=1 conv=notrunc status=none
           if gh attestation verify tampered.cms --bundle "$ATTESTATION_BUNDLE" "${policy[@]}" > /dev/null 2>&1; then
             printf 'Tampered subject was accepted\n' >&2

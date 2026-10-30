@@ -5,6 +5,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -21,6 +22,83 @@ publish = load('publish', 'cm3-publish-image.py')
 
 
 class SourceDelivery(unittest.TestCase):
+    def test_public_distribution_fails_closed_even_with_approved_environment(self):
+        with patch.dict('os.environ', {'PUBLIC_DISTRIBUTION': 'true'}):
+            with self.assertRaisesRegex(ValueError, 'OVERLAY-1'):
+                publish.stage(Path('/unused'))
+
+    def test_build_only_stages_no_payloads_or_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            image = work / 'image-output'
+            sources = work / 'delivery-inputs'
+            evidence = work / 'evidence'
+            for directory in [image, sources, evidence]:
+                directory.mkdir()
+            revision = 'a' * 40
+            identity = dict(source_revision=revision, run_id='123', label=publish.LABEL)
+            compressed = image / (publish.assembly.NAME + '.xz')
+            compressed.write_bytes(b'test fixture, not an assembled image')
+            report = dict(identity, status='PASS', hardware='UNTESTED', stable_release='BLOCKED',
+                          compressed_sha256=publish.assembly.profile.probe.digest(compressed),
+                          image_sha256='b' * 64, image_bytes=100, compressed_bytes=compressed.stat().st_size)
+            (image / 'verification.json').write_text(json.dumps(report))
+            (image / 'packages.tsv').write_text('example\t1\tarm64\n')
+            names = ['modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
+                     'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
+                     'loader-inputs.json', 'debian-sources/example.dsc']
+            for name in names:
+                path = sources / name
+                path.parent.mkdir(exist_ok=True)
+                path.write_text('source fixture, must not be published')
+            delivery_report = dict(identity, files={name: publish.assembly.profile.probe.digest(sources / name) for name in names})
+            (sources / 'delivery-inputs.json').write_text(json.dumps(delivery_report))
+            for name in ['image-stage-a.json', 'image-admission.json', 'image-offline-tests.json']:
+                (evidence / name).write_text('{}')
+            for directory in [image, evidence]:
+                (directory / 'unreviewed.cms').write_text('must not be published')
+                (directory / 'secret.key').write_text('test-only, not a real key')
+            with patch.object(publish.assembly, 'boundary', return_value=revision), patch.dict('os.environ', GITHUB_RUN_ID='123'):
+                publish.diagnostics(work)
+            destination = work / 'public-diagnostics'
+            self.assertEqual({p.name for p in destination.iterdir()},
+                             {'verification.json', 'packages.tsv', 'image-stage-a.json', 'image-admission.json',
+                              'image-offline-tests.json', 'README.txt', 'RAW-SHA256SUMS', 'IMAGE-XZ-SHA256SUMS',
+                              'engineering-result.json', 'SHA256SUMS'})
+            self.assertFalse((work / 'public-image').exists())
+            engineering = json.loads((destination / 'engineering-result.json').read_text())
+            self.assertEqual(engineering['engineering'], 'PASS')
+            self.assertEqual(engineering['redistribution'], 'BLOCKED: OVERLAY-1')
+            self.assertNotIn('SHA256SUMS', engineering['files'])
+            shutil_destination = work / 'previous-diagnostics'
+            destination.rename(shutil_destination)
+            compressed.write_bytes(b'tampered')
+            with patch.object(publish.assembly, 'boundary', return_value=revision), patch.dict('os.environ', GITHUB_RUN_ID='123'):
+                with self.assertRaisesRegex(ValueError, 'image changed'):
+                    publish.diagnostics(work)
+            self.assertFalse(destination.exists())
+
+    def test_all_workflow_uploads_are_explicitly_non_payload_for_build_only(self):
+        workflow = (ROOT / '.github/workflows/build.yaml').read_text()
+        packages, provenance = workflow.split('\n  provenance:\n')
+        steps = packages.split('      - name: ')[1:]
+        upload_steps = [step for step in steps if 'uses: actions/upload-artifact@' in step]
+        self.assertEqual(len(upload_steps), 4)
+        for step in upload_steps:
+            if 'path: package-work/public-diagnostics/' in step:
+                self.assertIn('if: inputs.experimental_image && !inputs.public_distribution', step)
+            elif 'path: package-work/public-image/' in step:
+                self.assertIn('if: inputs.experimental_image && inputs.public_distribution', step)
+            else:
+                self.assertIn('if: always() && !inputs.experimental_image', step)
+        self.assertIn('if test "$PUBLIC_DISTRIBUTION" != false; then', workflow)
+        self.assertIn('OVERLAY-1 unresolved; public payload distribution is blocked', workflow)
+        self.assertNotIn('actions/cache@', workflow)
+        self.assertIn('provenance-input/engineering-result.json', provenance)
+        self.assertIn('--source-digest "$APPROVED_SHA"', provenance)
+        self.assertIn('if: always() && !inputs.experimental_image',
+                      next(step for step in steps if step.startswith('Encrypt allowlisted')))
+
     def test_actual_build_configs_are_required_and_kernel_evidence_must_match(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)
