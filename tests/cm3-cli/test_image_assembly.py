@@ -16,6 +16,21 @@ SPEC.loader.exec_module(assembly)
 
 
 class Admission(unittest.TestCase):
+    def test_offline_ssh_parser_accepts_explicit_temporary_key_without_weakening_policy(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / 'run').mkdir()
+            output = '\n'.join(['permitrootlogin no', 'passwordauthentication no',
+                                'kbdinteractiveauthentication no', 'authenticationmethods publickey',
+                                'allowgroups cm3-cli-owner'])
+            with patch.object(assembly.profile.probe, 'chroot', return_value=output) as chroot:
+                assembly.profile.probe.verify_ssh_policy(root, host_key='/run/check/key')
+                self.assertEqual(chroot.call_args_list[0].args, (root, 'sshd', '-t', '-h', '/run/check/key'))
+                self.assertEqual(chroot.call_args_list[1].args, (root, 'sshd', '-T', '-h', '/run/check/key'))
+            with patch.object(assembly.profile.probe, 'chroot', return_value=output.replace('permitrootlogin no', 'permitrootlogin yes')):
+                with self.assertRaises(ValueError):
+                    assembly.profile.probe.verify_ssh_policy(root, host_key='/run/check/key')
+
     def test_local_cli_is_rejected_without_outputs(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)

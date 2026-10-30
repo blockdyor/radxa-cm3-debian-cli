@@ -118,8 +118,10 @@ class BoardProbeTests(unittest.TestCase):
                         text.index('packages/cm3-cli-board-support/build.py'))
         self.assertIn('--revision "$EXPECTED_SHA" --epoch "$(git show -s --format=%ct HEAD)"', text)
         self.assertIn('--manifest preflight-work/board-manifest.json', text)
-        self.assertLess(text.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work;'),
-                        text.index('mkdir /work/board-debs;'))
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', text)
+        entry = (ROOT / 'scripts/cm3-external-preflight.sh').read_text()
+        self.assertLess(entry.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work'),
+                        entry.index('mkdir /work/board-debs'))
         self.assertNotIn('path: preflight-work/board-input', text)
 
     def test_builder_rejects_wrong_commit_timestamp(self):

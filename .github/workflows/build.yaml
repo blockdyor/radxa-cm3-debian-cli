@@ -8,9 +8,14 @@ on:
         required: true
         type: string
       hypothesis:
-        description: Initial probe or specific failure/fix being tested (not an image attempt)
+        description: Specific changed-stage hypothesis (recorded in the cumulative ledger)
         required: true
         type: string
+      experimental_image:
+        description: Build an EXPERIMENTAL image file after Stage A; no hardware/release authority
+        required: true
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -29,6 +34,7 @@ jobs:
     env:
       EXPECTED_SHA: ${{ inputs.expected_sha }}
       HYPOTHESIS: ${{ inputs.hypothesis }}
+      EXPERIMENTAL_IMAGE: ${{ inputs.experimental_image }}
     steps:
       - name: Checkout approved fork revision once
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -76,11 +82,52 @@ jobs:
             --output preflight-work/board-input/cm3-cli-board-support_0.1.0_all.deb \
             --revision "$EXPECTED_SHA" --epoch "$(git show -s --format=%ct HEAD)" \
             --manifest preflight-work/board-manifest.json
-          docker run --privileged --rm --platform linux/amd64 \
+          docker run --detach --privileged --platform linux/amd64 \
+            --name "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
             -e GITHUB_ACTIONS=true -e GITHUB_REPOSITORY -e GITHUB_RUN_ID -e GITHUB_SHA \
+            -e EXPECTED_SHA -e RUNNER_ENVIRONMENT -e EXPERIMENTAL_IMAGE \
             -v "$PWD:/src:ro" -v "$PWD/package-work:/work" \
-            "$builder" sh -ec 'apt-get -o APT::Update::Error-Mode=any update; apt-get install -y --no-install-recommends python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount; python3 /src/scripts/cm3-bootstrap-tools.py; command -v jsonnet; PYTHONPATH=/src/tests/cm3-cli python3 -m unittest -v test_rsdk_profile.ProfileRendering.test_exact_profile_has_no_inherited_trust_or_provisioning_hooks test_rsdk_profile.ProfileRendering.test_missing_failed_stale_receipt_and_overrides_fail_closed test_rsdk_profile.ProfileRendering.test_shell_paths_are_quoted test_rsdk_profile.ProfileRendering.test_receipt_is_json_data_not_a_file_path_or_injected_jsonnet; arch-test arm64; python3 /src/scripts/cm3-source-preflight.py --workdir /work; mkdir /work/board-debs; cp /src/preflight-work/board-input/cm3-cli-board-support_0.1.0_all.deb /work/board-debs/; cp /src/preflight-work/board-manifest.json /work/evidence/; python3 /src/scripts/cm3-package-preflight.py --workdir /work; exec python3 /src/scripts/cm3-rsdk-profile.py --workdir /work' \
+            "$builder" sleep infinity
+          docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            sh /src/scripts/cm3-external-preflight.sh \
             2>&1 | tee preflight-work/source-build.log
+      - name: Prepare exact corresponding sources and preserved notices
+        if: inputs.experimental_image
+        run: docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-image-delivery.py
+      - name: Produce authenticated exact-head Stage A evidence
+        if: inputs.experimental_image
+        run: docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-image-stage-a.py produce
+      - name: Reconcile cumulative three-image budget before assembly
+        if: inputs.experimental_image
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 scripts/cm3-image-budget.py
+      - name: Assemble experimental CM3 disk image
+        if: inputs.experimental_image
+        run: docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-assemble-image.py --workdir /work
+      - name: Independently inspect actual image and stage sanitized delivery
+        if: inputs.experimental_image
+        run: |
+          set -euo pipefail
+          docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-verify-image.py
+          docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-publish-image.py
+      - name: Upload reviewed EXPERIMENTAL image and corresponding materials
+        if: inputs.experimental_image
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-EXPERIMENTAL-${{ github.sha }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
+          path: package-work/public-image/
+      - name: Remove only this run's disposable builder
+        if: always()
+        run: |
+          set -euo pipefail
+          name="cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          if docker container inspect "$name" > /dev/null 2>&1; then
+            docker container rm --force "$name"
+          fi
       - name: Encrypt allowlisted successful compilation for internal recovery
         if: always()
         run: python3 scripts/cm3-retain-packages.py --workdir package-work --output preflight-work/cm3-recovery.cms

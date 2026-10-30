@@ -48,20 +48,19 @@ class BootstrapTools(unittest.TestCase):
 
     def test_tool_qualification_precedes_compilation_and_does_not_add_sid(self):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
-        setup = 'python3 /src/scripts/cm3-bootstrap-tools.py;'
-        self.assertIn(setup, workflow)
-        self.assertLess(workflow.index(setup),
-                        workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work'))
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', workflow)
+        workflow = (ROOT / 'scripts/cm3-external-preflight.sh').read_text()
+        setup = 'python3 /src/scripts/cm3-bootstrap-tools.py'
         compile_at = workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work')
+        self.assertLess(workflow.index(setup), compile_at)
         prerequisites = ('apt-get install -y --no-install-recommends python3 ca-certificates '
-                         'apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount;')
+                         'apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount')
         self.assertLess(workflow.index(prerequisites), workflow.index(setup))
-        self.assertLess(workflow.index('command -v jsonnet;'), compile_at)
-        for method in ('test_exact_profile_has_no_inherited_trust_or_provisioning_hooks',
-                       'test_missing_failed_stale_receipt_and_overrides_fail_closed',
-                       'test_shell_paths_are_quoted',
-                       'test_receipt_is_json_data_not_a_file_path_or_injected_jsonnet'):
-            self.assertLess(workflow.index('test_rsdk_profile.ProfileRendering.' + method), compile_at)
+        self.assertLess(workflow.index('command -v jsonnet'), compile_at)
+        self.assertLess(workflow.index('cm3-image-stage-a.py tests'), compile_at)
+        stage = (ROOT / 'scripts/cm3-image-stage-a.py').read_text()
+        self.assertIn("discover(str(ROOT / 'tests/cm3-cli'))", stage)
+        self.assertIn('not result.skipped', stage)
         self.assertNotIn('ProfileRendering.test_legacy', workflow)
         self.assertNotIn('jsonnet bdebstrap', workflow)
         source = (ROOT / 'scripts/cm3-bootstrap-tools.py').read_text()
@@ -69,3 +68,30 @@ class BootstrapTools(unittest.TestCase):
         self.assertNotIn('allow-unauthenticated', source)
         self.assertNotIn('trusted=yes', source)
         self.assertIn("'jsonnet', str(path)", source)
+
+    def test_pinned_jsonnet_archive_rejects_tamper_and_symlink_member(self):
+        import hashlib
+        import io
+        import tarfile
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'tool.tar.gz'
+            for symlink in [False, True]:
+                with tarfile.open(path, 'w:gz') as archive:
+                    for name in ['jsonnet', 'LICENSE']:
+                        item = tarfile.TarInfo(name)
+                        data = b'test fixture'
+                        item.size = len(data)
+                        if symlink and name == 'jsonnet':
+                            item.type = tarfile.SYMTYPE
+                            item.linkname = '/outside'
+                            archive.addfile(item)
+                        else:
+                            archive.addfile(item, io.BytesIO(data))
+                with patch.object(tools, 'JSONNET_SHA256', hashlib.sha256(path.read_bytes()).hexdigest()):
+                    if symlink:
+                        with self.assertRaises(ValueError):
+                            tools.verified_jsonnet(path)
+                    else:
+                        self.assertEqual(tools.verified_jsonnet(path)['jsonnet'], b'test fixture')
+                with self.assertRaisesRegex(ValueError, 'SHA256'):
+                    tools.verified_jsonnet(path)

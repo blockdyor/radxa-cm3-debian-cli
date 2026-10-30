@@ -4,14 +4,15 @@ EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
 Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Board,
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
-currently implements the prerequisite source-package probe, not a usable image.
-Only the exact carrier's product defaults now select Trixie/CLI. The owner now
+implements the prerequisite source-package probe and a manually admitted
+experimental image pipeline. No usable or boot-tested image is claimed by code alone.
+The owner now
 explicitly authorizes experimental exact-target image creation after stage A
 below, BEFORE real-target first boot, services, active LSM, hardware recovery or
 performance qualification. This supersedes the historical preimage runtime hold;
 it does not claim an image exists or enable the inherited image path. Stable
 release remains BLOCKED and hardware remains UNTESTED.
-Latest result: attempt 12 at `12ad8dcd6d1457260b53c25dcff4f476bd327009`
+Latest completed producer: attempt 13 at `c24ad2a0598d000727763803b8c678d6a3411fc0`
 passes source compilation, the signed ARM64 ten-package install/DKMS/board-lifecycle
 fixture and the real exact-product RSDK clean directory bootstrap (270 installed
 packages, clean audit and builder-identity/feed cleanup). It does not boot a kernel.
@@ -19,7 +20,7 @@ This is not the complete package/security preflight or an image: see the latest
 section in `preflight-status.md` for remaining integration requirements.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. All twelve historical attempts remain recorded.
+not full signed ARM64 preflight. All thirteen historical attempts remain recorded.
 On 2026-10-29 the owner superseded the package cap and authorized evidence-based
 source builds and same-job validation retries on the existing standard runner.
 Attempt 5 rebuilt all nine packages and verified
@@ -399,7 +400,8 @@ supplied receipts only: it does not authenticate them, invent a PASS, reserve an
 attempt, invoke a builder or remove the `rsdk-build` guard. The caller must verify
 receipt provenance, exact head/target/input binding, current authorization and
 the phase-wide budget before assembly. Do not handwrite PASS values to bypass
-missing evidence. This patch provides no supported full-image build invocation.
+missing evidence. The native workflow path below now produces these receipts;
+its actual execution result must be inspected before claiming an image exists.
 
 ### B — Actual-artifact inspection, after experimental assembly
 
@@ -431,14 +433,39 @@ Use the fixed `cm3-phase-b-exclusive` concurrency group, `cancel-in-progress:
 false`, and a durable phase-wide attempt ledger checked/reserved before assembly.
 Each reservation must have commit, source/input digests, run URL, hypothesis or
 specific fix, outcome and remaining budget. Concurrency alone is not an attempt
-counter. No full-image job exists here, so no resettable counter is presented as
-a security control. See `attempts.json` for the initial ledger.
+counter. `cm3-image-budget.py` reconciles complete repository run/attempt/step
+history against `attempts.json` before allowing entry to the assembly step.
+Reruns, overlap, missing history, repeated hypotheses and a fourth entry fail closed.
 
-After passing stage A offline prerequisites, the later implementation must expose one
-manual exact-tuple build, populate the actual fork revision, forbid stale rootfs
-reuse, and preserve signed repository inputs rather than regenerate unsigned
-Release files through upstream `--debs`. Keep `trixie`, `trixie-updates` and
-`trixie-security` as maintained runtime sources; no moving `stable` alias.
+The existing manual `build.yaml` accepts `experimental_image=true` (default false).
+Its same-job pinned builder qualifies the software guestfish appliance and full
+offline suite before compilation, then builds/configures the ten signed inputs,
+bootstraps the exact product rootfs, retains exact corresponding sources/notices,
+produces Stage A with current exact-head Sonar evidence, reserves the cumulative
+image allowance, assembles through existing RSDK guestfish code, independently
+inspects the actual disk, and uploads only hash-allowlisted sanitized materials.
+There is no hand-authored receipt, stale rootfs import or unsigned `--debs` path.
+The source-only default remains available. Both paths share exclusive concurrency,
+standard Ubuntu 24.04, 180 minutes, two compilation/compression threads, and no release
+permission. Target runtime feeds remain signed `trixie`, `trixie-updates` and
+`trixie-security`; no moving `stable` alias or reproducible-snapshot claim.
+
+After publishing and verifying the exact reviewed SHA and Sonar gate, the command is:
+
+    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli --ref dev/cm3-debian-cli -f expected_sha=FULL_REVIEWED_COMMIT -f experimental_image=true -f 'hypothesis=SPECIFIC_CHANGED_STAGE'
+
+The placeholders must be replaced, and the cumulative ledger/live history reconciled
+before dispatch. This is execution documentation, not a claim that this revision ran.
+`cm3-image-stage-a.py` accepts only `tests`, `sonar` or `produce`, with fixed external
+paths. Image/source/delivery validators accept no caller-supplied filesystem paths.
+`cm3-verify-image.py` opens only the fixed regular image read-only through libguestfs;
+it verifies decompressed bytes, GPT/layout, loader byte offsets, actual UUID/fstab/
+extlinux agreement, pinned boot payloads, package inventory and identity cleanup.
+`cm3-publish-image.py` stages only verified `.img.xz`, checksums and reviewed
+source/notice/provenance files, never raw roots, private evidence or signing keys.
+The raw checksum is separate in `RAW-SHA256SUMS`; decompress before checking it.
+No checksum list hashes itself. These new paths remain externally unexercised
+until a recorded actual run proves otherwise; code/tests alone do not establish PASS.
 
 An image artifact, if later produced, needs independently checked compressed and
 raw SHA-256, decompressor test, complete installed package/source manifest,

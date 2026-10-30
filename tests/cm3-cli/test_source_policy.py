@@ -136,7 +136,7 @@ class SourcePolicyTests(unittest.TestCase):
             expected = 'admission does not match' if field else 'absolute, empty workdir'
             self.assertIn(expected, errors.getvalue())
 
-    def test_manual_only_fixed_concurrency_and_no_image_command(self):
+    def test_manual_only_fixed_concurrency_and_scoped_experimental_image(self):
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
         self.assertIn('  workflow_dispatch:', workflow)
         for trigger in ['  push:', '  pull_request:', '  schedule:', '  merge_group:']:
@@ -145,12 +145,14 @@ class SourcePolicyTests(unittest.TestCase):
         self.assertIn('cancel-in-progress: false', workflow)
         self.assertIn('runs-on: ubuntu-24.04', workflow)
         self.assertIn('timeout-minutes: 180', workflow)
-        self.assertIn('python3 /src/scripts/cm3-source-preflight.py --workdir /work;', workflow)
-        self.assertIn('python3 /src/scripts/cm3-package-preflight.py --workdir /work;', workflow)
-        self.assertLess(workflow.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work;'),
-                        workflow.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work;'))
-        self.assertLess(workflow.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work;'),
-                        workflow.index('exec python3 /src/scripts/cm3-rsdk-profile.py --workdir /work'))
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', workflow)
+        entry = (ROOT / 'scripts/cm3-external-preflight.sh').read_text()
+        self.assertLess(entry.index('python3 /src/scripts/cm3-source-preflight.py --workdir /work'),
+                        entry.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work'))
+        self.assertLess(entry.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work'),
+                        entry.index('exec python3 /src/scripts/cm3-rsdk-profile.py --workdir /work'))
+        self.assertIn('default: false', workflow)
+        self.assertIn('Reconcile cumulative three-image budget before assembly', workflow)
         self.assertNotIn('openssl x509', workflow)
         self.assertNotIn('rsdk build', workflow)
         self.assertNotIn('matrix:', workflow)

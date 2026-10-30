@@ -79,11 +79,12 @@ class SignedPackagePolicyTests(unittest.TestCase):
         self.assertIn('--no-install-recommends', installs[0])
         self.assertIn('arch-test', installs[0])
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
-        container_command = workflow.split("sh -ec '", 1)[1].split("' \\", 1)[0]
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', workflow)
+        container_command = (ROOT / 'scripts/cm3-external-preflight.sh').read_text()
         self.assertIn('apt-get install -y --no-install-recommends python3', container_command)
         self.assertIn('python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test '
-                      'debian-archive-keyring mount;', container_command)
-        self.assertLess(container_command.index('arch-test arm64;'),
+                      'debian-archive-keyring mount', container_command)
+        self.assertLess(container_command.index('arch-test arm64'),
                         container_command.index('python3 /src/scripts/cm3-source-preflight.py'))
 
     def test_boot_policy_is_owned_by_admitted_package_not_synthetic_fixture(self):
@@ -115,7 +116,9 @@ class SignedPackagePolicyTests(unittest.TestCase):
             else:
                 self.assertIn(required, text)
         workflow = (ROOT / '.github/workflows/build.yaml').read_text()
-        self.assertIn('scripts/cm3-package-preflight.py --workdir /work', workflow)
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', workflow)
+        self.assertIn('scripts/cm3-package-preflight.py --workdir /work',
+                      (ROOT / 'scripts/cm3-external-preflight.sh').read_text())
         self.assertNotIn('package-work/signed-repository/', workflow)
         self.assertNotIn('package-work/arm64-root/', workflow)
         self.assertNotIn('contents: write', workflow)

@@ -6,7 +6,19 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Latest run: attempt 13 actual attested repository verified
+## Current implementation checkpoint — experimental pipeline not yet executed
+
+The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
+historical pre-image service/LSM/rollback hold below. A manually selected experimental
+workflow now connects actual same-run Stage A production, cumulative three-image
+admission, existing RSDK assembly, independent disk inspection and allowlisted
+source/notice delivery. It has not yet produced an image. All thirteen historical
+source attempts remain recorded; image entries remain 0/3 at this checkpoint.
+The latest completed producer remains attempt 13, not this newer validator source.
+Actual firstboot/services/active LSM, distinct-version hardware recovery and all
+28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
+
+## Latest completed run: attempt 13 actual attested repository verified
 
 Run attempt 1 completed SUCCESS at 2026-10-29T17:06:45Z:
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40899447213
@@ -48,11 +60,12 @@ This does not close the complete corresponding-source/blob-license review.
 No private key, plaintext BSP, target root or private evidence was uploaded.
 No new workflow, image, checker or timer was dispatched for these checks.
 
-Next unmet execution gate: deliberate installation of the admitted bundle into a
-disposable external ARM64 fixture, followed by required provisioning/service/LSM
-checks. Download-only APT validation is not that installation. The image guard
-stays held at 0/3; source/input/license and distinct-version recovery requirements
-are unchanged. Attempt 13 does not validate later source or clear its Sonar gate.
+At that historical checkpoint, admitted-bundle installation and runtime checks
+were still pre-image requirements. The later owner timing amendment moves actual
+runtime/hardware qualification to Stage C; download-only APT validation is still
+not installation. The new same-job route must validate its own configuration and
+source/notice delivery before experimental assembly. Attempt 13 does not validate
+later source or clear its Sonar gate.
 
 ## Historical attempt 12 clean exact-product directory bootstrap passed
 

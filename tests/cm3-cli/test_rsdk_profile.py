@@ -288,7 +288,9 @@ class ProfileIntegration(unittest.TestCase):
 
     def test_profile_only_follows_signed_probe_and_never_assembles_an_image(self):
         text = (ROOT / '.github/workflows/build.yaml').read_text()
-        self.assertLess(text.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work;'),
+        self.assertIn('sh /src/scripts/cm3-external-preflight.sh', text)
+        text = (ROOT / 'scripts/cm3-external-preflight.sh').read_text()
+        self.assertLess(text.index('python3 /src/scripts/cm3-package-preflight.py --workdir /work'),
                         text.index('python3 /src/scripts/cm3-rsdk-profile.py --workdir /work'))
         entry = (ROOT / 'scripts/cm3-rsdk-profile.py').read_text()
         self.assertNotIn("['mmdebstrap',", entry)

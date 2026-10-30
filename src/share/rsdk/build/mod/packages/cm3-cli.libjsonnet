@@ -30,6 +30,10 @@ assert std.length(preflight.packages) == 10 : 'CM3 requires all ten admitted pac
         'customize-hooks': [
             |||
                 set -eu
+                # RSDK replaces this staging-only UUID with the assembled filesystem UUID.
+                install -d "$1/etc/kernel"
+                printf '%%s\n' 'UUID=11111111-1111-4111-8111-111111111111 / ext4 defaults 0 1' > "$1/etc/fstab"
+                printf '%%s\n' 'root=UUID=11111111-1111-4111-8111-111111111111 ro console=ttyFIQ0,1500000n8 apparmor=1 security=apparmor lsm=landlock,lockdown,yama,integrity,apparmor,bpf' > "$1/etc/kernel/cmdline"
                 install -d "$1/opt/cm3-repo" "$1/usr/share/keyrings"
                 cp -R %s/. "$1/opt/cm3-repo/"
                 cp "$1/opt/cm3-repo/archive-key.gpg" "$1/usr/share/keyrings/cm3-build.gpg"
@@ -46,6 +50,8 @@ assert std.length(preflight.packages) == 10 : 'CM3 requires all ten admitted pac
                 chroot "$1" env DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends --no-install-suggests install -y %s
                 chroot "$1" dpkg --configure -a
                 test -z "$(chroot "$1" dpkg --audit)"
+                chroot "$1" u-boot-update
+                test -s "$1/boot/extlinux/extlinux.conf"
                 rm -r "$1/var/tmp/cm3-board"
             ||| % [
                 std.escapeStringBash(temp_dir + '/cm3-repository'),

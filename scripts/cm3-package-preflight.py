@@ -283,10 +283,11 @@ def install_board_policy(root, board):
     chroot(root, 'dpkg-query', '-S', '/etc/kernel/install.d/99-update-overlay.install')
 
 
-def verify_ssh_policy(root):
+def verify_ssh_policy(root, host_key=None):
     (root / 'run/sshd').mkdir(mode=0o755, exist_ok=True)
-    chroot(root, 'sshd', '-t')
-    ssh = chroot(root, 'sshd', '-T', capture=True)
+    options = ['-h', host_key] if host_key is not None else []
+    chroot(root, 'sshd', '-t', *options)
+    ssh = chroot(root, 'sshd', '-T', *options, capture=True)
     for setting in ['permitrootlogin no', 'passwordauthentication no',
                     'kbdinteractiveauthentication no', 'authenticationmethods publickey',
                     'allowgroups cm3-cli-owner']:

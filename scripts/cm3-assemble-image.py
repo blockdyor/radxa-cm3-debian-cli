@@ -15,6 +15,7 @@ import platform
 import re
 import stat
 import subprocess
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location('cm3_profile', ROOT / 'scripts/cm3-rsdk-profile.py')
@@ -23,6 +24,9 @@ SPEC.loader.exec_module(profile)
 POLICY_SPEC = importlib.util.spec_from_file_location('cm3_stage_policy', ROOT / 'scripts/cm3-stage-policy.py')
 policy = importlib.util.module_from_spec(POLICY_SPEC)
 POLICY_SPEC.loader.exec_module(policy)
+CONTRACT_SPEC = importlib.util.spec_from_file_location('cm3_contract', ROOT / 'scripts/cm3-image-contract.py')
+contract = importlib.util.module_from_spec(CONTRACT_SPEC)
+CONTRACT_SPEC.loader.exec_module(contract)
 PRODUCT = 'radxa-cm3-rpi-cm4-io'
 NAME = 'cm3-trixie-arm64-cli.img'
 
@@ -96,6 +100,35 @@ def authenticate(work, revision, run_id):
         raise ValueError('profile installed file verification failed')
     if profile.probe.chroot(root, 'dpkg', '--audit', capture=True).strip():
         raise ValueError('profile package audit failed')
+    # The distributable root has no host keys. A temporary explicit check key
+    # permits sshd's offline parser checks without reintroducing builder identity.
+    with tempfile.TemporaryDirectory(prefix='cm3-ssh-check-', dir=root / 'run') as temporary:
+        key = '/' + str((Path(temporary) / 'key').relative_to(root))
+        profile.probe.chroot(root, 'ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', key)
+        profile.probe.verify_ssh_policy(root, host_key=key)
+    lock = profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
+    kernel = next(name.removeprefix('linux-image-') for name, (_, arch) in
+                  profile.probe.source.expected_packages(lock).items()
+                  if name.startswith('linux-image-') and arch == 'arm64')
+    profile.probe.source.verify_kernel_config(regular(root / ('boot/config-' + kernel)).read_text())
+    profile.probe.verify_gzip_initramfs(regular(root / ('boot/initrd.img-' + kernel)))
+    menu = regular(root / 'boot/extlinux/extlinux.conf').read_text()
+    for required in ['console=ttyFIQ0,1500000n8', 'security=apparmor', 'apparmor=1',
+                     'rockchip/rk3566-radxa-cm3-rpi-cm4-io.dtb',
+                     'vmlinuz-' + kernel, 'initrd.img-' + kernel]:
+        if required not in menu:
+            raise ValueError('profile missing boot input: ' + required)
+    for service in contract.SERVICE_LINKS:
+        if not (root / 'etc/systemd/system' / service).is_symlink():
+            raise ValueError('profile service not enabled: ' + service)
+    for name in ['etc/machine-id', 'var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
+                 'etc/apt/sources.list.d/cm3-build.list', 'usr/share/keyrings/cm3-build.gpg',
+                 'opt/cm3-repo', 'root/.ssh', 'usr/sbin/policy-rc.d']:
+        path = root / name
+        if path.exists() or path.is_symlink():
+            raise ValueError('profile retained builder identity/trust/start mask: ' + name)
+    if list((root / 'etc/ssh').glob('ssh_host_*')):
+        raise ValueError('profile retained builder SSH host keys')
     lock = profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
     if lock['target'] != dict(product=PRODUCT, soc='rk3566', suite='trixie', edition='cli',
                               architecture='arm64', sector_size=512):
