@@ -187,7 +187,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T02:50:47Z",
       "retained_payloads": "No artifacts uploaded (API total_count=0). All payload, encrypted recovery and broad evidence upload paths skipped; disposable builder cleanup succeeded. No image produced or retained."
+    },
+    {
+      "number": 15,
+      "commit": "d1040b38dc4efe8f85c8e2048ed99f401280a147",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40994643971",
+      "run_attempt": 1,
+      "hypothesis": "Qualify explicit libc and SSH test dependencies and expose regression failures before build-only CM3 assembly; preserve zero public payload uploads",
+      "result": "FAIL at source-delivery authentication after source-build/signed ARM64/profile step PASS. dpkg --verify returned differences; individual paths were not printed. Inspected retained source-built kernel package is gzip-compressed and pinned bootutils postinst deliberately decompresses it for Rockchip U-Boot, so a literal installed-file MD5 comparison cannot accept that legitimate transformation. Next correction independently compares installed ARM64 Image bytes against the exact authenticated kernel payload's bounded decompression, permits only that precise checksum-difference row, and reports/rejects all other differences. Stage A/assembly/image inspection NOT REACHED; actual failing paths remain unknown until diagnostic reanalysis.",
+      "failure_stage": "source-delivery-installed-file-authentication",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T04:47:09Z",
+      "retained_payloads": "No artifacts uploaded (API total_count=0). Public payload/ciphertext/broad evidence uploads SKIPPED, disposable builder cleanup PASS. No image produced, retained or publicly distributed."
     }
   ],
-  "status": "Fourteen completed workflow attempts recorded without resetting history. Attempt14 qualifies the actual guestfs software appliance and exact-head Sonar but stops at pre-compilation regressions; failed test details were not exposed. Next changed-stage correction adds missing direct test dependencies and preserves actual failure diagnostics. Image0/3: assembly never entered. Build-only engineering is authorized; public payload delivery remains BLOCKED for OVERLAY-1, upstream radxa-pkg/radxa-overlays#606. Existing hardware/runtime criteria remain UNTESTED; no release qualification."
+  "status": "Fifteen completed workflow attempts preserved. Attempt15 passes actual source/signed ARM64/profile and fails installed-file authentication before image entry. Kernel decompression is a verified legitimate bootutils transformation, not blanket permission to ignore dpkg differences. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1, upstream radxa-pkg/radxa-overlays#606. Hardware/runtime checks remain UNTESTED."
 }

@@ -7,7 +7,10 @@ libguestfs appliance's file-backed disk, not the runner's disk. Services, active
 LSM, hardware boot and distinct-version rollback remain UNTESTED.
 """
 import argparse
+import gzip
+import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -15,6 +18,7 @@ import platform
 import re
 import stat
 import subprocess
+import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +80,40 @@ def experimental_admission(work, revision, run_id):
     return policy.admit(stage.get('checks'))
 
 
+def verify_installed_files(root, package, kernel):
+    differences = profile.probe.chroot(root, 'dpkg', '--verify', capture=True)
+    # The pinned bootutils hook decompresses only this kernel for Rockchip U-Boot.
+    expected = ['??5??????', '/boot/vmlinuz-' + kernel]
+    rows = [line.split() for line in differences.splitlines() if line.strip()]
+    if rows not in [[], [expected]]:
+        raise ValueError('profile installed file verification failed:\n' + differences)
+    installed = regular(root / ('boot/vmlinuz-' + kernel))
+    payload = None
+    with subprocess.Popen(['dpkg-deb', '--fsys-tarfile', str(regular(package))],
+                          stdout=subprocess.PIPE) as process:
+        try:
+            with tarfile.open(fileobj=process.stdout, mode='r|') as archive:
+                for member in archive:
+                    if member.name.removeprefix('./') == 'boot/vmlinuz-' + kernel:
+                        if payload is not None or not member.isfile() or not 0 < member.size <= 128 * 1024 * 1024:
+                            raise ValueError('invalid authenticated kernel payload')
+                        payload = archive.extractfile(member).read()
+        except (ValueError, OSError, tarfile.TarError):
+            process.kill()
+            process.wait()
+            raise
+        if process.wait() != 0:
+            raise ValueError('cannot inspect authenticated kernel package')
+    if payload is None:
+        raise ValueError('authenticated kernel payload absent')
+    if payload.startswith(b'\x1f\x8b'):
+        with gzip.GzipFile(fileobj=io.BytesIO(payload)) as stream:
+            payload = stream.read(128 * 1024 * 1024 + 1)
+    if (len(payload) > 128 * 1024 * 1024 or payload[56:60] != b'ARMd' or
+            profile.probe.digest(installed) != hashlib.sha256(payload).hexdigest()):
+        raise ValueError('installed kernel differs from authenticated ARM64 Image transformation')
+
+
 def authenticate(work, revision, run_id):
     # Re-run signature/index/payload/source/admission closure; a PASS label alone
     # is never sufficient. The original rootfs is reused, not bootstrapped again.
@@ -94,10 +132,13 @@ def authenticate(work, revision, run_id):
                                      capture=True)
     if installed != regular(work / 'evidence/rsdk-profile-packages.tsv').read_text():
         raise ValueError('profile package state changed')
-    # Verify packaged bytes, including the pinned kernel/DTB/loader, before any
-    # privileged image operation. dpkg -V intentionally checks all installed files.
-    if profile.probe.chroot(root, 'dpkg', '--verify', capture=True).strip():
-        raise ValueError('profile installed file verification failed')
+    lock = profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
+    kernel_package = next(name for name, (_, arch) in
+                          profile.probe.source.expected_packages(lock).items()
+                          if name.startswith('linux-image-') and arch == 'arm64')
+    kernel = kernel_package.removeprefix('linux-image-')
+    packages = profile.probe.inspect_inputs(work, lock)
+    verify_installed_files(root, packages[kernel_package], kernel)
     if profile.probe.chroot(root, 'dpkg', '--audit', capture=True).strip():
         raise ValueError('profile package audit failed')
     # The distributable root has no host keys. A temporary explicit check key
@@ -106,10 +147,7 @@ def authenticate(work, revision, run_id):
         key = '/' + str((Path(temporary) / 'key').relative_to(root))
         profile.probe.chroot(root, 'ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', key)
         profile.probe.verify_ssh_policy(root, host_key=key)
-    lock = profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
-    kernel = next(name.removeprefix('linux-image-') for name, (_, arch) in
-                  profile.probe.source.expected_packages(lock).items()
-                  if name.startswith('linux-image-') and arch == 'arm64')
+
     profile.probe.source.verify_kernel_config(regular(root / ('boot/config-' + kernel)).read_text())
     profile.probe.verify_gzip_initramfs(regular(root / ('boot/initrd.img-' + kernel)))
     menu = regular(root / 'boot/extlinux/extlinux.conf').read_text()

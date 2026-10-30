@@ -1,5 +1,6 @@
 """Assembly admission and real Jsonnet rendering only; NEVER build/mount locally."""
 import importlib.util
+import gzip
 import json
 import os
 from pathlib import Path
@@ -16,6 +17,43 @@ SPEC.loader.exec_module(assembly)
 
 
 class Admission(unittest.TestCase):
+    def test_only_exact_authenticated_kernel_decompression_is_allowed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            payload_root = base / 'package'
+            control = payload_root / 'DEBIAN'
+            control.mkdir(parents=True)
+            (control / 'control').write_text('Package: fixture\nVersion: 1\nArchitecture: all\n'
+                                           'Maintainer: Test <test@example.invalid>\nDescription: test-only\n')
+            (payload_root / 'boot').mkdir()
+            kernel = 'test-only'
+            raw = bytes(56) + b'ARMd' + bytes(100)
+            payload = payload_root / ('boot/vmlinuz-' + kernel)
+            package = base / 'fixture.deb'
+            root = base / 'root'
+            (root / 'boot').mkdir(parents=True)
+            installed = root / ('boot/vmlinuz-' + kernel)
+            changed = '??5??????   /boot/vmlinuz-' + kernel + '\n'
+            for compressed in [True, False]:
+                payload.write_bytes(gzip.compress(raw) if compressed else raw)
+                subprocess.run(['dpkg-deb', '--build', '--root-owner-group', str(payload_root), str(package)],
+                               check=True, stdout=subprocess.DEVNULL)
+                installed.write_bytes(raw)
+                with patch.object(assembly.profile.probe, 'chroot', return_value=changed if compressed else ''):
+                    assembly.verify_installed_files(root, package, kernel)
+                for contents in [raw + b'tamper', gzip.compress(raw)]:
+                    installed.write_bytes(contents)
+                    with patch.object(assembly.profile.probe, 'chroot', return_value=changed):
+                        with self.assertRaisesRegex(ValueError, 'authenticated ARM64'):
+                            assembly.verify_installed_files(root, package, kernel)
+            for differences in [changed + '??5??????   /usr/bin/sudo\n', changed * 2,
+                                changed.replace('??5??????', 'missing'),
+                                changed.replace('   /boot', ' c /boot')]:
+                with patch.object(assembly.profile.probe, 'chroot', return_value=differences):
+                    with self.assertRaisesRegex(ValueError, 'verification failed') as error:
+                        assembly.verify_installed_files(root, package, kernel)
+                    self.assertIn(differences, str(error.exception))
+
     def test_offline_ssh_parser_accepts_explicit_temporary_key_without_weakening_policy(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

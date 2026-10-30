@@ -6,7 +6,7 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Current implementation checkpoint — experimental pipeline not yet executed
+## Current engineering checkpoint — image assembly not yet reached
 
 Public image delivery remains withheld for unresolved OVERLAY-1. The owner's
 later build-only decision allows engineering assembly and inspection without
@@ -42,13 +42,23 @@ The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice delivery. It has not yet produced an image. All thirteen historical
+source/notice preparation. It has not yet produced an image. All fifteen completed
 source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The latest completed producer remains attempt 13, not this newer validator source.
+The last retained attested package producer remains attempt13; build-only runs14/15
+uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
-## Latest completed run: attempt 13 actual attested repository verified
+Build-only runs14/15 published no artifacts and consumed no image entry. Run15
+completed actual source builds, signed ARM64 lifecycle and exact-profile bootstrap,
+then failed installed-file authentication in source preparation. Its detailed
+`dpkg --verify` differences were not printed. The retained source-built kernel
+is gzip-compressed and the pinned bootutils hook decompresses it for Rockchip
+U-Boot. Authentication now checks that exact raw ARM64 Image against bounded
+decompression of the authenticated package; all other differences still fail
+and are reported. This correction has not yet passed the external image path.
+
+## Historical successful run: attempt 13 actual attested repository verified
 
 Run attempt 1 completed SUCCESS at 2026-10-29T17:06:45Z:
 https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40899447213
