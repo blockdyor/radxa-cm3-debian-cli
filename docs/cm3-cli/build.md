@@ -5,8 +5,12 @@ EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Board,
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 currently implements the prerequisite source-package probe, not a usable image.
-Only the exact carrier's product defaults now select Trixie/CLI. Image assembly
-remains disabled; changing defaults does not enable the inherited image path.
+Only the exact carrier's product defaults now select Trixie/CLI. The owner now
+explicitly authorizes experimental exact-target image creation after stage A
+below, BEFORE real-target first boot, services, active LSM, hardware recovery or
+performance qualification. This supersedes the historical preimage runtime hold;
+it does not claim an image exists or enable the inherited image path. Stable
+release remains BLOCKED and hardware remains UNTESTED.
 Latest result: attempt 12 at `12ad8dcd6d1457260b53c25dcff4f476bd327009`
 passes source compilation, the signed ARM64 ten-package install/DKMS/board-lifecycle
 fixture and the real exact-product RSDK clean directory bootstrap (270 installed
@@ -72,8 +76,9 @@ BSP installation; the second removes the job-only feed/key. Board hash/unpack
 still precedes kernel configuration. The checker requires exact installed
 identities, clean audit and no builder machine IDs, SSH host keys, owner document
 or temporary feed. Attempt 12 passes this stage at its exact recorded revision.
-No account enrollment, target service start, disk access or image assembly is
-authorized or implied; the normal `rsdk build` entrypoint stays held.
+That bootstrap result authorizes or implies no account enrollment, target service
+start or disk access. Experimental assembly now follows stage A below; the normal
+`rsdk build` entrypoint stays guarded until separately integrated.
 
 `scripts/cm3-bootstrap-tools.py` qualifies the profile tools before compilation.
 Debian Trixie does not include `bdebstrap`; the builder installs the exact Debian
@@ -106,8 +111,8 @@ or authorized by these instructions.
 The exact historical dispatches below and `.github/workflows/build.yaml` record
 the implemented invocation. The changed seventh source attempt was reserved and
 dispatched once at its reviewed, verified pushed SHA. Further changed probes are
-authorized under the 2026-10-29 development policy, not a reset of history. Full-image assembly
-remains held. Changing `expected_sha`, invoking a
+authorized under the 2026-10-29 development policy, not a reset of history.
+Experimental full-image assembly requires stage A below. Changing `expected_sha`, invoking a
 helper directly or cloning a fresh checkout does not reset either budget.
 
 Source pins make the experiment inspectable, not bitwise reproducible. The
@@ -317,7 +322,8 @@ although boot/security policy now comes from `cm3-cli-board-support`; no target 
 so active LSM/first boot/enrollment/update recovery are untested. Reinstalling
 the same version is NOT distinct-version BSP upgrade validation. Attested update
 trust, secure CLI integration and input-snapshot/license closure remain pending.
-Image assembly stays disabled. Read `arm64-result.json` separately from source
+That historical probe did not enable image assembly; current policy is stage A
+below. Read `arm64-result.json` separately from source
 `result.json`; neither may be inferred from the other or a workflow name.
 
 Local, unprivileged checks (Python/Bash; compiler regressions additionally use
@@ -328,43 +334,92 @@ GCC14/make and an ARM64 compiler when installed, otherwise explicitly skip):
     bash -n src/libexec/rsdk/rsdk-build
     git diff --check
 
-## Holds, not bypasses
+## Staged admission: experimental assembly is not stable qualification
 
-A successful source-package job is NOT the complete package preflight. Before
-adding/enabling an image stage, implement and pass all of the following on the
-qualified disposable external runner:
+The owner authorizes experimental image creation for the exact CM3
+Trixie/ARM64/CLI tuple before real-target runtime testing. This replaces the
+former circular requirement to boot/qualify a not-yet-created image before
+assembly. It does not waive security checks, original G0–G7, either original gate
+text, or any of the 28 H01–H28 hardware rows. All hardware remains UNTESTED;
+stable release remains BLOCKED. No receipt PASS is asserted by this policy.
 
-1. Whitelist the nine BSP packages with exact versions/architectures and inspect
-   exact carrier DTB and loader files. Review per-file blob redistribution terms.
-2. Build `cm3-cli-board-support` for deterministic extlinux/DTB selection, gzip
-   initramfs, ttyFIQ0/1500000 recovery and deliberately enabled AppArmor; do not
-   depend on the builder's running device tree. Replace, not duplicate, conflicting
-   systemd-boot/overlay hooks. Preserve stock untuned kernel support.
-3. Authenticate Debian main/updates/security and a signed whitelist local BSP APT
-   repository from bootstrap onward with scoped `signed-by`. Reject a tampered
-   metadata fixture. No Bookworm source, Radxa remote feed/pkgs.json, `trusted=yes`,
-   insecure APT flag, global key injection, downgrade pin, or unsigned dpkg shortcut
-   in the new exact-target route. Leave other products unchanged.
-4. Complete a clean Essential-inclusive ARM64 install/configure/upgrade/remove
-   test with clean dpkg audit and recorded package/source/origin manifest. Build
-   the overlays' real dummy kernel module AND DTBOs using the matching installed
-   headers. Exercise native ARM64 header helpers, initial and upgrade initramfs/
-   extlinux hooks and staged known-good boot inputs.
-5. Test fail-closed owner/key enrollment, no default users/password or root SSH,
-   unique machine/host identities, interruption/idempotence, one network manager,
-   documented services and firewall, active intended LSM in an appropriate boot
-   fixture, and no arbitrary `/config` shell evaluation. Expansion, if provided,
-   must identify only the OS partition, never scan/resize attached data disks.
-6. Implement and verify the attested signed-bundle update trust round-trip and
-   deliberate package import, with no automatic bootloader/media writes. Pin the
-   actual compiler/tool/package closure after observing it; do not invent versions
-   or call a rolling APT selection a reproducible snapshot.
+### A — Offline prerequisites, before experimental assembly
 
-Until then the standard `rsdk-build` exact Trixie/CLI path rejects assembly rather
-than falling through to the inherited missing/unsigned repository logic. There
-is no supported full-image invocation at this commit. Do not remove that guard
-just because source compilation succeeds. No CLI/security implementation is
-represented as finished before these prerequisite results.
+On the qualified disposable external runner, collect inspected receipts for the
+exact reviewed head and admitted inputs. Each of these five fields must be the
+literal JSON string `"PASS"`; missing, failed, untested or boolean values block
+admission:
+
+- `authenticated_inputs`: authenticate Debian main/updates/security and the
+  signed whitelist BSP repository from bootstrap onward with scoped `signed-by`;
+  verify exact package identities, payload hashes, provenance and tamper rejection.
+  Review exact loader/DTB inputs and applicable redistribution terms. No Bookworm
+  source, Radxa remote feed/pkgs.json, `trusted=yes`, insecure APT flag, global
+  key injection, downgrade pin or unsigned dpkg shortcut in the exact-target route.
+- `package_configuration`: clean Essential-inclusive ARM64 install/configure,
+  upgrade/remove/reinstall, clean dpkg audit and package/source/origin manifests;
+  real matching-header DKMS dummy module and DTBO builds, native ARM64 helpers,
+  generated gzip initramfs/extlinux hooks and staged known-good boot inputs.
+- `exact_target_rootfs`: fresh actual `radxa-cm3-rpi-cm4-io` Trixie/ARM64/CLI
+  rootfs, not a generic fixture or stale reuse; exact board policy, deterministic
+  extlinux/DTB selection, ttyFIQ0/1500000 recovery configuration, intended AppArmor
+  boot arguments and stock untuned kernel support. Replace conflicting inherited
+  hooks; do not depend on the builder's running device tree.
+- `offline_security`: inspect fail-closed owner/key enrollment, no default
+  users/password or root SSH, identity cleanup, interruption/idempotence fixtures,
+  one network manager, service/firewall configuration and no arbitrary `/config`
+  shell evaluation. If expansion exists, it targets only the OS partition and
+  never scans/resizes attached data disks. Verify attested signed-bundle trust
+  round-trip and deliberate import without automatic bootloader/media writes.
+  These are offline checks, NOT proof of running target services or active LSM.
+- `exact_head_sonar`: passing inspected Sonar analysis/security gate for the
+  exact reviewed build head, not an earlier successful source revision.
+
+Use `scripts/cm3-stage-policy.py` as a small shared policy API:
+
+```python
+admit(stage_a)  # a dict containing the five fields above
+# Returns exactly:
+# {"experimental_assembly": "ALLOWED", "stable_release": "BLOCKED", "hardware": "UNTESTED"}
+# Raises ValueError for a non-object or any missing/non-PASS required field.
+```
+
+CLI (both arguments are JSON file paths, not inline JSON):
+
+```sh
+python3 scripts/cm3-stage-policy.py --evidence stage-a.json --output decision.json
+```
+
+The input is the stage A object itself, with no wrapper. Successful evaluation
+writes the exact decision above and exits zero. Invalid evidence, unreadable input
+or unwritable/existing output exits nonzero; output is never overwritten. Extra
+fields cannot qualify runtime, hardware or stable release. The helper evaluates
+supplied receipts only: it does not authenticate them, invent a PASS, reserve an
+attempt, invoke a builder or remove the `rsdk-build` guard. The caller must verify
+receipt provenance, exact head/target/input binding, current authorization and
+the phase-wide budget before assembly. Do not handwrite PASS values to bypass
+missing evidence. This patch provides no supported full-image build invocation.
+
+### B — Actual-artifact inspection, after experimental assembly
+
+Inspect the actual artifact independently: compressed/raw SHA-256, decompressor
+integrity, raw boot offsets, partition separation/fit, exact target DTB/root
+identity and complete installed package/source manifest. Retain source/config/
+patch/tool/blob/license records, signed-input provenance, limits and safe recovery
+instructions. Pin the actual observed compiler/tool/package closure; do not invent
+versions or call rolling APT selection a reproducible snapshot. An assembly PASS
+is not an artifact-inspection PASS, and neither satisfies runtime qualification.
+
+### C — Runtime/hardware qualification, required for stable release
+
+After stage B and separately authorized sacrificial-target testing, verify actual
+first boot, fail-closed enrollment, unique machine/host identities, interruption/
+idempotence, running services/firewall/network ownership, active intended LSM,
+OS-only expansion if provided, distinct-version BSP update/reboot and hardware
+recovery. Qualify hardware and performance under the unchanged original G0–G7
+and all 28 H01–H28 rows, including the mandatory PCIe/NVMe row. No row is waived
+and no result is inferred from offline fixtures or artifact creation. This API
+never grants stable release; release/publication requires separate authorization.
 
 ## Full-image bounds for the later stage
 
@@ -378,7 +433,7 @@ specific fix, outcome and remaining budget. Concurrency alone is not an attempt
 counter. No full-image job exists here, so no resettable counter is presented as
 a security control. See `attempts.json` for the initial ledger.
 
-After passing full package preflight, the later implementation must expose one
+After passing stage A offline prerequisites, the later implementation must expose one
 manual exact-tuple build, populate the actual fork revision, forbid stale rootfs
 reuse, and preserve signed repository inputs rather than regenerate unsigned
 Release files through upstream `--debs`. Keep `trixie`, `trixie-updates` and
