@@ -42,14 +42,14 @@ The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice preparation. It has not yet produced an image. All nineteen completed
+source/notice preparation. It has not yet produced an image. All twenty completed
 source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The last retained attested package producer remains attempt13; build-only runs14–19
+The last retained attested package producer remains attempt13; build-only runs14–20
 uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
-Build-only runs14–19 published no artifacts and consumed no image entry. Run15
+Build-only runs14–20 published no artifacts and consumed no image entry. Run15
 completed actual source builds, signed ARM64 lifecycle and exact-profile bootstrap,
 then failed installed-file authentication in source preparation. Its detailed
 `dpkg --verify` differences were not printed. The retained source-built kernel
@@ -89,9 +89,14 @@ update and exact-version downloads, excluding inherited source parts. The same
 three signed Debian suites, archive keyring and fail-closed update policy remain;
 no builder source is changed and no signature check is disabled. Real offline APT
 parsing reproduces the conflict and accepts the isolated configuration; update
-and download errors propagate. Actual authenticated source downloads with this
-correction remain untested externally. Assembler and image-absence guards remain.
-Stage A, assembly and independent image inspection remain NOT REACHED.
+and download errors propagate. Run20 (`41050050823`, exact `386a2e6`) passed
+complete source preparation and authenticated exact-head Stage A. The next budget
+step reconciled history but failed creating its receipt in builder-owned evidence
+as the unprivileged host runner. The correction stages the exclusive receipt in
+host-owned `preflight-work/evidence`, then copies only that fresh file into the
+builder after absence/symlink checks. No broad chmod/chown or budget-policy change.
+This transfer is not yet externally tested. Assembly and independent image
+inspection remain NOT REACHED; image entries remain 0/3.
 Upstream #606 was closed without an explanatory comment; this is not an
 authoritative resolution of OVERLAY-1 or permission for public distribution.
 

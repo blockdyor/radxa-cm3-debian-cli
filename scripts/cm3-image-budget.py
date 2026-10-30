@@ -90,7 +90,8 @@ def main():
                                      commit=run['head_sha'], status=run['status']))
     ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
     result = admit(ledger, attempts, run_id, revision, os.environ['HYPOTHESIS'])
-    destination = ROOT / 'package-work/evidence/image-admission.json'
+    # The host runner owns preflight-work; the root builder owns package-work.
+    destination = ROOT / 'preflight-work/evidence/image-admission.json'
     with destination.open('x') as stream:
         stream.write(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result, indent=2))

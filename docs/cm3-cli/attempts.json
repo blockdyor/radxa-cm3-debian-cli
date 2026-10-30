@@ -247,7 +247,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T11:32:58Z",
       "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext and broad diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Exact failed/full logs retained privately. No image or retained package/root payload."
+    },
+    {
+      "number": 20,
+      "commit": "386a2e69f3bfa6bc0f6d97f9703355cac550ffc3",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41050050823",
+      "run_attempt": 1,
+      "hypothesis": "Isolate signed exact-version Debian source retrieval from inherited Signed-By conflict before authenticated Stage A and build-only image inspection",
+      "result": "FAIL at image-budget receipt write after source/signed ARM64/profile, complete corresponding-source preparation and authenticated exact-head Stage A steps PASS. Host runner cannot create package-work/evidence/image-admission.json in root-builder-owned directory (PermissionError). Reconciliation reached exclusive receipt creation, but no admission receipt was written. Focused correction stages receipt in host-owned preflight-work/evidence then copies only that fresh receipt into builder evidence; no broad permissions or budget-policy change. Stage A reached; assembly and independent image inspection SKIPPED, zero image entries.",
+      "failure_stage": "image-budget-host-receipt-permission",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T13:42:47Z",
+      "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext, broad and engineering diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Exact failed/full logs retained privately. No image or retained package/root/source payload."
     }
   ],
-  "status": "Nineteen completed workflow attempts preserved. Attempt19 externally passes authenticated rootfs checks including identity hygiene; stops before source downloads at inherited APT Signed-By conflict. Isolated signed source/index configuration locally tested, not externally proven. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
+  "status": "Twenty completed workflow attempts preserved. Attempt20 externally passes complete source preparation and authenticated Stage A; stops writing host image-admission receipt into builder-owned evidence. Narrow host-staging/container-copy correction locally tested, not externally proven. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
 }

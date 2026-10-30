@@ -1,6 +1,9 @@
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('image_budget', ROOT / 'scripts/cm3-image-budget.py')
@@ -9,6 +12,43 @@ SPEC.loader.exec_module(budget)
 
 
 class ImageBudget(unittest.TestCase):
+    def test_host_receipt_uses_host_owned_staging_and_never_overwrites(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            host = root / 'preflight-work/evidence'
+            host.mkdir(parents=True)
+            run = dict(id=99, head_sha='a' * 40, run_attempt=1)
+            environment = dict(GITHUB_REPOSITORY=budget.REPOSITORY, GITHUB_RUN_ATTEMPT='1',
+                               GITHUB_REF='refs/heads/dev/cm3-debian-cli', GITHUB_RUN_ID='99',
+                               GITHUB_SHA='a' * 40, HYPOTHESIS='test fixture: receipt staging')
+            ledger = root / 'docs/cm3-cli/attempts.json'
+            ledger.parent.mkdir(parents=True)
+            ledger.write_text(json.dumps(self.ledger(0)))
+            with patch.object(budget, 'ROOT', root), patch.dict('os.environ', environment), \
+                    patch.object(budget, 'pages', side_effect=[[run], []]):
+                budget.main()
+            receipt = host / 'image-admission.json'
+            original = receipt.read_bytes()
+            self.assertEqual(json.loads(original)['status'], 'ADMITTED')
+            self.assertFalse((root / 'package-work').exists())
+            with patch.object(budget, 'ROOT', root), patch.dict('os.environ', environment), \
+                    patch.object(budget, 'pages', side_effect=[[run], []]):
+                with self.assertRaises(FileExistsError):
+                    budget.main()
+            self.assertEqual(receipt.read_bytes(), original)
+
+    def test_workflow_copies_only_fresh_receipt_before_assembly(self):
+        workflow = (ROOT / '.github/workflows/build.yaml').read_text()
+        step = workflow.split('- name: Reconcile cumulative three-image budget before assembly')[1].split('- name: Assemble')[0]
+        self.assertLess(step.index('python3 scripts/cm3-image-budget.py'), step.index('docker cp'))
+        self.assertIn('set -euo pipefail', step)
+        self.assertIn('test ! -e /work/evidence/image-admission.json', step)
+        self.assertIn('test ! -L /work/evidence/image-admission.json', step)
+        self.assertIn('docker cp preflight-work/evidence/image-admission.json', step)
+        self.assertIn(':/work/evidence/image-admission.json', step)
+        self.assertNotIn('chmod', step)
+        self.assertNotIn('chown', step)
+
     def ledger(self, count):
         return dict(maximum_full_image_attempts=3, maximum_concurrent_full_images=1,
                     full_image_attempts=[dict(run_url=f'https://github.com/example/actions/runs/{n + 1}',

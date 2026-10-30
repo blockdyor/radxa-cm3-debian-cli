@@ -112,7 +112,15 @@ jobs:
         if: inputs.experimental_image
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 scripts/cm3-image-budget.py
+        run: |
+          set -euo pipefail
+          python3 scripts/cm3-image-budget.py
+          docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            test ! -e /work/evidence/image-admission.json
+          docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            test ! -L /work/evidence/image-admission.json
+          docker cp preflight-work/evidence/image-admission.json \
+            "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}:/work/evidence/image-admission.json"
       - name: Assemble experimental CM3 disk image
         if: inputs.experimental_image
         run: docker exec "cm3-builder-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" python3 /src/scripts/cm3-assemble-image.py --workdir /work
