@@ -46,6 +46,8 @@ def regression(work, revision):
     with (work / 'evidence/image-offline-tests.json').open('x') as output:
         output.write(json.dumps(report, indent=2) + '\n')
     if report['status'] != 'PASS' or report['tests'] == 0:
+        # Failed disposable builders are removed; retain the real failure in CI logs.
+        print((work / 'evidence/image-offline-tests.log').read_text(), file=sys.stderr)
         raise ValueError('complete offline regressions must pass without skips; see image-offline-tests.log')
     return report
 

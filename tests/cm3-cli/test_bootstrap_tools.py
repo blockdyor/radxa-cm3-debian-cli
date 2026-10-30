@@ -57,6 +57,7 @@ class BootstrapTools(unittest.TestCase):
                          'apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount')
         self.assertLess(workflow.index(prerequisites), workflow.index(setup))
         self.assertLess(workflow.index('command -v jsonnet'), compile_at)
+        self.assertIn('binutils libc6-dev openssh-client', workflow)
         self.assertLess(workflow.index('cm3-image-stage-a.py tests'), compile_at)
         stage = (ROOT / 'scripts/cm3-image-stage-a.py').read_text()
         self.assertIn("discover(str(ROOT / 'tests/cm3-cli'))", stage)

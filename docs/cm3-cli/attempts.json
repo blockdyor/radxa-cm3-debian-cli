@@ -175,7 +175,19 @@
       "attestation_artifact_sha256": "d457d8ee7cacabc50e23e1fa634a04670d2e611f46050624f0f833f5637c4320",
       "ciphertext_sha256": "f9fdd3300b98517211b7ab4a37a72374ea812945bd6e7a1fb4a52e0717717f93",
       "retained_payloads": "All three downloaded ZIP digests match live API digests; all 57 ZIP members pass CRC. Exact admission/source/board/profile receipts and all13 completed runs reconcile. Actual official-gh exact certificate identity, source/signer digest/ref/issuer/SLSA/hosted-runner checks pass. CMS AES-GCM authenticates before extraction; every inner file hash, ten package identities and signed metadata-to-payload closure checked privately. Public key authority is limited to this attested bundle, never installed as host/global trust. Original rkbin notice bytes match the loader-input record and existing copyright remains. No target root, signing key, recipient private key or plaintext BSP uploaded; no new workflow dispatched."
+    },
+    {
+      "number": 14,
+      "commit": "2e42bf67cac034056d111d7c9f6ced22e5df8afd",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/40993844769",
+      "run_attempt": 1,
+      "hypothesis": "Build-only actual CM3 image assembly and independent inspection with no payload publication while OVERLAY-1 remains unresolved",
+      "result": "FAIL before source compilation: pinned builder/Jsonnet, exact-head Sonar and actual libguestfs software-appliance qualification PASS. Complete offline regression admission failed; detailed test log was runner-local and removed with builder, so individual failures are not established. Inspected prerequisite list omits libc6-dev and openssh-client required by compiler/ssh-keygen tests. Next correction adds these explicit prerequisites and prints failed test diagnostics without weakening no-skip admission. Stage A/assembly/inspection NOT REACHED; no image attempt consumed.",
+      "failure_stage": "pre-compilation-offline-regressions",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T02:50:47Z",
+      "retained_payloads": "No artifacts uploaded (API total_count=0). All payload, encrypted recovery and broad evidence upload paths skipped; disposable builder cleanup succeeded. No image produced or retained."
     }
   ],
-  "status": "Thirteen completed workflow attempts recorded without resetting history. Attempt 13 passes source/signed ARM64/profile and actual attestation plus subsequent exact-SAN ciphertext/inner-repository verification and isolated authenticated APT acquisition. Acquisition is not imported-package installation or enduring update trust. Full preflight NOT COMPLETE: target provisioning/active LSM, distinct-version BSP recovery and complete source/blob-license/input closure remain open. Producer c24ad2a is distinct from later consumer/documentation revisions and Sonar acceptance. Current owner permits evidence-based retries, not unchanged failures or three same-stage failures without progress. Image0/3 held; all hardware gates unchanged."
+  "status": "Fourteen completed workflow attempts recorded without resetting history. Attempt14 qualifies the actual guestfs software appliance and exact-head Sonar but stops at pre-compilation regressions; failed test details were not exposed. Next changed-stage correction adds missing direct test dependencies and preserves actual failure diagnostics. Image0/3: assembly never entered. Build-only engineering is authorized; public payload delivery remains BLOCKED for OVERLAY-1, upstream radxa-pkg/radxa-overlays#606. Existing hardware/runtime criteria remain UNTESTED; no release qualification."
 }

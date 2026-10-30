@@ -1,4 +1,5 @@
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,25 @@ SPEC.loader.exec_module(stage)
 
 
 class SonarEvidence(unittest.TestCase):
+    def test_failed_regressions_leave_real_error_in_ci_logs_and_no_pass_receipt(self):
+        class Broken(unittest.TestCase):
+            def runTest(self):
+                self.fail('deliberate regression diagnostic fixture')
+
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            (work / 'evidence').mkdir()
+            errors = io.StringIO()
+            with patch.object(stage.unittest.defaultTestLoader, 'discover',
+                              return_value=unittest.TestSuite([Broken()])), \
+                    patch.dict(os.environ, GITHUB_RUN_ID='12'), patch.object(stage.sys, 'stderr', errors):
+                with self.assertRaisesRegex(ValueError, 'regressions'):
+                    stage.regression(work, 'a' * 40)
+            self.assertIn('deliberate regression diagnostic fixture', errors.getvalue())
+            report = json.loads((work / 'evidence/image-offline-tests.json').read_text())
+            self.assertEqual(report['status'], 'FAIL')
+            self.assertEqual(report['failures'], 1)
+
     def answers(self, revision='a' * 40, gate='OK', issues=0, hotspots=0):
         return [{'pullRequests': [dict(key='1', commit=dict(sha=revision),
                                       status=dict(qualityGateStatus=gate), analysisDate='now')]},
