@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Offline experimental-assembly policy; not an evidence verifier or builder."""
 
-import argparse
 import json
-from pathlib import Path
+import sys
 
 
 REQUIRED = (
@@ -30,18 +29,14 @@ def admit(stage_a):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--evidence', required=True, type=Path,
-                        help='JSON file containing the stage A object')
-    parser.add_argument('--output', required=True, type=Path,
-                        help='new JSON decision file (must not exist)')
-    args = parser.parse_args()
+    # The policy needs JSON data, never authority to read or write agent-supplied paths.
+    if len(sys.argv) != 1:
+        raise SystemExit('Read stage A JSON from stdin; no filesystem arguments are accepted')
     try:
-        result = admit(json.loads(args.evidence.read_text(encoding='utf-8')))
-        with args.output.open('x', encoding='utf-8') as output:
-            output.write(json.dumps(result, indent=2) + '\n')
+        result = admit(json.load(sys.stdin))
     except (OSError, ValueError) as error:
-        parser.error(str(error))
+        raise SystemExit(str(error)) from error
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == '__main__':

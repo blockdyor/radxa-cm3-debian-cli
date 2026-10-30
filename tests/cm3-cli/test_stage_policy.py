@@ -48,38 +48,35 @@ class StagePolicyTests(unittest.TestCase):
                             runtime='PASS', experimental_assembly='BLOCKED')
         self.assertEqual(policy.admit(self.stage_a), self.expected)
 
-    def run_cli(self, evidence, output):
-        return subprocess.run([sys.executable, str(SCRIPT), '--evidence',
-                               str(evidence), '--output', str(output)],
+    def run_cli(self, content, *args):
+        return subprocess.run([sys.executable, str(SCRIPT), *args], input=content,
                               capture_output=True, text=True)
 
-    def test_cli_writes_exact_decision_and_refuses_overwrite(self):
-        with tempfile.TemporaryDirectory() as directory:
-            evidence = Path(directory) / 'evidence.json'
-            output = Path(directory) / 'decision.json'
-            evidence.write_text(json.dumps(self.stage_a))
-            result = self.run_cli(evidence, output)
-            self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(json.loads(output.read_text()), self.expected)
-            before = output.read_bytes()
-            self.assertNotEqual(self.run_cli(evidence, output).returncode, 0)
-            self.assertEqual(output.read_bytes(), before)
-            self.assertNotEqual(self.run_cli(evidence, evidence).returncode, 0)
-            self.assertEqual(json.loads(evidence.read_text()), self.stage_a)
+    def test_cli_reads_data_and_prints_exact_decision(self):
+        result = self.run_cli(json.dumps(self.stage_a))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), self.expected)
 
-    def test_cli_bad_evidence_never_writes_decision(self):
+    def test_cli_bad_evidence_never_prints_decision(self):
+        for content in ['{', '{}', 'null', '[]', '',
+                        json.dumps(dict(self.stage_a, exact_head_sonar='FAIL'))]:
+            with self.subTest(content=content):
+                result = self.run_cli(content)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, '')
+
+    def test_agent_supplied_paths_cannot_be_read_or_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
-            evidence = Path(directory) / 'evidence.json'
-            output = Path(directory) / 'decision.json'
-            for content in ['{', '{}', 'null', '[]',
-                            json.dumps(dict(self.stage_a, exact_head_sonar='FAIL'))]:
-                with self.subTest(content=content):
-                    evidence.write_text(content)
-                    self.assertNotEqual(self.run_cli(evidence, output).returncode, 0)
-                    self.assertFalse(output.exists())
-            evidence.unlink()
-            self.assertNotEqual(self.run_cli(evidence, output).returncode, 0)
-            self.assertFalse(output.exists())
+            sentinel = Path(directory) / 'sentinel'
+            sentinel.write_text('not JSON; never open this path')
+            for name in [str(sentinel), '../outside.json', '/etc/shadow']:
+                with self.subTest(name=name):
+                    result = self.run_cli(json.dumps(self.stage_a), '--evidence', name,
+                                          '--output', str(sentinel))
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(result.stdout, '')
+                    self.assertIn('no filesystem arguments', result.stderr)
+                    self.assertEqual(sentinel.read_text(), 'not JSON; never open this path')
 
 
 if __name__ == '__main__':

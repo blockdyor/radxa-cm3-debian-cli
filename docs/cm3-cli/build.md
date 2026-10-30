@@ -384,15 +384,16 @@ admit(stage_a)  # a dict containing the five fields above
 # Raises ValueError for a non-object or any missing/non-PASS required field.
 ```
 
-CLI (both arguments are JSON file paths, not inline JSON):
+CLI reads JSON data on stdin and writes a decision on stdout. It accepts no
+filesystem-path arguments. Shell no-clobber protects an existing decision file:
 
 ```sh
-python3 scripts/cm3-stage-policy.py --evidence stage-a.json --output decision.json
+(set -C; python3 scripts/cm3-stage-policy.py < stage-a.json > decision.json)
 ```
 
 The input is the stage A object itself, with no wrapper. Successful evaluation
-writes the exact decision above and exits zero. Invalid evidence, unreadable input
-or unwritable/existing output exits nonzero; output is never overwritten. Extra
+prints the exact decision above and exits zero. Invalid evidence exits nonzero
+without printing a decision. The shell opens files, not the policy helper. Extra
 fields cannot qualify runtime, hardware or stable release. The helper evaluates
 supplied receipts only: it does not authenticate them, invent a PASS, reserve an
 attempt, invoke a builder or remove the `rsdk-build` guard. The caller must verify
