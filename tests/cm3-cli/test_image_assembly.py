@@ -17,6 +17,46 @@ SPEC.loader.exec_module(assembly)
 
 
 class Admission(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('depmod'), 'actual depmod executable required')
+    def test_generated_module_indexes_must_match_real_depmod_without_mutating_input(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            kernel = '6.1.0-test'
+            modules = root / 'lib/modules' / kernel
+            modules.mkdir(parents=True)
+            (root / 'run').mkdir()
+            for name in ['modules.order', 'modules.builtin', 'modules.builtin.modinfo']:
+                (modules / name).write_bytes(b'')
+            subprocess.run(['depmod', '-a', '-b', str(root), '-m', '/lib/modules', kernel], check=True)
+            before = {name: (modules / name).read_bytes() for name in ['modules.dep', 'modules.dep.bin']}
+            def chroot(_, *args, **kwargs):
+                command = list(args)
+                output = command.index('-o') + 1
+                command[output] = str(root / command[output].lstrip('/'))
+                subprocess.run([command[0], '-b', str(root), *command[1:]], check=True)
+            with patch.object(assembly.profile.probe, 'chroot', side_effect=chroot):
+                assembly.verify_module_indexes(root, kernel)
+                for name in before:
+                    self.assertEqual((modules / name).read_bytes(), before[name])
+                    (modules / name).write_bytes(before[name] + b'tamper')
+                    with self.assertRaisesRegex(ValueError, 'generated module index'):
+                        assembly.verify_module_indexes(root, kernel)
+                    self.assertEqual((modules / name).read_bytes(), before[name] + b'tamper')
+                    (modules / name).write_bytes(before[name])
+                index = modules / 'modules.dep'
+                index.unlink()
+                index.symlink_to(modules / 'modules.dep.bin')
+                with self.assertRaisesRegex(ValueError, 'redirected generated module index'):
+                    assembly.verify_module_indexes(root, kernel)
+                index.unlink()
+                with self.assertRaises(FileNotFoundError):
+                    assembly.verify_module_indexes(root, kernel)
+                index.write_bytes(before['modules.dep'])
+                with patch.object(assembly.profile.probe, 'chroot', side_effect=subprocess.CalledProcessError(1, ['depmod'])):
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        assembly.verify_module_indexes(root, kernel)
+            self.assertEqual(list((root / 'run').iterdir()), [])
+
     def test_only_exact_authenticated_kernel_decompression_is_allowed(self):
         with tempfile.TemporaryDirectory() as temporary:
             base = Path(temporary)
@@ -41,12 +81,25 @@ class Admission(unittest.TestCase):
                 installed.write_bytes(raw)
                 with patch.object(assembly.profile.probe, 'chroot', return_value=changed if compressed else ''):
                     assembly.verify_installed_files(root, package, kernel)
+                indexes = ''.join('??5??????   /lib/modules/' + kernel + '/' + name + '\n'
+                                  for name in ['modules.dep', 'modules.dep.bin'])
+                with patch.object(assembly.profile.probe, 'chroot', return_value=changed + indexes), \
+                        patch.object(assembly, 'verify_module_indexes') as verify_indexes:
+                    assembly.verify_installed_files(root, package, kernel)
+                    verify_indexes.assert_called_once_with(root, kernel)
+                with patch.object(assembly.profile.probe, 'chroot', return_value=changed + indexes), \
+                        patch.object(assembly, 'verify_module_indexes', side_effect=ValueError('bad generated index')):
+                    with self.assertRaisesRegex(ValueError, 'bad generated index'):
+                        assembly.verify_installed_files(root, package, kernel)
                 for contents in [raw + b'tamper', gzip.compress(raw)]:
                     installed.write_bytes(contents)
                     with patch.object(assembly.profile.probe, 'chroot', return_value=changed):
                         with self.assertRaisesRegex(ValueError, 'authenticated ARM64'):
                             assembly.verify_installed_files(root, package, kernel)
             for differences in [changed + '??5??????   /usr/bin/sudo\n', changed * 2,
+                                changed + indexes * 2,
+                                changed + indexes.replace('modules.dep.bin', 'modules.alias.bin'),
+                                changed + indexes.replace('   /lib', ' c /lib'),
                                 changed.replace('??5??????', 'missing'),
                                 changed.replace('   /boot', ' c /boot')]:
                 with patch.object(assembly.profile.probe, 'chroot', return_value=differences):

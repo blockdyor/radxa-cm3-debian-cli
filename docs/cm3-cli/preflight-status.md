@@ -42,21 +42,35 @@ The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice preparation. It has not yet produced an image. All fifteen completed
+source/notice preparation. It has not yet produced an image. All sixteen completed
 source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The last retained attested package producer remains attempt13; build-only runs14/15
+The last retained attested package producer remains attempt13; build-only runs14–16
 uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
-Build-only runs14/15 published no artifacts and consumed no image entry. Run15
+Build-only runs14–16 published no artifacts and consumed no image entry. Run15
 completed actual source builds, signed ARM64 lifecycle and exact-profile bootstrap,
 then failed installed-file authentication in source preparation. Its detailed
 `dpkg --verify` differences were not printed. The retained source-built kernel
 is gzip-compressed and the pinned bootutils hook decompresses it for Rockchip
 U-Boot. Authentication now checks that exact raw ARM64 Image against bounded
-decompression of the authenticated package; all other differences still fail
-and are reported. This correction has not yet passed the external image path.
+decompression of the authenticated package. Run16 at `d6360d9` passed the actual
+source/signed ARM64/profile step, but source preparation rejected three checksum
+differences: that kernel, `modules.dep` and `modules.dep.bin` for
+`6.1.84-18+cm3cli1-rk2410-nocsf`. The whole difference set was rejected before
+the kernel-byte comparison; that comparison is not externally proven yet.
+
+DKMS regenerates the dependency indexes. The focused correction uses target
+`depmod -a -m /lib/modules -o <temporary-output> <kernel>` to recompute both
+indexes without overwriting installed files, then requires exact byte equality.
+The authenticated kernel check remains; every other difference, duplicate,
+missing file or conffile discrepancy still fails. Actual depmod fixture tests
+cover positive regeneration, tampered text/binary indexes, symlinks, missing
+indexes, failure propagation and cleanup. This correction has not run externally.
+Stage A, assembly and independent image inspection remain NOT REACHED.
+Upstream #606 was closed without an explanatory comment; this is not an
+authoritative resolution of OVERLAY-1 or permission for public distribution.
 
 ## Historical successful run: attempt 13 actual attested repository verified
 

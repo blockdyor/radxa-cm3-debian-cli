@@ -3,7 +3,7 @@
 set -eu
 export DEBIAN_FRONTEND=noninteractive
 apt-get -o APT::Update::Error-Mode=any update
-apt-get install -y --no-install-recommends python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount git gcc make gcc-aarch64-linux-gnu gh binutils libc6-dev openssh-client
+apt-get install -y --no-install-recommends python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount git gcc make gcc-aarch64-linux-gnu gh binutils libc6-dev openssh-client kmod
 git config --global --add safe.directory /src
 python3 /src/scripts/cm3-bootstrap-tools.py
 command -v jsonnet

@@ -199,7 +199,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T04:47:09Z",
       "retained_payloads": "No artifacts uploaded (API total_count=0). Public payload/ciphertext/broad evidence uploads SKIPPED, disposable builder cleanup PASS. No image produced, retained or publicly distributed."
+    },
+    {
+      "number": 16,
+      "commit": "d6360d93dc66f6720f306eae66f631f1e9f527ba",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41007107881",
+      "run_attempt": 1,
+      "hypothesis": "Authenticate exact bootutils gzip-to-ARM64 kernel transformation and reject/report all other installed-file drift before build-only assembly",
+      "result": "FAIL at source-delivery installed-file authentication after source-build/signed ARM64/profile step PASS. Exact reported checksum differences: /boot/vmlinuz-6.1.84-18+cm3cli1-rk2410-nocsf, /lib/modules/6.1.84-18+cm3cli1-rk2410-nocsf/modules.dep and modules.dep.bin. Strict verifier rejected the whole set before comparing decompressed kernel bytes; no claim that its kernel comparison passed externally. DKMS runs depmod, whose documented outputs include both indexes. Focused correction regenerates those two indexes separately using target depmod, requires exact installed-byte equality, retains exact authenticated kernel comparison and rejects all other/duplicate/missing/conffile differences. Correction locally tested, not externally exercised. Stage A/assembly/independent image inspection NOT REACHED.",
+      "failure_stage": "source-delivery-installed-file-authentication",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T07:07:56Z",
+      "retained_payloads": "API total_count=0 artifacts. Public payload, encrypted recovery and broad evidence uploads SKIPPED; disposable builder cleanup PASS. Private diagnostic log retained locally; no image produced or retained."
     }
   ],
-  "status": "Fifteen completed workflow attempts preserved. Attempt15 passes actual source/signed ARM64/profile and fails installed-file authentication before image entry. Kernel decompression is a verified legitimate bootutils transformation, not blanket permission to ignore dpkg differences. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1, upstream radxa-pkg/radxa-overlays#606. Hardware/runtime checks remain UNTESTED."
+  "status": "Sixteen completed workflow attempts preserved. Attempt16 passes source/signed ARM64/profile, then rejects exact kernel and depmod-index differences before image entry. Narrow authenticated-kernel and regenerated-index correction remains externally untested; no blanket dpkg exception. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
 }

@@ -80,12 +80,30 @@ def experimental_admission(work, revision, run_id):
     return policy.admit(stage.get('checks'))
 
 
+def verify_module_indexes(root, kernel):
+    # DKMS legitimately regenerates these two packaged indexes. Recompute into
+    # a separate output tree, never overwrite the installed bytes being checked.
+    with tempfile.TemporaryDirectory(prefix='cm3-depmod-check-', dir=root / 'run') as temporary:
+        output = Path(temporary)
+        profile.probe.chroot(root, 'depmod', '-a', '-m', '/lib/modules',
+                             '-o', '/' + str(output.relative_to(root)), kernel)
+        for name in ['modules.dep', 'modules.dep.bin']:
+            installed = root / 'lib/modules' / kernel / name
+            if installed.is_symlink() or not installed.resolve().is_relative_to(root):
+                raise ValueError('redirected generated module index: ' + str(installed))
+            generated = regular(output / 'lib/modules' / kernel / name)
+            if regular(installed.resolve()).read_bytes() != generated.read_bytes():
+                raise ValueError('installed generated module index differs from depmod: ' + str(installed))
+
+
 def verify_installed_files(root, package, kernel):
     differences = profile.probe.chroot(root, 'dpkg', '--verify', capture=True)
     # The pinned bootutils hook decompresses only this kernel for Rockchip U-Boot.
     expected = ['??5??????', '/boot/vmlinuz-' + kernel]
+    indexes = [['??5??????', '/lib/modules/' + kernel + '/' + name]
+               for name in ['modules.dep', 'modules.dep.bin']]
     rows = [line.split() for line in differences.splitlines() if line.strip()]
-    if rows not in [[], [expected]]:
+    if any(row not in [expected, *indexes] or rows.count(row) != 1 for row in rows):
         raise ValueError('profile installed file verification failed:\n' + differences)
     installed = regular(root / ('boot/vmlinuz-' + kernel))
     payload = None
@@ -112,6 +130,8 @@ def verify_installed_files(root, package, kernel):
     if (len(payload) > 128 * 1024 * 1024 or payload[56:60] != b'ARMd' or
             profile.probe.digest(installed) != hashlib.sha256(payload).hexdigest()):
         raise ValueError('installed kernel differs from authenticated ARM64 Image transformation')
+    if any(row in indexes for row in rows):
+        verify_module_indexes(root, kernel)
 
 
 def authenticate(work, revision, run_id):
