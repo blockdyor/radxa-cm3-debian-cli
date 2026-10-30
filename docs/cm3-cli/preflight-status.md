@@ -42,14 +42,14 @@ The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice preparation. It has not yet produced an image. All eighteen completed
+source/notice preparation. It has not yet produced an image. All nineteen completed
 source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The last retained attested package producer remains attempt13; build-only runs14–18
+The last retained attested package producer remains attempt13; build-only runs14–19
 uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
-Build-only runs14–18 published no artifacts and consumed no image entry. Run15
+Build-only runs14–19 published no artifacts and consumed no image entry. Run15
 completed actual source builds, signed ARM64 lifecycle and exact-profile bootstrap,
 then failed installed-file authentication in source preparation. Its detailed
 `dpkg --verify` differences were not printed. The retained source-built kernel
@@ -79,8 +79,18 @@ and offline sshd policy checks. Source preparation then stopped at retained
 `root/.ssh`; its contents/type were not logged, so neither emptiness nor credentials
 are established. Bootstrap now uses `rmdir` only for an empty unredirected
 `root/.ssh`; nonempty directories, files and symlinks fail without deletion.
-Absent/empty/retained-data/symlink/error paths have local fixture checks, not yet
-external validation. Assembler and actual-image identity-absence guards remain.
+Absent/empty/retained-data/symlink/error paths have local fixture checks.
+Run19 (`41034777951`, exact `5a5da0f`) passed the complete rootfs authentication,
+including identity hygiene, and reached Debian source retrieval. APT then rejected
+conflicting `Signed-By` paths: the inherited builder source specifies
+`debian-archive-keyring.pgp` while the added global `deb-src` specifies `.gpg`.
+Source retrieval now uses a dedicated source list and index directory for both
+update and exact-version downloads, excluding inherited source parts. The same
+three signed Debian suites, archive keyring and fail-closed update policy remain;
+no builder source is changed and no signature check is disabled. Real offline APT
+parsing reproduces the conflict and accepts the isolated configuration; update
+and download errors propagate. Actual authenticated source downloads with this
+correction remain untested externally. Assembler and image-absence guards remain.
 Stage A, assembly and independent image inspection remain NOT REACHED.
 Upstream #606 was closed without an explanatory comment; this is not an
 authoritative resolution of OVERLAY-1 or permission for public distribution.

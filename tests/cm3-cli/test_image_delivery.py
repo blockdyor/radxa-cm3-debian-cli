@@ -1,6 +1,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -22,6 +23,59 @@ publish = load('publish', 'cm3-publish-image.py')
 
 
 class SourceDelivery(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('apt-get'), 'actual APT parser required')
+    def test_source_download_isolates_inherited_signed_by_conflicts(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            inherited = work / 'inherited'
+            inherited.mkdir()
+            for extension in ['gpg', 'pgp']:
+                (inherited / (extension + '.list')).write_text(
+                    'deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.' + extension +
+                    '] https://deb.debian.org/debian trixie main\n')
+            base = ['apt-get', '-o', 'Dir::Etc::sourcelist=-',
+                    '-o', 'Dir::Etc::sourceparts=' + str(inherited),
+                    '-o', 'Dir::State::lists=' + str(work / 'lists')]
+            failed = subprocess.run([*base, '--print-uris', 'update'], capture_output=True, text=True)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertIn('Conflicting values set for option Signed-By', failed.stderr)
+            with patch.object(delivery.subprocess, 'run') as runner:
+                delivery.download_sources(work, work, ['base-source=1:2-3'])
+            update, download = runner.call_args_list
+            options = update.args[0][1:-1]
+            self.assertEqual(download.args[0], ['apt-get', *options, '--download-only', '--only-source',
+                                               'source', '--', 'base-source=1:2-3'])
+            self.assertTrue(update.kwargs['check'])
+            self.assertTrue(download.kwargs['check'])
+            self.assertEqual(download.kwargs['cwd'], work)
+            self.assertIn('Dir::Etc::sourceparts=-', options)
+            self.assertIn('Dir::State::lists=' + str(work / 'delivery-apt/lists'), options)
+            self.assertIn('APT::Update::Error-Mode=any', options)
+            sources = (work / 'delivery-apt/sources.list').read_text().splitlines()
+            self.assertEqual(len(sources), 3)
+            self.assertTrue(all(line.startswith('deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] ')
+                                for line in sources))
+            self.assertEqual([line.split('] ')[1] for line in sources], [
+                'https://deb.debian.org/debian trixie main non-free-firmware',
+                'https://deb.debian.org/debian trixie-updates main non-free-firmware',
+                'https://security.debian.org/debian-security trixie-security main non-free-firmware'])
+            # Real APT parses the generated policy without downloads or host-state writes.
+            passed = subprocess.run([*base, *options, '--print-uris', 'update'],
+                                    capture_output=True, text=True, check=True)
+            self.assertIn('trixie_InRelease', passed.stdout)
+            self.assertNotIn('Conflicting', passed.stderr)
+            self.assertEqual(len(list(inherited.iterdir())), 2)
+
+    def test_source_update_and_download_fail_closed(self):
+        for failure in [0, 1]:
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temporary:
+                work = Path(temporary)
+                error = subprocess.CalledProcessError(100, ['apt-get'])
+                with patch.object(delivery.subprocess, 'run', side_effect=[None] * failure + [error]) as runner:
+                    with self.assertRaises(subprocess.CalledProcessError):
+                        delivery.download_sources(work, work, ['base=1', 'next=2'])
+                self.assertEqual(runner.call_count, failure + 1)
+
     def test_public_distribution_fails_closed_even_with_approved_environment(self):
         with patch.dict('os.environ', {'PUBLIC_DISTRIBUTION': 'true'}):
             with self.assertRaisesRegex(ValueError, 'OVERLAY-1'):

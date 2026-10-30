@@ -235,7 +235,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T09:28:33Z",
       "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext and broad diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Sourceprep diagnostics retained privately. No image or retained package/root payload."
+    },
+    {
+      "number": 19,
+      "commit": "5a5da0fd20aa95e11f6fd65566adaa372045c9dc",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41034777951",
+      "run_attempt": 1,
+      "hypothesis": "Remove only empty unredirected root SSH staging directory while rejecting retained data before authenticated Stage A and build-only assembly",
+      "result": "FAIL before Debian source retrieval after source/signed ARM64/profile step PASS. Source preparation passed authenticated kernel transformation, target depmod equality, dpkg audit, offline SSH policy and full rootfs identity hygiene, then APT rejected conflicting Signed-By paths: new global deb-src uses debian-archive-keyring.gpg, inherited builder source uses debian-archive-keyring.pgp. Focused correction isolates signed source list and index state for both update and exact-version source downloads, without modifying inherited sources or disabling signature checks. Real APT conflict/isolation and failure-propagation tests PASS locally; external correction untested. Stage A/assembly/independent image inspection NOT REACHED.",
+      "failure_stage": "source-delivery-apt-signed-by-conflict",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T11:32:58Z",
+      "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext and broad diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Exact failed/full logs retained privately. No image or retained package/root payload."
     }
   ],
-  "status": "Eighteen completed workflow attempts preserved. Attempt18 externally passes authenticated kernel and target depmod equality; stops at retained root/.ssh. Empty-directory-only cleanup is locally tested, not externally proven; nonempty and redirected paths still fail. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
+  "status": "Nineteen completed workflow attempts preserved. Attempt19 externally passes authenticated rootfs checks including identity hygiene; stops before source downloads at inherited APT Signed-By conflict. Isolated signed source/index configuration locally tested, not externally proven. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
 }

@@ -63,6 +63,25 @@ def build_configs(work):
     return {'kernel.config': kernel, 'u-boot.config': loader}
 
 
+def download_sources(work, source_dir, specs):
+    # Isolate both sources and indexes from the builder's inherited Signed-By policy.
+    apt = work / 'delivery-apt'
+    (apt / 'lists/partial').mkdir(parents=True)
+    sources = apt / 'sources.list'
+    with sources.open('x') as stream:
+        for mirror in ['https://deb.debian.org/debian trixie',
+                       'https://deb.debian.org/debian trixie-updates',
+                       'https://security.debian.org/debian-security trixie-security']:
+            stream.write('deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] ' + mirror + ' main non-free-firmware\n')
+    options = ['-o', 'Dir::Etc::sourcelist=' + str(sources),
+               '-o', 'Dir::Etc::sourceparts=-', '-o', 'Dir::State::lists=' + str(apt / 'lists'),
+               '-o', 'APT::Update::Error-Mode=any']
+    subprocess.run(['apt-get', *options, 'update'], check=True)
+    for spec in specs:
+        subprocess.run(['apt-get', *options, '--download-only', '--only-source', 'source', '--', spec],
+                       cwd=source_dir, check=True)
+
+
 def prepare(work):
     revision = assembly.boundary(work)
     receipt = assembly.authenticate(work, revision, os.environ['GITHUB_RUN_ID'])
@@ -77,16 +96,7 @@ def prepare(work):
     specs = source_specs(manifest, local_names)
     source_dir = output / 'debian-sources'
     source_dir.mkdir()
-    # Source indexes use only the same signed Debian suites as the target.
-    sources = Path('/etc/apt/sources.list.d/cm3-delivery-sources.list')
-    with sources.open('x') as stream:
-        for mirror in ['https://deb.debian.org/debian trixie',
-                       'https://deb.debian.org/debian trixie-updates',
-                       'https://security.debian.org/debian-security trixie-security']:
-            stream.write('deb-src [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] ' + mirror + ' main non-free-firmware\n')
-    subprocess.run(['apt-get', '-o', 'APT::Update::Error-Mode=any', 'update'], check=True)
-    for spec in specs:
-        subprocess.run(['apt-get', '--download-only', '--only-source', 'source', '--', spec], cwd=source_dir, check=True)
+    download_sources(work, source_dir, specs)
     if not list(source_dir.glob('*.dsc')):
         raise ValueError('actual authenticated Debian source downloads required')
     with tarfile.open(output / 'modified-bsp-and-builder-sources.tar.gz', 'x:gz') as archive:
