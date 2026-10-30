@@ -27,13 +27,16 @@ class Admission(unittest.TestCase):
             (root / 'run').mkdir()
             for name in ['modules.order', 'modules.builtin', 'modules.builtin.modinfo']:
                 (modules / name).write_bytes(b'')
-            subprocess.run(['depmod', '-a', '-b', str(root), '-m', '/lib/modules', kernel], check=True)
+            subprocess.run(['depmod', '-a', '-b', str(root), kernel], check=True)
             before = {name: (modules / name).read_bytes() for name in ['modules.dep', 'modules.dep.bin']}
             def chroot(_, *args, **kwargs):
-                command = list(args)
-                output = command.index('-o') + 1
-                command[output] = str(root / command[output].lstrip('/'))
-                subprocess.run([command[0], '-b', str(root), *command[1:]], check=True)
+                self.assertEqual(args[:5], ('depmod', '-a', '-m', '/lib/modules', '-o'))
+                self.assertEqual(args[-1], kernel)
+                output = root / args[5].lstrip('/')
+                # Host kmod 31 lacks target kmod 34's -m/-o; use a separate
+                # fixture tree to exercise real regeneration and byte checks.
+                shutil.copytree(root / 'lib/modules', output / 'lib/modules')
+                subprocess.run(['depmod', '-a', '-b', str(output), kernel], check=True)
             with patch.object(assembly.profile.probe, 'chroot', side_effect=chroot):
                 assembly.verify_module_indexes(root, kernel)
                 for name in before:

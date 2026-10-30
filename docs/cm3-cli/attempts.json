@@ -211,7 +211,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T07:07:56Z",
       "retained_payloads": "API total_count=0 artifacts. Public payload, encrypted recovery and broad evidence uploads SKIPPED; disposable builder cleanup PASS. Private diagnostic log retained locally; no image produced or retained."
+    },
+    {
+      "number": 17,
+      "commit": "37ad6eb635b7465f299494f831df55e9aeb3f7ba",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41021265130",
+      "run_attempt": 1,
+      "hypothesis": "Verify authenticated kernel transformation and exact regenerated DKMS dependency indexes without modifying installed files before build-only assembly",
+      "result": "FAIL before compilation at host offline regression tests: real depmod fixture used target kmod34 -m/-o options on Ubuntu runner kmod31; -m was ignored and /lib/modules parsed as a bad version. Target production verifier was not reached or changed. Fixture now regenerates in a separate copy using portable -b, asserts exact target invocation, retains real byte comparisons and all tamper/missing/symlink/failure/cleanup checks. No failure suppressed. Stage A/assembly/independent image inspection NOT REACHED.",
+      "failure_stage": "host-offline-regressions",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T07:38:26Z",
+      "retained_payloads": "Artifacts API total_count=0; payload, ciphertext and broad diagnostic upload steps SKIPPED; cleanup SUCCESS. No compilation, image or retained payload."
     }
   ],
-  "status": "Sixteen completed workflow attempts preserved. Attempt16 passes source/signed ARM64/profile, then rejects exact kernel and depmod-index differences before image entry. Narrow authenticated-kernel and regenerated-index correction remains externally untested; no blanket dpkg exception. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
+  "status": "Seventeen completed workflow attempts preserved. Attempt17 failed host offline tests before compilation: Ubuntu kmod31 lacks target kmod34 -m/-o options. Portable real-depmod fixture correction preserves target invocation and all byte/tamper checks; target verifier remains externally untested. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
 }
