@@ -3,6 +3,8 @@ import lzma
 from pathlib import Path
 import tempfile
 import unittest
+import stat
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = importlib.util.spec_from_file_location('image_verify', ROOT / 'scripts/cm3-verify-image.py')
@@ -11,6 +13,48 @@ SPEC.loader.exec_module(verify)
 
 
 class ImageContract(unittest.TestCase):
+    def test_board_payload_inspects_real_package_files_and_rejects_changed_policy(self):
+        spec = importlib.util.spec_from_file_location('board_build', ROOT / 'packages/cm3-cli-board-support/build.py')
+        board = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(board)
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            package = board.build(directory / 'board.deb', 'a' * 40, 0)
+            root = directory / 'root'
+            subprocess.run(['dpkg-deb', '--extract', str(package), str(root)], check=True)
+
+            class PackageFiles:
+                # Filesystem-backed adapter for the read-only guest operations, not boot evidence.
+                def lstatns(self, path):
+                    info = (root / path.lstrip('/')).lstat()
+                    return dict(st_mode=info.st_mode, st_uid=0, st_gid=0)
+
+                def checksum(self, algorithm, path):
+                    if algorithm != 'sha256':
+                        raise ValueError('unexpected checksum algorithm')
+                    return verify.assembly.profile.probe.digest(root / path.lstrip('/'))
+
+            self.assertEqual(set(verify.board_payload(PackageFiles())),
+                             {'/' + name for name in board.PAYLOAD} | {
+                                 '/usr/lib/cm3-cli/owner_config.py',
+                                 '/usr/share/doc/cm3-cli-board-support/README',
+                                 '/usr/share/doc/cm3-cli-board-support/copyright'})
+            (root / 'etc/ssh/sshd_config.d/00-cm3-cli.conf').write_text('PermitRootLogin yes\n')
+            with self.assertRaises(ValueError):
+                verify.board_payload(PackageFiles())
+
+    def test_board_policy_requires_real_root_owned_mode_and_exact_bytes(self):
+        metadata = dict(st_mode=stat.S_IFREG | 0o644, st_uid=0, st_gid=0)
+        verify.board_file(metadata, 'expected', 'expected', 0o644)
+        for field, value in [('st_uid', 1000), ('st_gid', 1000),
+                             ('st_mode', stat.S_IFLNK | 0o644),
+                             ('st_mode', stat.S_IFREG | 0o666),
+                             ('st_mode', stat.S_IFREG | 0o4644)]:
+            with self.subTest(field=field, value=value), self.assertRaises(ValueError):
+                verify.board_file(metadata | {field: value}, 'expected', 'expected', 0o644)
+        with self.assertRaises(ValueError):
+            verify.board_file(metadata, 'changed', 'expected', 0o644)
+
     def partitions(self):
         return [dict(part_num=n, part_start=start * 512, part_end=end * 512 - 1,
                      part_size=(end - start) * 512)

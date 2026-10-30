@@ -52,6 +52,17 @@ def archive_checkout(archive, checkout, prefix):
             archive.add(path, arcname=prefix + '/' + name, recursive=False)
 
 
+def build_configs(work):
+    kernel = assembly.regular(work / 'linux-rk2410-nocsf/src/.config')
+    retained = assembly.regular(work / 'evidence/kernel.config')
+    if kernel.read_bytes() != retained.read_bytes():
+        raise ValueError('kernel corresponding-source configuration differs from actual build evidence')
+    loader = assembly.regular(work / 'u-boot-rk2601/src/.config')
+    if not kernel.stat().st_size or not loader.stat().st_size:
+        raise ValueError('actual kernel and U-Boot build configurations required')
+    return {'kernel.config': kernel, 'u-boot.config': loader}
+
+
 def prepare(work):
     revision = assembly.boundary(work)
     receipt = assembly.authenticate(work, revision, os.environ['GITHUB_RUN_ID'])
@@ -59,6 +70,7 @@ def prepare(work):
     output = work / 'delivery-inputs'
     output.mkdir()
     lock = assembly.profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
+    configs = build_configs(work)
     manifest = assembly.profile.probe.chroot(root, 'dpkg-query', '-W',
                 '-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n', capture=True)
     local_names = set(assembly.profile.probe.source.expected_packages(lock)) | {'cm3-cli-board-support'}
@@ -92,7 +104,8 @@ def prepare(work):
                 archive_checkout(archive, child_path, recipe['name'] + '/' + name)
         for path in sorted((work / 'evidence').glob('*.diff')):
             archive.add(path, arcname='local-patches/' + path.name, recursive=False)
-        archive.add(work / 'evidence/kernel.config', arcname='generated/kernel.config', recursive=False)
+        for name, path in configs.items():
+            archive.add(path, arcname='generated/' + name, recursive=False)
     # Preserve original per-package notices and full common license texts unchanged.
     with tarfile.open(output / 'installed-notices.tar.gz', 'x:gz') as archive:
         archive.add(root / 'usr/share/doc', arcname='usr/share/doc')
@@ -110,6 +123,7 @@ def prepare(work):
             raise ValueError('missing actual firmware payload or preserved Debian copyright')
         firmware[package] = hashes
     shutil.copyfile(ROOT / 'project/cm3-cli/source-lock.json', output / 'source-lock.json')
+    shutil.copyfile(assembly.regular(work / 'evidence/loader-inputs.json'), output / 'loader-inputs.json')
     (output / 'installed-source-identities.tsv').write_text(manifest)
     (output / 'firmware-files.json').write_text(json.dumps(firmware, indent=2) + '\n')
     (output / 'builder-packages.tsv').write_text(assembly.profile.probe.command(

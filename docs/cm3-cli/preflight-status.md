@@ -8,6 +8,27 @@ https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
 ## Current implementation checkpoint — experimental pipeline not yet executed
 
+Public image dispatch/delivery is currently withheld for the specific unresolved
+OVERLAY-1 distribution scope below, not for hardware tests or an agent-count gate.
+At the locked overlay commit `a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6`,
+the root `LICENSE` contains GPLv2 while `debian/copyright` declares `Files: *`
+GPL-3+. The dummy module source `debian/radxa-overlays.c` declares
+only `MODULE_LICENSE("GPL")`, not a version or an exception. These differing
+signals do not establish an authoritative file-scope mapping or GPLv2-kernel
+compatibility for the built module. Preserve the package and notices; do not
+silently relicense or remove board support. Obtain an upstream file-scope
+clarification covering the overlay sources and dummy module before public upload.
+This is an unresolved permission question, not a finding that all overlays are
+undistributable. Exact source links and the existing file-level inventory are
+in `provenance.md` (OVERLAY-1). No new image attempt is spent on this blocker.
+
+Source delivery now requires both actual kernel/U-Boot build configurations,
+checks kernel configuration against the retained build evidence, and exports the
+existing hashed loader-input/notice mapping. Independent image inspection also
+checks board-policy file bytes, root ownership and exact permissions; it does
+not infer those properties from a package name/version. These checks have not
+yet inspected an assembled disk image.
+
 The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image

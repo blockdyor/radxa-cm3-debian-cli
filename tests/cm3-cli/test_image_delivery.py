@@ -21,6 +21,31 @@ publish = load('publish', 'cm3-publish-image.py')
 
 
 class SourceDelivery(unittest.TestCase):
+    def test_actual_build_configs_are_required_and_kernel_evidence_must_match(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            kernel = work / 'linux-rk2410-nocsf/src/.config'
+            loader = work / 'u-boot-rk2601/src/.config'
+            retained = work / 'evidence/kernel.config'
+            for path in [kernel, loader, retained]:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('CONFIG_TEST=y\n')
+            self.assertEqual(delivery.build_configs(work), {'kernel.config': kernel, 'u-boot.config': loader})
+            kernel.write_text('CONFIG_TEST=n\n')
+            with self.assertRaisesRegex(ValueError, 'differs'):
+                delivery.build_configs(work)
+            kernel.write_bytes(retained.read_bytes())
+            for content in ['', None]:
+                if content is None:
+                    loader.unlink()
+                else:
+                    loader.write_text(content)
+                with self.assertRaises((ValueError, OSError)):
+                    delivery.build_configs(work)
+            loader.symlink_to(kernel)
+            with self.assertRaises(ValueError):
+                delivery.build_configs(work)
+
     def test_source_identity_strictly_matches_download_arguments(self):
         manifest = 'base\t1\tarm64\tbase-source\t1:2-3\nlocal\t1\tall\tlocal\t1\n'
         self.assertEqual(delivery.source_specs(manifest, {'local'}), ['base-source=1:2-3'])
@@ -52,14 +77,20 @@ class SourceDelivery(unittest.TestCase):
             directory = Path(temporary)
             names = ['modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
                      'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
-                     'debian-sources/example.dsc']
+                     'loader-inputs.json', 'debian-sources/example.dsc']
             for name in names:
                 path = directory / name
                 path.parent.mkdir(exist_ok=True)
                 path.write_text('fixture')
             (directory / 'delivery-inputs.json').write_text('{}')
             manifest = dict(files={name: publish.assembly.profile.probe.digest(directory / name) for name in names})
-            self.assertEqual(len(publish.checked_materials(directory, manifest)), 7)
+            self.assertEqual(len(publish.checked_materials(directory, manifest)), 8)
+            incomplete = dict(files={name: digest for name, digest in manifest['files'].items()
+                                     if name != 'loader-inputs.json'})
+            (directory / 'loader-inputs.json').unlink()
+            with self.assertRaisesRegex(ValueError, 'incomplete'):
+                publish.checked_materials(directory, incomplete)
+            (directory / 'loader-inputs.json').write_text('fixture')
             extra = directory / 'secret.key'
             extra.write_text('not a real key')
             with self.assertRaisesRegex(ValueError, 'set changed'):

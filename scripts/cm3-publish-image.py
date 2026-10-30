@@ -26,7 +26,8 @@ def checked_materials(directory, manifest):
         if assembly.profile.probe.digest(assembly.regular(directory / path)) != digest:
             raise ValueError('source/notice material hash mismatch')
     if not {'modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
-            'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json'} <= set(expected):
+            'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
+            'loader-inputs.json'} <= set(expected):
         raise ValueError('corresponding source/notices incomplete')
     if not any(name.startswith('debian-sources/') and name.endswith('.dsc') for name in expected):
         raise ValueError('exact Debian source delivery absent')

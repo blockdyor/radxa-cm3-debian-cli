@@ -7,6 +7,7 @@ import json
 import lzma
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 
@@ -51,6 +52,30 @@ def inventory(status, expected):
     if rows != expected_rows:
         raise ValueError('image inventory differs from authenticated configured rootfs')
     return ''.join(name + '\t' + '\t'.join(fields) + '\n' for name, fields in sorted(rows.items()))
+
+
+def board_file(metadata, digest, expected, mode):
+    if (not stat.S_ISREG(metadata['st_mode']) or metadata['st_uid'] != 0 or
+            metadata['st_gid'] != 0 or stat.S_IMODE(metadata['st_mode']) != mode or digest != expected):
+        raise ValueError('image board policy bytes, ownership or permissions changed')
+
+
+def board_payload(guest):
+    spec = importlib.util.spec_from_file_location('cm3_board', ROOT / 'packages/cm3-cli-board-support/build.py')
+    board = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(board)
+    sources = {name: board.HERE / 'root' / name for name in board.PAYLOAD}
+    sources['usr/lib/cm3-cli/owner_config.py'] = ROOT / 'scripts/cm3-owner-config.py'
+    sources['usr/share/doc/cm3-cli-board-support/README'] = board.HERE / 'README'
+    sources['usr/share/doc/cm3-cli-board-support/copyright'] = ROOT / 'LICENSE'
+    hashes = {}
+    for name, source in sources.items():
+        path = '/' + name
+        mode = 0o755 if name in ['usr/lib/cm3-cli/enroll.py', 'usr/lib/cm3-cli/boot-update'] else 0o644
+        expected = assembly.profile.probe.digest(assembly.regular(source))
+        board_file(guest.lstatns(path), guest.checksum('sha256', path), expected, mode)
+        hashes[path] = expected
+    return hashes
 
 
 def inspect(work):
@@ -119,6 +144,7 @@ def inspect(work):
         for service in contract.SERVICE_LINKS:
             if not guest.is_symlink('/etc/systemd/system/' + service):
                 raise ValueError('required service not enabled: ' + service)
+        policy_hashes = board_payload(guest)
         packages = inventory(text('/var/lib/dpkg/status'),
                              (work / 'evidence/rsdk-profile-packages.tsv').read_text())
         # Loader offsets come from the actual pinned package's setup.sh, checked in tests.
@@ -142,7 +168,7 @@ def inspect(work):
     report = dict(label=LABEL, status='PASS', source_revision=revision, run_id=os.environ['GITHUB_RUN_ID'],
                   image_sha256=raw_hash, compressed_sha256=xz_hash,
                   image_bytes=raw.stat().st_size, compressed_bytes=compressed.stat().st_size,
-                  layout=layout, boot=boot, boot_file_sha256=hashes,
+                  layout=layout, boot=boot, boot_file_sha256=hashes, board_policy_sha256=policy_hashes,
                   hardware='UNTESTED', services='UNTESTED', active_lsm='UNTESTED', stable_release='BLOCKED')
     with (output / 'verification.json').open('x') as stream:
         stream.write(json.dumps(report, indent=2) + '\n')

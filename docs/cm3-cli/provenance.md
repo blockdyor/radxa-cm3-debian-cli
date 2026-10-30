@@ -186,6 +186,16 @@ Absence of a file-local notice is not evidence that a file is unlicensed.
 Source: [pinned overlay packaging and notices](https://github.com/radxa-pkg/radxa-overlays/tree/a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6).
 No blanket license clearance or changed upstream terms are inferred.
 
+On 2026-10-30 the pinned root [LICENSE](https://github.com/radxa-pkg/radxa-overlays/blob/a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6/LICENSE),
+[packaging copyright](https://github.com/radxa-pkg/radxa-overlays/blob/a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6/debian/copyright)
+and [dummy module](https://github.com/radxa-pkg/radxa-overlays/blob/a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6/debian/radxa-overlays.c)
+were retrieved again. They still contain the differing declarations above;
+`MODULE_LICENSE("GPL")` alone does not resolve their scope. Public binary
+delivery is withheld pending authoritative clarification of the overlay/module
+file-scope grant and applicable kernel-module compatibility. Merely copying
+more license texts or changing a status to PASS is not that clarification.
+The owner timing amendment does not waive this distribution restriction.
+
 The pinned U-Boot notice is `Licenses/README` plus `Licenses/gpl-2.0.txt`, not
 a missing root LICENSE. Bootutils declares its terms in `debian/copyright`.
 The loader recipe replaces vendor SPL with compiled U-Boot SPL; the selected
