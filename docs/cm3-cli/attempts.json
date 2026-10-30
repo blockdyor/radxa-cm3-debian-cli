@@ -223,7 +223,19 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T07:38:26Z",
       "retained_payloads": "Artifacts API total_count=0; payload, ciphertext and broad diagnostic upload steps SKIPPED; cleanup SUCCESS. No compilation, image or retained payload."
+    },
+    {
+      "number": 18,
+      "commit": "3e2988d936c1bfc6cf09c3061224d5452c09fcab",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41022353211",
+      "run_attempt": 1,
+      "hypothesis": "Portable real-depmod host fixture admits unchanged authenticated kernel and target regenerated-index checks before build-only assembly",
+      "result": "FAIL at source-preparation identity hygiene after source/signed ARM64/profile step PASS. Real authentication passed exact kernel transformation, target depmod regenerated-index equality, clean dpkg audit and temporary-key sshd policy checks; stopped at retained root/.ssh. Contents/type of that path were not logged, so not established as empty or credential-bearing. Focused correction removes only an empty unredirected root/.ssh during bootstrap via rmdir; nonempty paths, files and symlinks fail without deletion. Later assembler and actual-image absence checks unchanged. Stage A/assembly/independent image inspection NOT REACHED.",
+      "failure_stage": "source-delivery-root-ssh-identity-hygiene",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T09:28:33Z",
+      "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext and broad diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Sourceprep diagnostics retained privately. No image or retained package/root payload."
     }
   ],
-  "status": "Seventeen completed workflow attempts preserved. Attempt17 failed host offline tests before compilation: Ubuntu kmod31 lacks target kmod34 -m/-o options. Portable real-depmod fixture correction preserves target invocation and all byte/tamper checks; target verifier remains externally untested. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
+  "status": "Eighteen completed workflow attempts preserved. Attempt18 externally passes authenticated kernel and target depmod equality; stops at retained root/.ssh. Empty-directory-only cleanup is locally tested, not externally proven; nonempty and redirected paths still fail. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
 }

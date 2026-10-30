@@ -118,6 +118,18 @@ def render(stage, receipt, output):
     return parsed
 
 
+def remove_empty_root_ssh(root):
+    directory = root / 'root/.ssh'
+    if directory.parent.is_symlink() or directory.is_symlink():
+        raise ValueError('redirected profile root SSH directory: ' + str(directory))
+    try:
+        directory.rmdir()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        raise ValueError('profile root SSH path is not an empty directory: ' + str(directory)) from exc
+
+
 def bootstrap(stage, output, receipt, evidence):
     root = stage / 'root'
     if root.exists() or root.is_symlink():
@@ -137,9 +149,11 @@ def bootstrap(stage, output, receipt, evidence):
             raise ValueError('profile package identity/configuration mismatch')
     if probe.chroot(root, 'dpkg', '--audit', capture=True).strip():
         raise ValueError('profile package audit failed')
+    # Remove only an empty staging directory, never credentials or redirected data.
+    remove_empty_root_ssh(root)
     for name in ['etc/machine-id', 'var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
                  'etc/apt/sources.list.d/cm3-build.list', 'usr/share/keyrings/cm3-build.gpg',
-                 'opt/cm3-repo']:
+                 'opt/cm3-repo', 'root/.ssh']:
         path = root / name
         if path.exists() or path.is_symlink():
             raise ValueError('profile retained a builder identity, owner or build feed')

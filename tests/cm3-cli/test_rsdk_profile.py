@@ -136,6 +136,40 @@ class ProfileRendering(unittest.TestCase):
 
 
 class ReceiptBoundary(unittest.TestCase):
+    def test_only_empty_root_ssh_directory_is_removed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            home = root / 'root'
+            home.mkdir()
+            directory = home / '.ssh'
+            profile.remove_empty_root_ssh(root)
+            directory.mkdir(mode=0o700)
+            profile.remove_empty_root_ssh(root)
+            self.assertFalse(directory.exists())
+            directory.mkdir()
+            marker = directory / 'authorized_keys'
+            marker.write_text('test-only marker, not a key')
+            with self.assertRaisesRegex(ValueError, 'not an empty directory'):
+                profile.remove_empty_root_ssh(root)
+            self.assertEqual(marker.read_text(), 'test-only marker, not a key')
+            marker.unlink()
+            directory.rmdir()
+            directory.write_text('unexpected file')
+            with self.assertRaisesRegex(ValueError, 'not an empty directory'):
+                profile.remove_empty_root_ssh(root)
+            self.assertEqual(directory.read_text(), 'unexpected file')
+            directory.unlink()
+            for destination in [home / 'missing', home]:
+                directory.symlink_to(destination, target_is_directory=True)
+                with self.assertRaisesRegex(ValueError, 'redirected'):
+                    profile.remove_empty_root_ssh(root)
+                self.assertTrue(directory.is_symlink())
+                directory.unlink()
+            home.rmdir()
+            home.symlink_to(root, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, 'redirected'):
+                profile.remove_empty_root_ssh(root)
+
     def test_wrong_admission_or_failed_probe_stops_before_repository(self):
         with tempfile.TemporaryDirectory() as temporary:
             work = Path(temporary)

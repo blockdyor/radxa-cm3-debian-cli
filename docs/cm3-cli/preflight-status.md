@@ -42,14 +42,14 @@ The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice preparation. It has not yet produced an image. All seventeen completed
+source/notice preparation. It has not yet produced an image. All eighteen completed
 source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The last retained attested package producer remains attempt13; build-only runs14–17
+The last retained attested package producer remains attempt13; build-only runs14–18
 uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
-Build-only runs14–17 published no artifacts and consumed no image entry. Run15
+Build-only runs14–18 published no artifacts and consumed no image entry. Run15
 completed actual source builds, signed ARM64 lifecycle and exact-profile bootstrap,
 then failed installed-file authentication in source preparation. Its detailed
 `dpkg --verify` differences were not printed. The retained source-built kernel
@@ -67,12 +67,20 @@ indexes without overwriting installed files, then requires exact byte equality.
 The authenticated kernel check remains; every other difference, duplicate,
 missing file or conffile discrepancy still fails. Actual depmod fixture tests
 cover positive regeneration, tampered text/binary indexes, symlinks, missing
-indexes, failure propagation and cleanup. This correction has not run externally.
+indexes, failure propagation and cleanup. Run18 externally passed these checks.
 Run17 (`41021265130`, exact `37ad6eb`) stopped before compilation: its host
 fixture passed target kmod34 flags to Ubuntu kmod31. The fixture now uses
 portable `depmod -b` on a separate module-tree copy, asserts the exact target
 invocation and retains real regeneration/tamper comparisons. Production target
 verification and checksum policy are unchanged; no failure is skipped or suppressed.
+Run18 (`41022353211`, exact `3e2988d`) passed source/signed ARM64/profile,
+authenticated kernel transformation, target depmod index equality, clean audit
+and offline sshd policy checks. Source preparation then stopped at retained
+`root/.ssh`; its contents/type were not logged, so neither emptiness nor credentials
+are established. Bootstrap now uses `rmdir` only for an empty unredirected
+`root/.ssh`; nonempty directories, files and symlinks fail without deletion.
+Absent/empty/retained-data/symlink/error paths have local fixture checks, not yet
+external validation. Assembler and actual-image identity-absence guards remain.
 Stage A, assembly and independent image inspection remain NOT REACHED.
 Upstream #606 was closed without an explanatory comment; this is not an
 authoritative resolution of OVERLAY-1 or permission for public distribution.
