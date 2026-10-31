@@ -47,6 +47,8 @@ def archive_checkout(archive, checkout, prefix):
         if (checkout / name).is_file():
             paths.add(name)
     for name in sorted(paths):
+        if prefix == 'builder-and-board' and name == 'project/cm3-cli/retention-recipient.pem':
+            continue  # Unused internal recovery recipient is not image corresponding source.
         path = checkout / name
         if path.is_symlink() or path.is_file():
             archive.add(path, arcname=prefix + '/' + name, recursive=False)
@@ -82,6 +84,24 @@ def download_sources(work, source_dir, specs):
                        cwd=source_dir, check=True)
 
 
+def review_notices(work, root):
+    overlay = assembly.regular(work / 'radxa-overlays/debian/copyright')
+    installed = assembly.regular(root / 'usr/share/doc/radxa-overlays-dkms/copyright')
+    if installed.read_bytes() != overlay.read_bytes() or b'GPL-2, unless otherwise noted' not in installed.read_bytes():
+        raise ValueError('installed overlay clarification missing or changed')
+    firmware = {}
+    for package in ['firmware-brcm80211', 'firmware-realtek']:
+        version = assembly.profile.probe.chroot(root, 'dpkg-query', '-W', '-f=${Version}', package, capture=True)
+        copyright = assembly.regular(root / 'usr/share/doc' / package / 'copyright')
+        digest = assembly.profile.probe.digest(copyright)
+        if version != '20250410-2' or digest != 'f5d62266d99e91aeae9223a5b4f830ed5e917256672f50470ef868e0378ad6d8':
+            raise ValueError('firmware version/notices differ from reviewed payload; review before distribution')
+        firmware[package] = dict(version=version, copyright_sha256=digest)
+    return dict(overlay_clarification='radxa-pkg/radxa-overlays@0ee073720de7652a6b77ea4be8ae029c4a3e7e4e',
+                overlay_copyright_sha256=assembly.profile.probe.digest(installed), firmware=firmware,
+                scope='Experimental aggregate only; original component terms apply; no stable/hardware approval')
+
+
 def prepare(work):
     revision = assembly.boundary(work)
     receipt = assembly.authenticate(work, revision, os.environ['GITHUB_RUN_ID'])
@@ -90,6 +110,7 @@ def prepare(work):
     output.mkdir()
     lock = assembly.profile.probe.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
     configs = build_configs(work)
+    notice_review = review_notices(work, root)
     manifest = assembly.profile.probe.chroot(root, 'dpkg-query', '-W',
                 '-f=${Package}\t${Version}\t${Architecture}\t${source:Package}\t${source:Version}\n', capture=True)
     local_names = set(assembly.profile.probe.source.expected_packages(lock)) | {'cm3-cli-board-support'}
@@ -136,6 +157,7 @@ def prepare(work):
     shutil.copyfile(assembly.regular(work / 'evidence/loader-inputs.json'), output / 'loader-inputs.json')
     (output / 'installed-source-identities.tsv').write_text(manifest)
     (output / 'firmware-files.json').write_text(json.dumps(firmware, indent=2) + '\n')
+    (output / 'notice-review.json').write_text(json.dumps(notice_review, indent=2) + '\n')
     (output / 'builder-packages.tsv').write_text(assembly.profile.probe.command(
         'dpkg-query', '-W', '-f=${Package}\t${Version}\t${Architecture}\n', capture=True))
     for name in ['hardware-matrix.tsv', 'gates-consolidated-verbatim.txt', 'gates-validation-verbatim.txt',

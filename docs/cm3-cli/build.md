@@ -1,5 +1,10 @@
 # CM3 Debian CLI experiment
 
+Current retained-candidate admission and retrieval contract:
+[`retained-image-admission.md`](retained-image-admission.md). It supersedes the
+historical OVERLAY-1 awaiting-response/public-upload hold below; original attempt
+records and build-only results are not rewritten. No retained image exists yet.
+
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
 The independently reconciled execution, artifact access/expiry and unchanged

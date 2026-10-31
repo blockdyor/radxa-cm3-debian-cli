@@ -1,5 +1,10 @@
 # External package preflight status
 
+For the changed retained-image pipeline, see
+[`retained-image-admission.md`](retained-image-admission.md). No new assembly has
+occurred during admission. Earlier checkpoints below remain historical; do not
+reuse their SHA, Stage A or redistribution disposition for the new candidate.
+
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
 Historical runs inspected 2026-10-28 UTC; development authorization updated

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage build-only diagnostics; public payload delivery is held for OVERLAY-1."""
+"""Stage verified experimental delivery or explicitly selected build-only diagnostics."""
 import importlib.util
 import json
 import os
@@ -35,8 +35,60 @@ def checked_materials(directory, manifest):
 
 
 def stage(work):
-    # An owner build-only approval is not a copyright-holder distribution grant.
-    raise ValueError('OVERLAY-1 unresolved: public payload distribution blocked')
+    revision = assembly.boundary(work)
+    run_id = os.environ['GITHUB_RUN_ID']
+    image_dir = work / 'image-output'
+    delivery_dir = work / 'delivery-inputs'
+    result = json.loads(assembly.regular(image_dir / 'verification.json').read_text())
+    delivery = json.loads(assembly.regular(delivery_dir / 'delivery-inputs.json').read_text())
+    for report in [result, delivery]:
+        if report.get('source_revision') != revision or report.get('run_id') != run_id or report.get('label') != LABEL:
+            raise ValueError('exact-run classified image/source delivery required')
+    if result.get('status') != 'PASS' or result.get('hardware') != 'UNTESTED' or result.get('stable_release') != 'BLOCKED':
+        raise ValueError('independent offline verification required; no hardware/release qualification')
+    materials = checked_materials(delivery_dir, delivery)
+    if 'notice-review.json' not in materials:
+        raise ValueError('payload-specific notice review required')
+    review = json.loads((delivery_dir / 'notice-review.json').read_text())
+    if review.get('overlay_clarification') != 'radxa-pkg/radxa-overlays@0ee073720de7652a6b77ea4be8ae029c4a3e7e4e':
+        raise ValueError('official overlay clarification required')
+    image = assembly.regular(image_dir / (assembly.NAME + '.xz'))
+    raw = assembly.regular(image_dir / assembly.NAME)
+    for path, digest, size in [(image, result['compressed_sha256'], result['compressed_bytes']),
+                               (raw, result['image_sha256'], result['image_bytes'])]:
+        if path.stat().st_size != size or assembly.profile.probe.digest(path) != digest:
+            raise ValueError('verified image changed before upload')
+    destination = work / 'public-image'
+    destination.mkdir()
+    shutil.copyfile(image, destination / image.name)
+    for name in ['packages.tsv', 'verification.json']:
+        shutil.copyfile(assembly.regular(image_dir / name), destination / name)
+    for name in ['image-stage-a.json', 'image-admission.json', 'image-offline-tests.json']:
+        shutil.copyfile(assembly.regular(work / 'evidence' / name), destination / name)
+    for name in materials:
+        target = destination / 'sources' / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(assembly.regular(delivery_dir / name), target)
+    (destination / 'README.txt').write_text(
+        LABEL + '\nSource: ' + revision + '\nRun: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/' + run_id +
+        '\n14-day GitHub Actions development artifact; no release or hardware authority.\n'
+        'Original component licenses apply. Sources/notices accompany these exact bytes in sources/.\n'
+        'Rockchip and radio firmware are proprietary; retain their notices and restrictions.\n'
+        'OS expansion is not implemented; maintenance/support ownership and reproducibility remain unqualified.\n'
+        'All physical tests remain UNTESTED. Obtain separate hardware authorization before use.\n')
+    (destination / 'RAW-SHA256SUMS').write_text(result['image_sha256'] + '  ' + assembly.NAME + '\n')
+    (destination / 'IMAGE-XZ-SHA256SUMS').write_text(result['compressed_sha256'] + '  ' + image.name + '\n')
+    record = dict(label=LABEL, source_revision=revision, run_id=run_id, hardware='UNTESTED',
+                  image_sha256=result['image_sha256'], compressed_sha256=result['compressed_sha256'],
+                  image_bytes=result['image_bytes'], compressed_bytes=result['compressed_bytes'],
+                  files={str(path.relative_to(destination)): assembly.profile.probe.digest(path)
+                         for path in sorted(destination.rglob('*')) if path.is_file()})
+    (destination / 'delivery-result.json').write_text(json.dumps(record, indent=2) + '\n')
+    with (destination / 'SHA256SUMS').open('x') as stream:
+        for path in sorted(destination.rglob('*')):
+            if path.is_file() and path.name != 'SHA256SUMS':
+                stream.write(assembly.profile.probe.digest(path) + '  ' + str(path.relative_to(destination)) + '\n')
+    print('Verified experimental image and corresponding materials:', destination)
 
 
 def diagnostics(work):
@@ -66,7 +118,7 @@ def diagnostics(work):
              'Raw image SHA256: ' + result['image_sha256'] + '\nRaw image bytes: ' + str(result['image_bytes']) + '\n'
              'Compressed image SHA256: ' + result['compressed_sha256'] + '\nCompressed bytes: ' + str(result['compressed_bytes']) + '\n\n'
              'BUILD-ONLY: payloads are not uploaded or retained; discarded with the disposable runner.\n'
-             'Redistribution clearance: BLOCKED (OVERLAY-1); upstream radxa-pkg/radxa-overlays#606.\n'
+             'Diagnostics-only mode; no payload or corresponding sources delivered.\n'
              'No default owner, passwords, SSH host keys or private credentials are supplied.\n'
              'Owner document schema/validation: scripts/cm3-owner-config.py in corresponding builder sources.\n'
              'See the preserved board README and build/provenance/limitations records for offline preparation.\n'
@@ -81,7 +133,7 @@ def diagnostics(work):
     (destination / 'RAW-SHA256SUMS').write_text(result['image_sha256'] + '  ' + assembly.NAME + '\n')
     (destination / 'IMAGE-XZ-SHA256SUMS').write_text(result['compressed_sha256'] + '  ' + assembly.NAME + '.xz\n')
     engineering = dict(label=LABEL, source_revision=revision, run_id=run_id,
-                       engineering='PASS', redistribution='BLOCKED: OVERLAY-1',
+                       engineering='PASS', redistribution='NOT REQUESTED: diagnostics only',
                        payload='NOT RETAINED; discarded with disposable runner',
                        image_sha256=result['image_sha256'], compressed_sha256=result['compressed_sha256'],
                        image_bytes=result['image_bytes'], compressed_bytes=result['compressed_bytes'],

@@ -1,5 +1,12 @@
 # Package provenance and maintenance boundary
 
+Current experimental distribution decision:
+[`retained-image-admission.md`](retained-image-admission.md). Official Radxa
+commit0ee0737 now supplies the OVERLAY-1 clarification; the build backports only
+that metadata and delivery verifies its installed bytes. Historical unresolved
+statements below describe the earlier producer, not an outstanding upstream
+response. Complete source/notice delivery still must accompany each new payload.
+
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
 Machine-readable authority: `project/cm3-cli/source-lock.json`. All recipe and

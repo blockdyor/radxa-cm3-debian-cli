@@ -65,7 +65,7 @@ def pages(path, field):
     return items
 
 
-def main():
+def main(check_only=False):
     if (os.environ.get('GITHUB_REPOSITORY') != REPOSITORY or
             os.environ.get('GITHUB_RUN_ATTEMPT') != '1' or
             os.environ.get('GITHUB_REF') != 'refs/heads/dev/cm3-debian-cli'):
@@ -90,6 +90,9 @@ def main():
                                      commit=run['head_sha'], status=run['status']))
     ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
     result = admit(ledger, attempts, run_id, revision, os.environ['HYPOTHESIS'])
+    if check_only:
+        print(json.dumps(dict(result, status='PRECHECK; NOT A RESERVATION'), indent=2))
+        return
     # The host runner owns preflight-work; the root builder owns package-work.
     destination = ROOT / 'preflight-work/evidence/image-admission.json'
     with destination.open('x') as stream:
@@ -98,4 +101,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check-only', action='store_true')
+    main(parser.parse_args().check_only)

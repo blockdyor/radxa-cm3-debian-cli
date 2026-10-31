@@ -26,6 +26,10 @@ class ImageBudget(unittest.TestCase):
             ledger.write_text(json.dumps(self.ledger(0)))
             with patch.object(budget, 'ROOT', root), patch.dict('os.environ', environment), \
                     patch.object(budget, 'pages', side_effect=[[run], []]):
+                budget.main(check_only=True)
+            self.assertFalse((host / 'image-admission.json').exists())
+            with patch.object(budget, 'ROOT', root), patch.dict('os.environ', environment), \
+                    patch.object(budget, 'pages', side_effect=[[run], []]):
                 budget.main()
             receipt = host / 'image-admission.json'
             original = receipt.read_bytes()
@@ -48,6 +52,8 @@ class ImageBudget(unittest.TestCase):
         self.assertIn(':/work/evidence/image-admission.json', step)
         self.assertNotIn('chmod', step)
         self.assertNotIn('chown', step)
+        self.assertLess(workflow.index('python3 scripts/cm3-image-budget.py --check-only'),
+                        workflow.index('- name: Source-build'))
 
     def ledger(self, count):
         return dict(maximum_full_image_attempts=3, maximum_concurrent_full_images=1,

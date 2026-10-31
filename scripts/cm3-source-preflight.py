@@ -184,6 +184,15 @@ def verify_loader_inputs(source, evidence):
     (evidence / 'loader-inputs.json').write_text(json.dumps(report, indent=2) + '\n')
 
 
+def prepare_overlay_license(source):
+    # Official Radxa issue606 closing commit; metadata only, no source upgrade.
+    patch = ROOT / 'project/cm3-cli/overlay-license.patch'
+    if hashlib.sha256(patch.read_bytes()).hexdigest() != 'e08dd7d5f575c557653f2cc72669d9deb1622da95bdd5951e2afd531ddaedce7':
+        raise ValueError('official overlay clarification patch changed')
+    run('git', '-C', source, 'apply', '--check', patch)
+    run('git', '-C', source, 'apply', patch)
+
+
 def build_recipe(recipe, lock, work, evidence):
     source = work / recipe['name']
     checkout(recipe, source)
@@ -223,6 +232,8 @@ def build_recipe(recipe, lock, work, evidence):
         local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
         run('file', source / 'rkbin/tools/boot_merger')
         run('readelf', '-l', source / 'rkbin/tools/boot_merger')
+    if recipe['name'] == 'radxa-overlays':
+        prepare_overlay_license(source)
     (evidence / (recipe['name'] + '-local.diff')).write_text(
         run('git', '-C', source, 'diff', '--binary', capture=True))
     for name in recipe.get('gitlinks', {}):

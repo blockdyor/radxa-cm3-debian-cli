@@ -76,9 +76,9 @@ class SourceDelivery(unittest.TestCase):
                         delivery.download_sources(work, work, ['base=1', 'next=2'])
                 self.assertEqual(runner.call_count, failure + 1)
 
-    def test_public_distribution_fails_closed_even_with_approved_environment(self):
+    def test_public_distribution_rejects_non_external_execution(self):
         with patch.dict('os.environ', {'PUBLIC_DISTRIBUTION': 'true'}):
-            with self.assertRaisesRegex(ValueError, 'OVERLAY-1'):
+            with self.assertRaisesRegex(ValueError, 'external GitHub-hosted'):
                 publish.stage(Path('/unused'))
 
     def test_build_only_stages_no_payloads_or_sources(self):
@@ -122,8 +122,34 @@ class SourceDelivery(unittest.TestCase):
             self.assertFalse((work / 'public-image').exists())
             engineering = json.loads((destination / 'engineering-result.json').read_text())
             self.assertEqual(engineering['engineering'], 'PASS')
-            self.assertEqual(engineering['redistribution'], 'BLOCKED: OVERLAY-1')
+            self.assertEqual(engineering['redistribution'], 'NOT REQUESTED: diagnostics only')
             self.assertNotIn('SHA256SUMS', engineering['files'])
+            # Retained mode uses the same independently verified fixture identity,
+            # additionally requiring raw bytes and reviewed notice/source material.
+            raw = image / publish.assembly.NAME
+            raw.write_bytes(b'raw image fixture, not a real disk')
+            report.update(image_sha256=publish.assembly.profile.probe.digest(raw), image_bytes=raw.stat().st_size)
+            (image / 'verification.json').write_text(json.dumps(report))
+            with patch.object(publish.assembly, 'boundary', return_value=revision), patch.dict('os.environ', GITHUB_RUN_ID='123'):
+                with self.assertRaisesRegex(ValueError, 'notice review'):
+                    publish.stage(work)
+            notice = sources / 'notice-review.json'
+            notice.write_text(json.dumps(dict(overlay_clarification='radxa-pkg/radxa-overlays@0ee073720de7652a6b77ea4be8ae029c4a3e7e4e')))
+            delivery_report['files'][notice.name] = publish.assembly.profile.probe.digest(notice)
+            (sources / 'delivery-inputs.json').write_text(json.dumps(delivery_report))
+            with patch.object(publish.assembly, 'boundary', return_value=revision), patch.dict('os.environ', GITHUB_RUN_ID='123'):
+                publish.stage(work)
+            retained = work / 'public-image'
+            self.assertEqual((retained / compressed.name).read_bytes(), compressed.read_bytes())
+            self.assertFalse((retained / raw.name).exists())
+            self.assertFalse(any(p.suffix in ['.cms', '.key', '.pem'] for p in retained.rglob('*')))
+            self.assertEqual(json.loads((retained / 'delivery-result.json').read_text())['image_sha256'], report['image_sha256'])
+            retained.rename(work / 'previous-retained')
+            raw.write_bytes(b'tampered raw fixture')
+            with patch.object(publish.assembly, 'boundary', return_value=revision), patch.dict('os.environ', GITHUB_RUN_ID='123'):
+                with self.assertRaisesRegex(ValueError, 'image changed'):
+                    publish.stage(work)
+            self.assertFalse(retained.exists())
             shutil_destination = work / 'previous-diagnostics'
             destination.rename(shutil_destination)
             compressed.write_bytes(b'tampered')
@@ -145,8 +171,8 @@ class SourceDelivery(unittest.TestCase):
                 self.assertIn('if: inputs.experimental_image && inputs.public_distribution', step)
             else:
                 self.assertIn('if: always() && !inputs.experimental_image', step)
-        self.assertIn('if test "$PUBLIC_DISTRIBUTION" != false; then', workflow)
-        self.assertIn('OVERLAY-1 unresolved; public payload distribution is blocked', workflow)
+        self.assertIn('test "$PUBLIC_DISTRIBUTION" = false || test "$EXPERIMENTAL_IMAGE" = true', workflow)
+        self.assertIn('provenance-input/delivery-result.json', provenance)
         self.assertNotIn('actions/cache@', workflow)
         self.assertIn('provenance-input/engineering-result.json', provenance)
         self.assertIn('--source-digest "$APPROVED_SHA"', provenance)
@@ -197,12 +223,16 @@ class SourceDelivery(unittest.TestCase):
             (root / '.config').write_text('CONFIG_EXAMPLE=y\n')
             (root / 'private.key').write_text('test-only, not a real key\n')
             (root / 'generated.o').write_text('not source\n')
+            recipient = root / 'project/cm3-cli/retention-recipient.pem'
+            recipient.parent.mkdir(parents=True)
+            recipient.write_text('test-only public recipient fixture\n')
+            subprocess.run(['git', '-C', str(root), 'add', str(recipient)], check=True)
             archive_path = Path(temporary) / 'source.tar.gz'
             with tarfile.open(archive_path, 'w:gz') as archive:
-                delivery.archive_checkout(archive, root, 'export')
+                delivery.archive_checkout(archive, root, 'builder-and-board')
             with tarfile.open(archive_path) as archive:
-                self.assertEqual(set(archive.getnames()), {'export/source.c', 'export/.config'})
-                self.assertEqual(archive.extractfile('export/source.c').read(), b'modified\n')
+                self.assertEqual(set(archive.getnames()), {'builder-and-board/source.c', 'builder-and-board/.config'})
+                self.assertEqual(archive.extractfile('builder-and-board/source.c').read(), b'modified\n')
 
     def test_public_material_set_rejects_tamper_extra_and_redirected_files(self):
         with tempfile.TemporaryDirectory() as temporary:
