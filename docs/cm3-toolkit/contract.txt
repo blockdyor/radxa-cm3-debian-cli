@@ -1,0 +1,214 @@
+CM3 TOOLKIT INTEGRATION CONTRACT v1
+Task t_eb16db2a | 2026-10-25 UTC | interface design, not implemented tools
+Target: radxa-cm3-rpi-cm4-io, RK3566 on Raspberry Pi CM4 IO Board.
+
+AUTHORITY AND REFERENCES
+Phase B is t_bacce4a4. Repository setup is t_934cf477; evidence recovery is
+t_1cd5a3ef; Phase A proposal is t_3a15869c/cm3-debian-cli-proposal.txt;
+original validation/matrix is t_f48601a3. Implementation owner t_16191242;
+feed investigation t_bca81279; experimental build owner t_8b0a254f.
+Verified via GitHub API and local clone on 2026-10-25:
+https://github.com/blockdyor/radxa-cm3-debian-cli
+Public fork of RadxaOS-SDK/rsdk, push permission true.
+Base dev/cm3-debian-cli = dba5cba3eafb948a22787560bea56da2b9f8f163.
+Separate local branch toolkit/cm3-contract-v1; isolated worktree recorded in
+internal handoff. No push/commit/PR by this contract task; integration owner
+publishes one toolkit draft PR after tests and publication review.
+
+Phase B supersedes Phase A research-only authorization for its own bounded
+build work, NOT hardware testing. This toolkit task permits lightweight code
+and fixture tests only. No builds, installs, reboot, hardware benchmarks,
+flashing, tuning, service changes, SPI writes or production changes.
+The contract does not select a newer Debian version or solve the feed;
+Phase B alone revalidates/pins latest stable and board packages.
+
+FILE OWNERSHIP AND HANDOFF
+Reserved new namespaces only: tools/cm3-toolkit/, tests/cm3-toolkit/,
+docs/cm3-toolkit/. Verified absent from base tree. Coordination recorded on
+Phase B comment 63 and implementation comment 64. This task sets the toolkit
+scope decision; no separate Phase B worker acknowledgment has been received.
+No conflicting file ownership was found in the inspected task bodies/tree.
+If a conflict is raised, stop that path and record it before editing.
+Never edit src/, .github/, project/, boot files, package selections or build
+workflows. No root README/package manifest edits or automatic CI hookup.
+Use Python 3 standard library and direct script invocation; no new packages.
+All workers produce durable ZIP attachments, with paths relative to repo root.
+Workers use their OWN worktrees/branches from the recorded base, never write
+concurrently to another worker's checkout. No worker commits or opens a PR.
+Integrator overlays disjoint ZIPs onto toolkit/cm3-contract-v1 (or recreates
+that branch from pinned base), verifies scope, commits and publishes ONE PR.
+
+Ownership (exclusive unless explicitly transferred in a board comment):
+  t_eb16db2a: docs/cm3-toolkit/contract.txt, docs/cm3-toolkit/sources/*.
+  t_61314b04 collector: tools/cm3-toolkit/collect.py,
+    tools/cm3-toolkit/common.py, tests/cm3-toolkit/test_collect.py,
+    tests/cm3-toolkit/test_common.py, tests/cm3-toolkit/fixtures/collector/*,
+    docs/cm3-toolkit/collector.txt.
+  t_13f22531 benchmarks: tools/cm3-toolkit/bench.py,
+    tools/cm3-toolkit/report.py, tests/cm3-toolkit/test_bench.py,
+    tests/cm3-toolkit/test_report.py, tests/cm3-toolkit/fixtures/bench/*,
+    docs/cm3-toolkit/benchmarks.txt.
+  t_e750e109 mapping: tools/cm3-toolkit/compatibility.json,
+    tests/cm3-toolkit/test_mapping.py, docs/cm3-toolkit/compatibility.txt.
+  t_dbbb5b95 integration: tests/cm3-toolkit/test_integration.py,
+    tests/cm3-toolkit/fixtures/integration/*, docs/cm3-toolkit/runbook.txt,
+    docs/cm3-toolkit/test-results.txt, docs/cm3-toolkit/examples/*.
+Do not add __init__.py or competing shared frameworks; import common from the
+adjacent script directory. Integrator may fix cross-component mismatches only
+with owner transfer recorded; immutable source snapshots never edited.
+
+COMMAND INTERFACE (to implement, not executable yet)
+python3 tools/cm3-toolkit/collect.py [--fixture-root DIR] [--output FILE]
+python3 tools/cm3-toolkit/bench.py PROCEDURE [--execute] [--allow-load]
+  [--allow-write] [--allow-network] [--duration-s N] [--memory-mib N]
+  [--file-mib N] [--approved-dir DIR] [--peer HOST] [--conditions FILE]
+  [--fixture-root DIR] [--output FILE]
+PROCEDURE: idle, cpu, memory, storage, network, boot-ssh.
+python3 tools/cm3-toolkit/report.py --baseline FILE --candidate FILE
+  [--output FILE]
+python3 -m unittest discover -s tests/cm3-toolkit -p 'test_*.py'
+
+Collect without fixture is bounded allowlisted inspection, not an automatic
+hardware run in this phase. Bench without --execute returns a plan and starts
+NO workloads/probes. Idle execution needs --execute; CPU/memory need both
+--execute --allow-load; storage flags are fixture-only; live storage is disabled;
+network additionally --allow-network --peer. Boot-SSH requires separate external
+observer event input, never reboots or initiates power control. Execution flag
+is not authority: conditions must cite separately approved test scope. Fixture
+mode never reads live target sources or contacts a peer; it cannot suppress
+synthetic marking even with execution flags. Report is offline only.
+
+Output: one JSON object to stdout by default, no implicit saved files. Explicit
+--output creates a NEW regular file only in a caller-selected existing directory;
+reject existing paths, symlinks, unsafe ancestors and special files; no clobber.
+Human diagnostics to stderr. Exit 0 for valid inspection/plans or complete results,
+2 for malformed input/authorization rejection, 3 for unavailable measurements,
+4 for execution/parser error/timeout. Partial/unavailable fields are still emitted
+in JSON; any required unavailable result yields exit 3, errors yield 4. A plan is
+not a measurement. Reporting must retain incomplete/error inputs, not hide them.
+
+COMMON PYTHON API (collector owner implements)
+SCHEMA_VERSION = 'cm3-toolkit/v1'
+make_result(kind, *, synthetic, fixture_id=None, conditions=None) -> dict
+  Returns the envelope below with records=[], sources=[], authorization flags
+  false, provenance fixed at creation; no live probing or output writes.
+add_record(result, name, status, *, value=None, unit=None, source=None,
+           reason=None) -> None
+validate_result(result) -> None; raises ValueError on malformed envelope,
+  unknown enum, nonfinite values, invalid measurement/value/status combinations,
+  missing synthetic provenance or unbounded/missing executed-test conditions.
+emit_result(result, output=None) -> None; validates and prints/safely writes.
+No common subprocess runner: benchmark owner owns child cleanup and bounds.
+Mapping is data, consumed as JSON; collector/benchmark do not modify it.
+
+RAW RESULT ENVELOPE (required keys, JSON, no NaN/Infinity)
+{
+  "schema_version": "cm3-toolkit/v1",
+  "kind": "inspection|plan|benchmark|comparison|compatibility",
+  "run_id": "opaque locally generated non-identifying run token",
+  "target": "radxa-cm3-rpi-cm4-io",
+  "provenance": {"synthetic": true, "fixture_id": "required-if-synthetic",
+    "origin": "fixture|live-inspection|approved-test|derived",
+    "input_run_ids": [], "tool_revision": "known SHA or null"},
+  "time": {"start_utc": "RFC3339 or null", "end_utc": "RFC3339 or null",
+    "duration_s": null, "clock": "monotonic|external-monotonic|not-run"},
+  "authorization": {"execute": false, "load": false, "write": false,
+    "network": false, "scope_ref": null},
+  "conditions": {},
+  "records": [{"name": "stable.component.metric", "status": "unavailable",
+    "value": null, "unit": null, "source": "allowlisted source or null",
+    "reason": "missing|unsupported|inaccessible|malformed|tool-missing|not-run"}],
+  "sources": [], "errors": []
+}
+The vertical-bar strings above denote allowed enum values, not literal values.
+Record statuses: ok, unavailable, error, not_run. Unavailable/error/not_run values
+MUST be null and have a reason; ok must have a non-null scalar/list/object value.
+Integers/floats finite; explicit units (bytes, KiB, Hz, kHz, degC, seconds, ms,
+bytes/s, operations/s, percent) or null for identity/config strings. Preserve
+original units/source and conversion rule; never infer watts, temperature or
+clock from labels. Error object: {code, message}, bounded and privacy-filtered.
+Sources entries: {id, kind, path_or_ref, sha256}; use null for unknown hash, no
+credentials or personal absolute paths. Raw references use relative artifact
+paths, lengths and SHA256; report rejects path escapes and oversized inputs.
+A result target is intended product, not proof that live hardware matches it;
+collect board identity as observed and flag mismatch explicitly.
+
+TEST CONDITIONS
+All benchmark executions include image hash/build ID and supplied source lock,
+Debian/kernel/DTB/bootloader/firmware IDs (unknown as null, not invented),
+module/carrier revision and RAM SKU (no serials), operator scope_ref, benchmark
+protocol ID, repetition index, baseline/candidate role, workload/tool versions,
+start/end monotonic duration, warm-up/exclusions/failures and raw artifact hashes.
+Record ambient/start sensor temperatures, cooling/orientation/fan control,
+PSU/rating and meter uncertainty, storage model class/medium/filesystem/fill/cache
+state, peer/link/direction and stream count, logger overhead; unknown fields null
+with reasons. Image identity may be caller-supplied from Phase B manifests;
+no builder output path or format is assumed. Credentials/keys/host identity
+files, MAC/IP addresses, storage serial/WWN and machine-id are excluded.
+
+BOUNDS AND SAFETY
+No automatic installs, sudo, shell=True, service stopping or configuration writes.
+Idle default 5 s, hard cap 60 s; other short procedures default 10 s, cap 60 s.
+Optional sustained CPU mode must be a distinct explicit protocol with duration
+<=3600 s and separate approved scope; short runs cannot claim G6 qualification.
+8-hour soak is a separately approved operator protocol, not default execution.
+Single command deadline <= procedure duration + 5 s cleanup grace. Kill/reap
+entire new process group on timeout, interrupt or error, capture bounded output
+(max 1 MiB per stream), close files and remove only owned temporary files.
+No uncapped retries/workers; CPU workers <= online CPU count and explicit cap.
+Memory <= min(requested, 256 MiB, 25% MemAvailable); preserve >=25% total RAM
+or larger reviewed reserve. Invalid/absent capacity data blocks load execution.
+Storage <=64 MiB per invocation AND >=25% filesystem capacity free afterwards;
+reject insufficient or unmeasurable space before creation. Bound cumulative bytes
+written and prohibit time-based rewrites beyond that budget. Approved existing
+directory resolved/validated without symlink traversal; new O_EXCL/O_NOFOLLOW
+regular owned file, directory-fd relative operations, no raw device/existing file,
+no /dev, /proc, /sys or path escape. Recheck identity for cleanup; never unlink an
+unrelated replacement. Network probes have finite explicit peer/time/byte bounds;
+no scanning, public auto-target, background server or guessed credentials.
+Thermal loads require validated sensors, approved thermal abort ceiling/observer,
+stop on sensor/control loss or ceiling, never change trip/governor/zram controls.
+Missing tool/sensor is unavailable and blocks its dependent procedure, not fallback
+to an unreviewed workload. Fixtures simulate effects only in isolated directories.
+
+COMPARISON AND COMPATIBILITY INPUTS
+report.py accepts validated raw envelopes (one result each; bounded <=10 MiB).
+It compares only matching protocol, units, baseline/candidate roles and known
+conditions; mismatches or unknown essential controls are INCONCLUSIVE. A single
+run cannot claim statistical benefit/G4 PASS; preserve every failure/exclusion.
+If EITHER input is synthetic, comparison is synthetic, origin derived, and every
+human report begins 'SYNTHETIC FIXTURE OUTPUT - NOT CM3 EVIDENCE'. Reject a
+synthetic input relabeled live; propagate fixture IDs and both input run IDs.
+No automatic G0-G7 or hardware PASS from collector, build or synthetic success.
+Always display UNTESTED hardware and NOT EVALUATED gates without approved real
+evidence and review. No maximum-speed/fully-compatible/stable claims.
+
+compatibility.json top level: schema_version='cm3-toolkit-mapping/v1', target,
+source_sha256 (matrix and both gate snapshots), rows=[... exactly H01..H28].
+Each row: id, priority, applicability, hardware_status='UNTESTED', gates=[G IDs],
+checks=[{id, category: 'files-manifest|running-image|physical-human', procedure,
+prerequisites:[], evidence_required:[], toolkit_command:null-or-argv-list,
+implementation: 'available|planned|manual', unavailable_reason:null-or-string}].
+Multiple categories allowed. Copy original row identity/priority/applicability,
+keep full byte-preserved matrix separately. Config check success is evidence
+only about inspected files. Never overwrite hardware_status from file checks.
+
+AUTHORITATIVE SNAPSHOTS
+sources/hardware-matrix.tsv is byte-identical to t_f48601a3 original and Phase B
+recovery. sources/gates-validation-verbatim.txt retains original validation G0-G7;
+sources/gates-consolidated-verbatim.txt retains final proposal G0-G7. Neither
+replaces/relaxes the other. Proposal consolidates recovery/LSM/release details;
+when both apply satisfy both, raise any conflict to Phase B rather than picking
+the easier wording. Both definitions remain proposal thresholds, not measured
+limits or hardware ratings. Snapshot hashes/source refs are in sources/index.json.
+No gates currently hardware-qualified; all 28 matrix rows remain UNTESTED.
+Private reports/task snapshots are attachment-only, not public repository inputs.
+Only reviewed minimal gate/matrix excerpts and this contract may be staged later.
+
+DELIVERY CHECK
+Contract task verifies snapshots by byte equality/hash, 28 unique sequential IDs,
+11 P0/5 P1/12 P2, all UNTESTED, eight gate IDs in both originals, branch base and
+exclusive namespaces. Component/integration tests belong to downstream owners.
+Toolkit readiness will not establish OS, hardware, boot, performance or security
+success. Phase B build limits (one concurrent, max three full attempts) remain
+unchanged; this contract initiates zero attempts.

@@ -1,0 +1,168 @@
+CM3 TOOLKIT RUNBOOK — LIVE STORAGE DISABLED, HARDWARE UNTESTED
+
+Scope and entry point
+  Run all commands from the repository root. Python 3 standard library on Linux;
+  no package installation, root, sudo, build integration or background services.
+  Offline verification:
+    PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests/cm3-toolkit -p 'test_*.py' -v
+  Plans (no target inspection/workload/network):
+    python3 tools/cm3-toolkit/bench.py cpu
+    python3 tools/cm3-toolkit/bench.py storage
+  Safe synthetic CLI example, not hardware authorization:
+    python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --fixture-root tests/cm3-toolkit/fixtures/bench --conditions tests/cm3-toolkit/fixtures/bench/conditions.json
+  Reproduce the checked-in synthetic comparison:
+    python3 tools/cm3-toolkit/report.py --baseline docs/cm3-toolkit/examples/SYNTHETIC-baseline.json --candidate docs/cm3-toolkit/examples/SYNTHETIC-candidate.json
+  The fixture collector template is materialized only in a temporary source tree
+  by test_integration.py; see collector.txt for its manual fixture invocation.
+
+Separate approval required before ALL following target commands
+  This document grants none. Do not run against the production CM3. An operator
+  must approve the exact expendable test target/image and each procedure, repeat
+  count, durations, thermal ceiling, CPU/memory/write/network budgets, directory,
+  peer, observers and recovery/stop arrangements. Approve any boot/power action
+  separately. No flashing/formatting, installs, tuning or application-platform
+  tests are supplied or implied. Check Phase B's actual image/package manifest
+  and source lock; do not assume a built/bootable image exists.
+
+  Verify physical CM3 RK3566, carrier revision and RAM SKU against the intended
+  product radxa-cm3-rpi-cm4-io. Check PSU rating, electrical limits, power wiring,
+  ambient, orientation, heatsink/fan/control and independent thermal observer.
+  Establish sensor interpretation and approved abort ceiling per both unchanged
+  G0-G7 source definitions before load; the example tests' temperatures are NOT
+  hardware limits. Retain protection; stop on thermal/control/sensor loss,
+  PSU/undervoltage fault, corruption, kernel errors or lost mandatory interface.
+  User-space sampling is not an interlock and cannot rescue a failed kernel.
+
+  LIVE STORAGE IS DISABLED (audit F02). --approved-dir and a scope string do
+  not prove an expendable backing volume. The CLI, live executor and file helper
+  refuse before creating a workload file or launching a storage child, even with
+  all opt-in flags. Do not use an older toolkit revision to bypass this refusal.
+  Storage plans, synthetic fixture parsing and offline reports remain available.
+  This contains unsafe execution; it does NOT implement topology validation or
+  complete storage-test readiness. Re-enabling needs a separately reviewed
+  protected-volume/ancestry/identity policy and regression evidence. No hardware
+  test is authorized here; all original storage/compatibility gates remain open.
+
+  CPU/memory require a valid thermal zone and observer. Single CPU worker only.
+  Memory <=min(request,256 MiB,25% available,available minus reserve); reserve is
+  at least 25% total RAM and may be increased. Unknown capacity blocks execution.
+  Short procedures <=60 s; idle default 5, others 10. Children have finite
+  deadlines, whole-group kill/reap and <=1 MiB per captured stream. No retries.
+  A separately approved sustained CPU protocol may run <=3600 s, not an 8h soak.
+
+  Network requires an isolated authorized literal unicast peer, one already
+  running iperf3 server, reviewed firewall/ICMP permission, cable/switch/link/MTU
+  and background traffic controls. No server is launched; no DNS or scan. Tools
+  must ALREADY be present on the test image, and preprovisioned externally:
+    python3 --version
+    command -v ping iperf3
+    ping -V
+    iperf3 --version
+  These version/availability checks are operator preflight, not run in toolkit
+  development. Network workload: one ICMP echo; one stream, <=1 MiB application
+  payload paced at 10 Mbit/s; control/retransmission/link overhead is extra.
+
+Conditions: required operator-authored files, never copy fixture authorization
+  Before commands, create reviewed JSON conditions under /approved/results.
+  /approved/results and /approved/scratch below are placeholders for approved
+  existing directories, not directories this toolkit creates. Use a new output
+  filename each invocation. Input/output basenames must match
+  [A-Za-z0-9][A-Za-z0-9_.-]{0,127}: no hidden names, encoded separators or controls.
+  The operator must replace ALL placeholders first.
+  Every procedure file needs this structure (values are examples to replace):
+    {"scope_ref":"APPROVAL-RECORD-REPLACE", "protocol_id":"OPERATOR-PROTOCOL-REPLACE",
+     "role":"baseline", "repetition":1,
+     "image_hash":"REVIEWED-IMAGE-SHA256", "source_lock":"REVIEWED-SOURCE-LOCK",
+     "debian":"REVIEWED-VERSION", "kernel":"REVIEWED-KERNEL",
+     "dtb":"REVIEWED-DTB-ID", "bootloader":"REVIEWED-ID", "firmware":"REVIEWED-ID",
+     "module_revision":"OBSERVED", "carrier_revision":"OBSERVED", "ram_sku":"OBSERVED",
+     "cooling":"REVIEWED", "orientation":"REVIEWED", "fan_control":"REVIEWED",
+     "ambient_degc":null, "power":"REVIEWED-PSU-RATING", "meter_uncertainty":null,
+     "storage":"APPROVED-MEDIUM-CLASS", "filesystem":"REVIEWED", "fill":null,
+     "cache_state":"REVIEWED", "network":"OPAQUE-PEER-LINK-DIRECTION-STREAMS",
+     "logger_overhead":"REVIEWED", "warmup":"REVIEWED", "exclusions":[],
+     "failures":[], "cpu_policy":"OBSERVED", "zram":"OBSERVED"}
+  Null means unknown, not zero/not applicable; unknown essential controls force
+  INCONCLUSIVE comparisons. Use explicit reviewed not-applicable descriptions
+  where justified, never invent observations to obtain a delta. Each CPU/memory
+  conditions file also requires thermal_zone (integer), thermal_abort_degc
+  (approved finite number), thermal_observer_ref (reviewed opaque reference).
+  Optional memory_reserve_bytes can only increase the default reserve.
+  Record approved image/build/source/package/tool versions and all failures,
+  exclusions and repetition indices; candidate role must be candidate. Freeze
+  protocol and controlled conditions before paired tests; do not select best runs.
+  Unknown image identity is not reconstructed from the installed root.
+  No credentials, keys, serials/WWNs, hostname, machine-id, IP/MAC or private paths
+  in JSON. Store endpoint/account/key only in the approved private observer setup.
+  Review free-text metadata before sharing: rejection rules are not a secret scanner.
+
+Target commands — documentation only, NOT EXECUTED for this delivery
+    python3 tools/cm3-toolkit/collect.py --output /approved/results/inspection-r1.json
+    python3 tools/cm3-toolkit/bench.py idle --execute --duration-s 5 --conditions /approved/results/idle-conditions.json --output /approved/results/idle-r1.json
+    python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --duration-s 10 --conditions /approved/results/cpu-conditions.json --output /approved/results/cpu-r1.json
+    python3 tools/cm3-toolkit/bench.py memory --execute --allow-load --duration-s 10 --memory-mib 64 --conditions /approved/results/memory-conditions.json --output /approved/results/memory-r1.json
+    Storage: no live execution command is supported; plan/fixture/report only.
+    python3 tools/cm3-toolkit/bench.py network --execute --allow-load --allow-network --peer 192.0.2.1 --duration-s 10 --conditions /approved/results/network-conditions.json --output /approved/results/network-r1.json
+  192.0.2.1 is documentation-only; replace with the individually approved peer.
+  For separately authorized sustained work use protocol_id cm3-cpu-sustained/v1
+  and sustained_scope_ref in the CPU conditions, then:
+    python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --sustained --duration-s 600 --conditions /approved/results/sustained-conditions.json --output /approved/results/sustained-r1.json
+  A 600-second single-worker observation cannot satisfy G6's 15-minute windows,
+  three thermal runs or 8-hour soak. These require a separate approved protocol.
+  Memory wake lateness is not authenticated SSH latency or memory correctness.
+  Synthetic storage readback is not physical throughput evidence. No watts/energy
+  claims without an external meter/uncertainty. See benchmarks.txt for definitions.
+
+External boot-to-SSH timing
+  Toolkit NEVER initiates reboot/power or SSH probes. On an independently approved
+  external observer, preprovision the authorized SSH account/key and pinned host
+  key using approved means, without host-key bypass. Use ONE monotonic clock.
+  Timestamp the reviewed power-assertion OR reset-release edge, clearly recording
+  cold/warm method and edge detection uncertainty. Finish only after successful
+  authenticated execution of the agreed trivial command (e.g. true), not TCP or
+  banner availability. Include polling/missed samples/auth/command delay,
+  timestamp resolution and sensing error in the reviewed uncertainty bound.
+  The owner must approve observer-specific power interface and endpoint; no
+  guessed relay/power commands or credentials are supplied by this toolkit.
+  Add boot_events to the conditions file with keys clock=external-monotonic,
+  observer_ref, start_s, end_s, uncertainty_s, start_event, end_event,
+  authentication, host_key_policy. Values are actual observer observations,
+  not fixture times; elapsed <=3600 s. Import only:
+    python3 tools/cm3-toolkit/bench.py boot-ssh --execute --conditions /approved/results/boot-conditions.json --output /approved/results/boot-r1.json
+  Envelope duration is import time; boot-ssh.elapsed is the external interval.
+
+Artifacts, exits and comparison
+  Retain immutable original JSON, observer logs and approved conditions for EVERY
+  attempt, with private endpoint details redacted before sharing. Embedded
+  procedure.raw records preserve bounded parsed evidence; sources includes their
+  SHA256 of sorted-key JSON. No hidden artifact files are produced. Record image,
+  manifest, source lock and toolkit commit hashes in the private evidence ledger.
+  Collect file hashes on the approved result host (not run during development):
+    sha256sum /approved/results/inspection-r1.json /approved/results/cpu-r1.json /approved/results/candidate-cpu-r1.json
+  Compare like procedure/repetition under frozen matched known controls:
+    python3 tools/cm3-toolkit/report.py --baseline /approved/results/cpu-r1.json --candidate /approved/results/candidate-cpu-r1.json --output /approved/results/comparison-cpu-r1.json
+  Report retains both input run IDs, conditions/errors/statuses and failures.
+  It requires executed/authorized benchmark envelopes; missing/inconsistent raw
+  digest or derived metrics suppresses all deltas. Unknown/mismatched essential
+  controls are INCONCLUSIVE. One pair is descriptive, never statistical benefit.
+  Synthetic provenance propagates and human summary starts with the warning.
+
+  Exit 0 valid plan/complete result; 2 malformed/authorization/path; 3 unavailable;
+  4 parser/execution/timeout; benchmark 130 interruption. Inspect JSON even on
+  nonzero exits. Collector fixture normally returns 3. No-clobber outputs are
+  exclusive 0600 files. Benchmark reserves output BEFORE dispatch; invalid input
+  may leave an empty reservation, interrupted/write-failed output may be partial.
+  If final benchmark write fails, result is also emitted to stdout: capture stdout
+  and stderr under the separately approved artifact policy and investigate before
+  retrying. Do not rerun blindly or delete arbitrary existing files.
+
+Compatibility and gate interpretation
+  tools/cm3-toolkit/compatibility.json: 28 original rows, 84 categorized checks;
+  files-manifest vs running-image vs physical-human evidence remain distinct.
+  Mapping's planned component links are historical/component delivery status;
+  actual CLI availability is verified by integration tests and this runbook.
+  Manual electrical/peripheral/security/recovery checks remain manual, not falsely
+  implemented by configuration inspection. All 28 hardware rows stay UNTESTED;
+  G0-G7 stay NOT EVALUATED. Both immutable source definitions are preserved.
+  Do not promote hardware status from a fixture, package/build or file observation.
+  Toolkit readiness is NOT OS, boot, security, compatibility or hardware success.

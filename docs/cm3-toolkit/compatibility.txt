@@ -1,0 +1,119 @@
+CM3 COMPATIBILITY CHECK MAP
+Target: radxa-cm3-rpi-cm4-io | mapping/v1 | 2026-10-25
+
+Purpose and authority
+  tools/cm3-toolkit/compatibility.json is static planning data, not a raw
+  result envelope and not an executed compatibility test. It preserves all
+  original H01-H28 row identities, priorities, applicability, equipment state,
+  evidence basis and V01-V09 references. Each row has three concrete checks:
+  F files-manifest, R running-image, P physical-human. These categories overlap
+  intentionally: seeing a DT node is not seeing a device work.
+
+  Original sources are docs/cm3-toolkit/sources/hardware-matrix.tsv,
+  gates-validation-verbatim.txt and gates-consolidated-verbatim.txt. index.json
+  identifies original Phase A sources and hashes. Both gate definitions apply,
+  unchanged; neither is a replacement or a relaxed interpretation of the other.
+  Refer to the originals for thresholds, repetitions and review criteria.
+  A conflict must go to Phase B t_bacce4a4, not be silently resolved here.
+
+  The agreed integration contract is docs/cm3-toolkit/contract.txt. The full
+  proposal remains t_3a15869c/cm3-debian-cli-proposal.txt; the original matrix
+  and validation plan are t_f48601a3. Private proposal/evidence packets are not
+  copied into this public mapping. Source hashes pin excerpts, not new claims
+  about current package availability. No missing-feed or build investigation
+  is implemented here, and no Phase B settings are changed.
+
+How to use later, only under separate authorization
+  1. Freeze the exact claimed board/revisions/SKU/media/peripheral scope and
+     image/build/source/kernel/DTB/firmware hashes. Resolve row applicability
+     from physical inventory, not package presence. H13 remains a mandatory
+     qualification target; missing NVMe endpoint does not waive it.
+  2. Read each row's original proposed_test_and_gate and procedure references,
+     then each check's procedure, prerequisites and evidence_required. These
+     checks split the original procedure by evidence origin; they do not
+     replace V01-V09 or grant permission to execute them.
+  3. Perform only separately approved checks. Record protocol version, operator
+     scope_ref, conditions, tool availability/versions, repetitions, all failures,
+     exclusions, unknowns and relative raw artifact hashes. For a running image
+     keep actual board identity separate from the intended product label.
+     Do not execute these instructions against the active production CM3.
+  4. Reconcile files, observed runtime behavior and physical observations in a
+     separate dated evidence ledger. Never edit the preserved snapshots or
+     overwrite hardware_status from a successful file check. Link ledger entries
+     by check ID (e.g. H13-R) and relevant gates. A human reviews full evidence
+     against BOTH original gate snapshots before any support/release claim.
+
+Status semantics
+  All hardware_status values are UNTESTED; all gates NOT EVALUATED; every check
+  status is not_run. These are deliberate facts about this delivery, not
+  placeholders filled with synthetic PASS. unavailable_reason records why this
+  mapping supplies no observation; it is not proof that a device is absent.
+
+  For later raw results use the contract envelope: not_run when not attempted;
+  unavailable for missing/unsupported/inaccessible/malformed sources or absent
+  tools/sensors (null value, specific reason); error for execution/parser faults.
+  Distinguish a malformed source from an unsupported feature and retain failures.
+  Check status ok means only the named observation was obtained, not hardware
+  PASS, gate PASS or stable release. Plans and fixtures are not measurements.
+  Conditional absent hardware can become NOT PRESENT only after inventory;
+  UNSUPPORTED needs incompatible route/driver/API evidence, not one failed try.
+  Missing equipment stays UNTESTED. Core UNTESTED/FAIL blocks stable claims.
+
+Toolkit links and limitations
+  Each toolkit_command is either null (manual procedure, not automated here)
+  or a planned contract argv list with a narrow toolkit_scope. This task does
+  not ship collector, benchmark or report implementations and claims none as
+  available. The integrator must verify actual CLI behavior and feature scope.
+  A collector supports partial identity/config evidence, not connector tests.
+  bench.py without --execute only returns a plan. It cannot establish boot
+  repetition, pattern correctness, protocol coverage or G6 from a short run.
+
+  Planned interfaces from the shared contract, not executed by this task:
+    python3 tools/cm3-toolkit/collect.py
+    python3 tools/cm3-toolkit/bench.py boot-ssh
+    python3 tools/cm3-toolkit/bench.py cpu
+    python3 tools/cm3-toolkit/bench.py memory
+    python3 tools/cm3-toolkit/bench.py storage
+    python3 tools/cm3-toolkit/bench.py network
+    python3 tools/cm3-toolkit/report.py --baseline BASELINE.json --candidate CANDIDATE.json
+  idle is also a contract benchmark but is not a dedicated original matrix row;
+  do not add a 29th row. Offline comparison helps summarize matching protocols,
+  not evaluate all gates. Integrator runbook owns verified executable commands,
+  conditions-file shape and exact explicit execution flags. No invented collector
+  record names or builder output paths are assumed here.
+
+Safety and evidence boundaries
+  SPI writes remain prohibited. Recovery/flash/fault-injection commands are not
+  provided by the toolkit. No sudo, install, service stopping, tuning, reboot,
+  power cycling or attachment is authorized by merely reading this document.
+  Future storage tests use only a new dedicated file in an approved directory,
+  never raw devices/existing user files. Respect contract RAM/free-space reserves,
+  byte/time caps, isolated approved network peer and validated thermal observer.
+  Cooling/ambient/PSU, image/medium, baseline/candidate roles and tool versions
+  must match a reviewed protocol. Unknown conditions make comparisons inconclusive.
+  Three thermal runs and an 8-hour soak remain separate approved protocols;
+  short bounded scripts cannot qualify G6. Meterless watts/joules are unavailable.
+  Preserve thermal/security protections; stop on faults per G0/G3. Review native
+  schematics and revision pin tables before peripheral electrical attachment.
+
+  Keep credentials/private keys, machine IDs, serials/WWNs and MAC/IP addresses
+  out of public artifacts. Record identity distinctness as a redacted assertion,
+  not actual secrets/identifiers. Keep sensitive target-identification details in
+  an approved private operator record, not the public toolkit result.
+
+Offline structural verification
+    python3 -m unittest discover -s tests/cm3-toolkit -p test_mapping.py -v
+
+  This test checks the fixed source SHA256 values and eight unchanged definitions
+  in each gate snapshot, exact original 28 ordered identities/priorities/fields,
+  original row gate references, 84 categorized check records, not_run/UNTESTED
+  invariants, and honest manual/planned links. It does not load or run target
+  tools, contact peers, inspect live hardware, or evaluate gate outcomes.
+  Synthetic fixtures used by other components must remain conspicuously synthetic.
+
+Delivery
+  Only compatibility.json, test_mapping.py and this document belong to this
+  component ZIP. Integration obtains immutable sources/contract from task
+  t_eb16db2a, overlays the three files, and runs the full fixture suite.
+  No separate PR or commit is produced by this mapping task.
+  Toolkit structural readiness is not operating-system or hardware test success.
