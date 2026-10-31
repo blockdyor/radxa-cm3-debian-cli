@@ -66,7 +66,9 @@ Conditions: required operator-authored files, never copy fixture authorization
   Before commands, create reviewed JSON conditions under /approved/results.
   /approved/results and /approved/scratch below are placeholders for approved
   existing directories, not directories this toolkit creates. Use a new output
-  filename each invocation. The operator must replace ALL placeholders first.
+  filename each invocation. Input/output basenames must match
+  [A-Za-z0-9][A-Za-z0-9_.-]{0,127}: no hidden names, encoded separators or controls.
+  The operator must replace ALL placeholders first.
   Every procedure file needs this structure (values are examples to replace):
     {"scope_ref":"APPROVAL-RECORD-REPLACE", "protocol_id":"OPERATOR-PROTOCOL-REPLACE",
      "role":"baseline", "repetition":1,

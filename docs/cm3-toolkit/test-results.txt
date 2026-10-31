@@ -1,7 +1,7 @@
 CM3 TOOLKIT OFFLINE TEST RESULTS
 
 2026-10-31 F02 containment update (supersedes live-storage readiness below):
-  Fresh complete toolkit suite: 63 tests, 49.971 seconds, zero failures/skips.
+  Fresh complete toolkit suite: 68 tests, 57.631 seconds, zero failures/skips.
   Fresh existing branch cm3-cli suite: 9 tests, zero failures/skips.
   Source-lock validation and git diff --check passed. No image build or target run.
   Watched new refusal tests fail on the original code, then pass after removal
@@ -10,6 +10,12 @@ CM3 TOOLKIT OFFLINE TEST RESULTS
   all non-executing plans, collector and reporting checks still pass.
   Three obsolete storage-write/cleanup tests were replaced by six fail-closed
   regressions; this is NOT new protected-volume/topology implementation.
+  Five additional filename-boundary regressions cover the two original PR2
+  Sonar input/output sink findings: plain bounded ASCII basename allowlist at
+  reads and exclusive output sinks, shared across benchmark/report/collector.
+  Hidden, encoded/control and separator names are refused, normal JSON input
+  and no-clobber output still work. These tests also failed before the fix.
+  Existing directory-fd, no-follow, regular-file and no-clobber checks remain.
   Live storage readiness remains OPEN; all hardware rows remain UNTESTED.
 
 HISTORICAL INTEGRATION RESULTS — unchanged original evidence follows:

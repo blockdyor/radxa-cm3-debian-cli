@@ -139,6 +139,14 @@ def _validate_result(result):
         require(all(isinstance(e[k], str) and 0 < len(e[k]) <= 512 for k in ('code', 'message')))
 
 
+def safe_filename(name):
+    """Accept one plain filename, never a hidden name, separator or encoded path."""
+    match = re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}', name)
+    if match is None:
+        raise ValueError('plain filename of at most 128 ASCII characters required')
+    return match.group(0)
+
+
 def emit_result(result, output=None):
     """Write only to stdout or a new 0600 file; walk ancestors without symlinks."""
     validate_result(result)
@@ -150,6 +158,7 @@ def emit_result(result, output=None):
     if not path or '..' in path.split('/') or path.endswith('/'):
         raise ValueError('unsafe output path')
     parts = os.path.abspath(path).split('/')[1:]
+    filename = safe_filename(parts[-1])
     if parts[0] in {'dev', 'proc', 'sys'}:
         raise ValueError('unsafe output filesystem')
     fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY)
@@ -158,7 +167,7 @@ def emit_result(result, output=None):
             nxt = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
             os.close(fd)
             fd = nxt
-        out = os.open(parts[-1], os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+        out = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                       0o600, dir_fd=fd)
         with os.fdopen(out, 'w', encoding='utf-8') as stream:
             if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):

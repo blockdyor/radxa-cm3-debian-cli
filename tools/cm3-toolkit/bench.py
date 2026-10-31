@@ -17,7 +17,7 @@ import subprocess
 import sys
 import time
 
-from common import make_result, add_record, emit_result, validate_result
+from common import make_result, add_record, emit_result, validate_result, safe_filename
 
 LIMIT = 1024 * 1024
 STORAGE_DISABLED = 'live storage execution disabled: protected-volume safety not implemented'
@@ -62,9 +62,10 @@ def validate_metadata(value, depth=0):
 def read_json(path, limit=10 * LIMIT):
     # Reject symlink ancestors and special files before reading bounded input.
     p = Path(path)
+    filename = safe_filename(p.name)
     fd_dir = open_directory(str(p.absolute().parent))
     try:
-        fd = os.open(p.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd_dir)
+        fd = os.open(filename, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd_dir)
         with os.fdopen(fd, 'rb') as stream:
             if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
                 raise ValueError('input must be a regular file')
@@ -475,9 +476,10 @@ def main():
             path = Path(args.output)
             if '..' in path.parts or str(args.output).endswith('/'):
                 raise ValueError('unsafe output path')
+            filename = safe_filename(path.name)
             directory_fd = open_directory(str(path.absolute().parent))
             try:
-                output_fd = os.open(path.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                output_fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                                     0o600, dir_fd=directory_fd)
             finally:
                 os.close(directory_fd)
