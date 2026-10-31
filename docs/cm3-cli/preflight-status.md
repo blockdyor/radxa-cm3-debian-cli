@@ -6,7 +6,50 @@ Historical runs inspected 2026-10-28 UTC; development authorization updated
 2026-10-29. Draft implementation PR:
 https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
 
-## Current engineering checkpoint — image assembly not yet reached
+## Current engineering checkpoint — build-only image inspection PASS
+
+Run21, attempt1, completed SUCCESS at 2026-10-30T15:57:34Z:
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41066891788
+The executed source was `6fac462f2eb7a350077a2b17d6b49439741518d1`, not a later
+documentation/accounting revision. Source preparation, signed ARM64 lifecycle,
+exact-product bootstrap, authenticated Stage A, receipt transfer, actual RSDK
+assembly and independent read-only image inspection all passed. The same-run
+offline suite ran 179 tests with zero skips/errors/failures; the final manifest
+contains 270 packages. This is engineering evidence, not proof of physical boot,
+firstboot/enrollment, running services, active LSM or update/recovery.
+
+The first actual assembly entry consumed image attempt **1/3**; two remain.
+Complete repository workflow/attempt/job history was reconciled on 2026-10-31:
+40 completed workflows, exactly one assembly entry and no active workflow.
+All twenty prior package-attempt records are preserved. No new dispatch or
+hardware action was used to reconcile this result.
+
+Only sanitized diagnostics and their public attestation were retained:
+
+- Engineering artifact `12990744023`, ZIP SHA256
+  `85b06b7161ab233b105606462707ad564e24a22ba5ef7a577ea9a5a01238c095`.
+- Attestation artifact `12991332483`, ZIP SHA256
+  `e7cc37b7374405d09e3533bc22706de333025d79e696335e8ea7d87209a31113`.
+- Both downloaded ZIPs matched the live API digests and passed CRC checks.
+  All nine `SHA256SUMS` members and eight nested diagnostic hashes reconcile.
+  Official `gh attestation verify` independently accepted the exact engineering
+  subject, workflow SAN, source/signer revision, OIDC issuer, hosted runner and
+  SLSA policy; tampered subject and wrong-source negatives failed as required.
+  This signature covers the engineering report and its hashed diagnostics,
+  not a retained or separately signed image payload. Retention expires 2026-11-13.
+
+The authenticated pipeline reports raw image size **1730655232 bytes**, SHA256
+`28f4717a1fefa7a286c3a31a4b1799d2e6ed960757d946f7def3904bb0ce98d9`,
+and compressed size **206582336 bytes**, SHA256
+`8a803f1065d7c85a772c89ddbae08c1aad0bdffb8ec82b40369a78ab455e3e77`.
+These are verified report values, not a local rehash of an accessible image.
+The actual `.img`/`.img.xz`, packages, roots and corresponding-source bundles
+were deliberately discarded with the disposable runner. **There is no downloadable
+or recoverable image from this run.** All public-payload, ciphertext and broad
+diagnostic upload steps were skipped; cleanup passed. Engineering PASS does not
+clear OVERLAY-1, any original gate, any of the 28 UNTESTED hardware rows or stable
+release. The sections below preserve historical checkpoints, not current holds
+on engineering assembly.
 
 Public image delivery remains withheld for unresolved OVERLAY-1. The owner's
 later build-only decision allows engineering assembly and inspection without
@@ -35,17 +78,17 @@ Source delivery now requires both actual kernel/U-Boot build configurations,
 checks kernel configuration against the retained build evidence, and exports the
 existing hashed loader-input/notice mapping. Independent image inspection also
 checks board-policy file bytes, root ownership and exact permissions; it does
-not infer those properties from a package name/version. These checks have not
-yet inspected an assembled disk image.
+not infer those properties from a package name/version. Run21 passed these checks
+against the actual assembled disk image.
 
 The owner's later Stage A/B/C timing amendment in `build.md` supersedes the
 historical pre-image service/LSM/rollback hold below. A manually selected experimental
 workflow now connects actual same-run Stage A production, cumulative three-image
 admission, existing RSDK assembly, independent disk inspection and allowlisted
-source/notice preparation. It has not yet produced an image. All twenty completed
-source attempts remain recorded; image entries remain 0/3 at this checkpoint.
-The last retained attested package producer remains attempt13; build-only runs14–20
-uploaded no payloads or recovery ciphertext.
+source/notice preparation. Run21 produced and inspected an image, then discarded
+its payload. All twenty-one completed source attempts remain recorded; image
+entries are 1/3. The last retained attested package producer remains attempt13;
+build-only runs14–21 uploaded no payloads or recovery ciphertext.
 Actual firstboot/services/active LSM, distinct-version hardware recovery and all
 28 matrix rows stay UNTESTED before hardware-qualified/stable-release approval.
 
@@ -59,7 +102,8 @@ decompression of the authenticated package. Run16 at `d6360d9` passed the actual
 source/signed ARM64/profile step, but source preparation rejected three checksum
 differences: that kernel, `modules.dep` and `modules.dep.bin` for
 `6.1.84-18+cm3cli1-rk2410-nocsf`. The whole difference set was rejected before
-the kernel-byte comparison; that comparison is not externally proven yet.
+the kernel-byte comparison; it was not externally proven by run16 (later runs18–21
+passed it).
 
 DKMS regenerates the dependency indexes. The focused correction uses target
 `depmod -a -m /lib/modules -o <temporary-output> <kernel>` to recompute both
@@ -95,8 +139,8 @@ step reconciled history but failed creating its receipt in builder-owned evidenc
 as the unprivileged host runner. The correction stages the exclusive receipt in
 host-owned `preflight-work/evidence`, then copies only that fresh file into the
 builder after absence/symlink checks. No broad chmod/chown or budget-policy change.
-This transfer is not yet externally tested. Assembly and independent image
-inspection remain NOT REACHED; image entries remain 0/3.
+Run21 externally passed the transfer, assembly and independent actual-image
+inspection. Its one assembly entry is recorded above and in `attempts.json`.
 Upstream #606 was closed without an explanatory comment; this is not an
 authoritative resolution of OVERLAY-1 or permission for public distribution.
 

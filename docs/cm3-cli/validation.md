@@ -30,7 +30,7 @@ of record rather than a shortened feature list.
 
 ## Evidence levels and open blockers
 
-Status as of 2026-10-29; exact historical commits, runs and diagnostic digests are
+Status as of 2026-10-31; exact historical commits, runs and diagnostic digests are
 in `preflight-status.md` and `attempts.json`.
 
 | Evidence level | Established | Not established |
@@ -39,6 +39,7 @@ in `preflight-status.md` and `attempts.json`.
 | External source compilation | Attempt 12 compiled all nine selected BSP packages plus the separately sourced board package at its recorded revision | Source-to-binary reproducibility or compilation of later changes |
 | External signed ARM64 fixture | Attempt 12 passed ten-package signed/tamper-negative installation, actual board lifecycle/effective SSH policy, native headers, real DKMS/DTBO, initramfs/extlinux/idempotence, reinstall/remove/restore and audit checks | Target provisioning, active target LSM, distinct-version BSP update or boot/recovery |
 | Exact-product RSDK bootstrap | Attempt 12 bootstrapped the actual Trixie/ARM64/CLI profile in a fresh directory; 270 configured packages, clean audit and builder-identity/feed cleanup | Disk image, target services, enrollment, kernel boot or hardware compatibility |
+| Build-only image engineering | Attempt21/run41066891788 at6fac462 passed authenticated Stage A, actual assembly and independent read-only inspection; exact diagnostic hashes and signature independently verified; image budget1/3 | Image payload not retained or downloadable; physical boot, target services, active LSM, recovery and OVERLAY-1 redistribution clearance |
 | Boot/security/update | Board package, owner-input validator and boot fixture code exist | Secure target first boot, active target LSM, distinct-version BSP upgrade/reboot/rescue, attested update trust and maintenance ownership |
 | Hardware/performance | No physical tests or B0 measurements | All H01–H28 remain UNTESTED; no boot, compatibility, speed, power or sustained-performance claim |
 
@@ -46,7 +47,8 @@ The config-fragment and archive-aware initramfs corrections now have external
 coverage in run 40808183234. Its diagnostics and encrypted allowlisted compilation
 are retained as native GitHub artifacts; recovery is optional. Current owner
 authorization permits evidence-based same-job compile/validation retries.
-Image assembly remains guarded off, and licensing/full-input
+Experimental assembly passed in run21 under the later Stage A/B/C authorization;
+public distribution remains guarded off, and licensing/full-input
 closure is incomplete. A fixture PASS, a dependency simulation, or the absence of
 device writes cannot satisfy a gate. Static checks do not certify the remaining
 security defaults: installing nftables does not establish firewall policy, and
@@ -55,7 +57,9 @@ compiled AppArmor support does not establish an active intended LSM.
 A successful source-package job will only establish its explicitly recorded
 stage. It cannot change a physical row or pass G0–G7. Any later package/image
 result must cite the exact commit/run/artifact hash and identify performed versus
-unperformed checks. No image produced yet; no release published.
+unperformed checks. One image was produced and inspected, but its payload was
+deliberately discarded; no image download or release was published. All original
+gate definitions and 28 UNTESTED matrix rows remain unchanged.
 
 ## Matrix source key
 

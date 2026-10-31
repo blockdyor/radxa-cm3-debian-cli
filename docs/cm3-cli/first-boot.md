@@ -41,14 +41,15 @@ key owner deliberately receives passwordless sudo because its password is locked
 No default owner/key, arbitrary `/config` shell command or disk expansion exists.
 See the package README for offline recovery and interrupted-account boundaries.
 
-The source package now contains a provisioning service and account-mutating code,
-but no image installation or target execution is established. Local tests use
+The source package contains a provisioning service and account-mutating code.
+Run21 installed and independently inspected the board package in an actual image,
+but that payload was discarded; no physical target execution is established. Local tests use
 isolated account fixtures. The ARM64 package probe denies service starts and
 does not test owner creation, first boot, SSH readiness, identity uniqueness or
 an active target LSM. Image integration must remove builder machine IDs and host
 keys; the exact-product profile now specifies this cleanup and a new external
-directory-bootstrap check enforces it. That new stage has not yet passed an
-external run, and neither it nor rendering proves first boot. The owner-group
+directory-bootstrap check enforces it. Run21 passed that stage and actual-image
+identity cleanup; neither result nor rendering proves first boot. The owner-group
 check rejects other accounts' primary-GID membership as well as supplementary
 members. No prior unauthorized SSH authentication was demonstrated.
 Hardware and secure first-boot gates remain open.

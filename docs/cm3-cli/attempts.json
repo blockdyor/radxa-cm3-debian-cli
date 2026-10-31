@@ -3,7 +3,31 @@
   "phase": "cm3-trixie-cli-experiment",
   "maximum_full_image_attempts": 3,
   "maximum_concurrent_full_images": 1,
-  "full_image_attempts": [],
+  "full_image_attempts": [
+    {
+      "number": 1,
+      "commit": "6fac462f2eb7a350077a2b17d6b49439741518d1",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41066891788",
+      "run_attempt": 1,
+      "hypothesis": "Stage exclusive image admission under runner ownership then transfer fresh same-run receipt to builder before experimental assembly and independent inspection",
+      "source_lock_sha256": "320cea35c319e260971ea0d40b98027a3c9b507b15bcb965d3edf3022f2bfbd8",
+      "stage_a_sha256": "858d495ace214de21c3ca06fab5fe33bdb6accf0df542afb200d484a51b483e2",
+      "started_at": "2026-10-30T15:51:36Z",
+      "assembly_completed_at": "2026-10-30T15:56:16Z",
+      "completed_at": "2026-10-30T15:57:34Z",
+      "result": "PASS: actual RSDK disk assembly and independent read-only actual-image inspection, including layout/loaders, boot contract, exact package inventory, board-policy bytes/ownership/modes and identity cleanup. Not a hardware boot or runtime-security result.",
+      "image_sha256": "28f4717a1fefa7a286c3a31a4b1799d2e6ed960757d946f7def3904bb0ce98d9",
+      "compressed_sha256": "8a803f1065d7c85a772c89ddbae08c1aad0bdffb8ec82b40369a78ab455e3e77",
+      "image_bytes": 1730655232,
+      "compressed_bytes": 206582336,
+      "engineering_artifact_id": 12990744023,
+      "engineering_artifact_sha256": "85b06b7161ab233b105606462707ad564e24a22ba5ef7a577ea9a5a01238c095",
+      "payload": "NOT RETAINED; discarded with disposable runner; no downloadable image",
+      "redistribution": "BLOCKED: OVERLAY-1",
+      "hardware": "UNTESTED",
+      "remaining_image_attempts": 2
+    }
+  ],
   "maximum_package_attempts": null,
   "package_development_authorization": "owner-2026-10-29-evidence-based-development",
   "package_budget_authorization": "Owner direction 2026-10-29 supersedes seven-attempt cap and validation-only restriction: evidence-based development on the existing standard GitHub runner, one heavyweight job at a time, 180 minutes per job, no paid resources. Inspect failures before retries; stop after three consecutive same-stage failures without progress. Historical attempts remain consumed; image limit remains three.",
@@ -259,7 +283,23 @@
       "demonstrable_progress": true,
       "completed_at": "2026-10-30T13:42:47Z",
       "retained_payloads": "Artifacts API total_count=0; all payload, ciphertext, broad and engineering diagnostic uploads SKIPPED; disposable cleanup SUCCESS. Exact failed/full logs retained privately. No image or retained package/root/source payload."
+    },
+    {
+      "number": 21,
+      "commit": "6fac462f2eb7a350077a2b17d6b49439741518d1",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41066891788",
+      "run_attempt": 1,
+      "hypothesis": "Stage exclusive image admission under runner ownership then transfer fresh same-run receipt to builder before experimental assembly and independent inspection",
+      "result": "PASS: source compilation, signed ARM64 ten-package lifecycle, exact-product bootstrap, complete corresponding-source preparation, authenticated exact-head Stage A, host receipt transfer, actual image assembly and independent image inspection. Full offline suite 179 tests, zero skips/errors/failures; final inventory 270 packages. Engineering PASS only; payload discarded, redistribution BLOCKED, hardware/runtime UNTESTED.",
+      "failure_stage": "none",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-30T15:57:34Z",
+      "artifact_id": 12990744023,
+      "artifact_sha256": "85b06b7161ab233b105606462707ad564e24a22ba5ef7a577ea9a5a01238c095",
+      "attestation_artifact_id": 12991332483,
+      "attestation_artifact_sha256": "e7cc37b7374405d09e3533bc22706de333025d79e696335e8ea7d87209a31113",
+      "retained_payloads": "Only ten allowlisted engineering diagnostic files and public signature/verification bundle retained through 2026-11-13. Both API ZIP SHA256/CRCs, all nine manifest hashes and eight nested hashes independently verified. Exact engineering-result subject signature/source/signer/workflow/issuer/hosted-runner/SLSA policy verified; tampered subject and wrong source rejected. No image, packages, rootfs, source bundles or recovery ciphertext uploaded or retained. Disposable builder cleanup SUCCESS."
     }
   ],
-  "status": "Twenty completed workflow attempts preserved. Attempt20 externally passes complete source preparation and authenticated Stage A; stops writing host image-admission receipt into builder-owned evidence. Narrow host-staging/container-copy correction locally tested, not externally proven. Image0/3: assembly never entered. Build-only engineering authorized; public redistribution BLOCKED for OVERLAY-1. Upstream606 closed without explanatory comment; closure is not licence clearance. Hardware/runtime remain UNTESTED."
+  "status": "Twenty-one completed workflow attempts preserved. Attempt21 at6fac462 succeeds through actual assembly and independent image inspection; first actual image entry1/3, two remain. Exact engineering diagnostics and their attestation independently verified. Image payload deliberately not retained or downloadable; no new build dispatched for this reconciliation. Public redistribution BLOCKED for OVERLAY-1; upstream606 closure is not licence clearance. Hardware/runtime remain UNTESTED; stable release BLOCKED."
 }

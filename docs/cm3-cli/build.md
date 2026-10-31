@@ -10,17 +10,21 @@ The owner now
 explicitly authorizes experimental exact-target image creation after stage A
 below, BEFORE real-target first boot, services, active LSM, hardware recovery or
 performance qualification. This supersedes the historical preimage runtime hold;
-it does not claim an image exists or enable the inherited image path. Stable
+it does not enable the inherited image path. Stable
 release remains BLOCKED and hardware remains UNTESTED.
-Latest completed producer: attempt 13 at `c24ad2a0598d000727763803b8c678d6a3411fc0`
-passes source compilation, the signed ARM64 ten-package install/DKMS/board-lifecycle
-fixture and the real exact-product RSDK clean directory bootstrap (270 installed
-packages, clean audit and builder-identity/feed cleanup). It does not boot a kernel.
-This is not the complete package/security preflight or an image: see the latest
-section in `preflight-status.md` for remaining integration requirements.
+Latest completed engineering run: attempt21 at
+`6fac462f2eb7a350077a2b17d6b49439741518d1`, run `41066891788`, passes source
+compilation, signed ARM64 ten-package lifecycle, exact-product bootstrap,
+corresponding-source preparation, authenticated Stage A, actual disk assembly and
+independent read-only image inspection. All 179 same-run tests passed without
+skips; the final manifest contains 270 packages. Image attempt1/3 is consumed.
+The payload was deliberately discarded, not uploaded or privately retained:
+there is no downloadable image. Only hashed/attested engineering diagnostics
+remain; sizes, reported image hashes and verification are in `preflight-status.md`.
+This is not a hardware boot, runtime-security PASS or redistribution clearance.
 The workflow registration was repaired through focused bootstrap PR #3. All
 first three source-package attempts failed; attempt 4 passed source compilation,
-not full signed ARM64 preflight. All thirteen historical attempts remain recorded.
+not full signed ARM64 preflight. All twenty-one historical attempts remain recorded.
 On 2026-10-29 the owner superseded the package cap and authorized evidence-based
 source builds and same-job validation retries on the existing standard runner.
 Attempt 5 rebuilt all nine packages and verified
@@ -452,7 +456,7 @@ permission. Target runtime feeds remain signed `trixie`, `trixie-updates` and
 
 After publishing and verifying the exact reviewed SHA and Sonar gate, the command is:
 
-    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli --ref dev/cm3-debian-cli -f expected_sha=FULL_REVIEWED_COMMIT -f experimental_image=true -f 'hypothesis=SPECIFIC_CHANGED_STAGE'
+    gh workflow run build.yaml --repo blockdyor/radxa-cm3-debian-cli --ref dev/cm3-debian-cli -f expected_sha=FULL_REVIEWED_COMMIT -f experimental_image=true -f public_distribution=false -f 'hypothesis=SPECIFIC_CHANGED_STAGE'
 
 The placeholders must be replaced, and the cumulative ledger/live history reconciled
 before dispatch. This is execution documentation, not a claim that this revision ran.
@@ -461,11 +465,15 @@ paths. Image/source/delivery validators accept no caller-supplied filesystem pat
 `cm3-verify-image.py` opens only the fixed regular image read-only through libguestfs;
 it verifies decompressed bytes, GPT/layout, loader byte offsets, actual UUID/fstab/
 extlinux agreement, pinned boot payloads, package inventory and identity cleanup.
-`cm3-publish-image.py` stages only verified `.img.xz`, checksums and reviewed
-source/notice/provenance files, never raw roots, private evidence or signing keys.
-The raw checksum is separate in `RAW-SHA256SUMS`; decompress before checking it.
-No checksum list hashes itself. These new paths remain externally unexercised
-until a recorded actual run proves otherwise; code/tests alone do not establish PASS.
+`cm3-publish-image.py --diagnostics` stages only allowlisted verified engineering
+reports, package inventory and checksums; the direct public-payload entrypoint
+fails closed for OVERLAY-1. Images, source bundles, recovery ciphertext, roots,
+private evidence and signing keys are not uploaded in build-only mode. The raw
+checksum is separate in `RAW-SHA256SUMS`; no checksum list hashes itself. Run21
+externally exercised assembly, inspection and diagnostic staging at its exact
+source revision; later documentation revisions are not compiled producer SHAs.
+Do not repeat that successful pipeline merely to update documentation or claim
+a download: a new image entry needs a specific authorized changed-stage purpose.
 
 An image artifact, if later produced, needs independently checked compressed and
 raw SHA-256, decompressor test, complete installed package/source manifest,
