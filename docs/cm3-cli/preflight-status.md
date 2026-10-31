@@ -603,7 +603,11 @@ recovered privately, not installed or redistributed. Retention ends
 No target root/initrd/private signing key was uploaded. Recovery does not grant
 reuse authorization, license closure or enduring update trust.
 
-## Admission and remaining work
+## Historical admission and remaining-work checkpoint (superseded by run21)
+
+The paragraphs below preserve the earlier package/image hold, not current image
+accounting. Current result is run21/image1/3 at the top of this file; independent
+2026-10-31 reconciliation and artifact access are in `experimental-build-report.md`.
 
 The fifth-attempt implementation adds a signed whitelist/Essential-inclusive
 ARM64 install/DKMS/extlinux-fixture probe to the existing manual job, not a full

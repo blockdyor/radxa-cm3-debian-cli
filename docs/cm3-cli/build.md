@@ -2,6 +2,9 @@
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
+The independently reconciled execution, artifact access/expiry and unchanged
+gate/hardware status are in `experimental-build-report.md` (2026-10-31).
+
 Target only: `radxa-cm3-rpi-cm4-io`, Radxa CM3/RK3566 on Raspberry Pi CM4 IO Board,
 Debian Trixie, ARM64, CLI, 512-byte sectors. Fresh installation only. This branch
 implements the prerequisite source-package probe and a manually admitted
