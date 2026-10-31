@@ -26,6 +26,34 @@
       "redistribution": "BLOCKED: OVERLAY-1",
       "hardware": "UNTESTED",
       "remaining_image_attempts": 2
+    },
+    {
+      "number": 2,
+      "commit": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085",
+      "run_attempt": 1,
+      "hypothesis": "Retain image2 with official overlay copyright-only backport, exact installed firmware notice checks, complete corresponding sources, and hash-bound reviewed experimental delivery after fresh same-run Stage A",
+      "source_lock_sha256": "320cea35c319e260971ea0d40b98027a3c9b507b15bcb965d3edf3022f2bfbd8",
+      "stage_a_sha256": "cb296d13cd340e3a0240cdbf6f4f5a04ee22eb978cb5692f8080c607c02777bc",
+      "started_at": "2026-10-31T13:57:43Z",
+      "assembly_completed_at": "2026-10-31T14:02:27Z",
+      "completed_at": "2026-10-31T14:04:05Z",
+      "result": "PASS: fresh source/package/profile and Stage A checks, actual assembly, read-only workflow image inspection and isolated exact-source provenance. Retained delivery downloaded and all 502 members hash-verified; compressed and decompressed raw identities recomputed. Fresh independent worker offline inspection remains pending.",
+      "image_sha256": "b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8",
+      "compressed_sha256": "6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037",
+      "image_bytes": 1730675712,
+      "compressed_bytes": 207281440,
+      "artifact_id": 13044838581,
+      "artifact_name": "cm3-EXPERIMENTAL-2b41b830cae9efc313f3d39d85be265b6e3eae25-41199013085",
+      "artifact_sha256": "cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad",
+      "artifact_expires_at": "2026-11-14T14:03:12Z",
+      "attestation_artifact_id": 13044604426,
+      "attestation_artifact_sha256": "16bd19edc0cf4063dd96135a6a2b4f7d18065d63f41d3e5ce4684dcec716bc1a",
+      "payload": "RETAINED: reviewed experimental image, package manifest, complete corresponding sources/notices and exact-run receipts; temporary 14-day GitHub Actions development artifact, not a release",
+      "label": "EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION",
+      "redistribution": "Scoped reviewed aggregate; original file/component notices and restrictions apply; no blanket relicensing",
+      "hardware": "UNTESTED",
+      "remaining_image_attempts": 1
     }
   ],
   "maximum_package_attempts": null,
@@ -299,7 +327,23 @@
       "attestation_artifact_id": 12991332483,
       "attestation_artifact_sha256": "e7cc37b7374405d09e3533bc22706de333025d79e696335e8ea7d87209a31113",
       "retained_payloads": "Only ten allowlisted engineering diagnostic files and public signature/verification bundle retained through 2026-11-13. Both API ZIP SHA256/CRCs, all nine manifest hashes and eight nested hashes independently verified. Exact engineering-result subject signature/source/signer/workflow/issuer/hosted-runner/SLSA policy verified; tampered subject and wrong source rejected. No image, packages, rootfs, source bundles or recovery ciphertext uploaded or retained. Disposable builder cleanup SUCCESS."
+    },
+    {
+      "number": 22,
+      "commit": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085",
+      "run_attempt": 1,
+      "hypothesis": "Retain image2 with official overlay copyright-only backport, exact installed firmware notice checks, complete corresponding sources, and hash-bound reviewed experimental delivery after fresh same-run Stage A",
+      "result": "PASS: source/package/profile tests, actual source/notice preparation, fresh Stage A, image2 assembly, workflow offline image inspection, retained delivery and isolated provenance. 183 same-run offline tests with zero failures/errors/skips; final manifest270 packages. Fresh independent worker offline inspection pending; hardware/runtime UNTESTED.",
+      "failure_stage": "none",
+      "demonstrable_progress": true,
+      "completed_at": "2026-10-31T14:04:05Z",
+      "artifact_id": 13044838581,
+      "artifact_sha256": "cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad",
+      "attestation_artifact_id": 13044604426,
+      "attestation_artifact_sha256": "16bd19edc0cf4063dd96135a6a2b4f7d18065d63f41d3e5ce4684dcec716bc1a",
+      "retained_payloads": "Actual .img.xz, package manifest, exact-run receipts and corresponding sources/notices retained as14-day development artifact through2026-11-14T14:03:12Z. Authenticated download verified API ZIP digests/CRCs, all502 member hashes,490 source materials, compressed and decompressed raw hash/size and exact-source/workflow/signer hosted provenance. No recovery ciphertext, keys, owner configuration or workspace archive uploaded; disposable builder cleanup SUCCESS."
     }
   ],
-  "status": "Twenty-one completed workflow attempts preserved. Attempt21 at6fac462 succeeds through actual assembly and independent image inspection; first actual image entry1/3, two remain. Exact engineering diagnostics and their attestation independently verified. Image payload deliberately not retained or downloadable; no new build dispatched for this reconciliation. Public redistribution BLOCKED for OVERLAY-1; upstream606 closure is not licence clearance. Hardware/runtime remain UNTESTED; stable release BLOCKED."
+  "status": "Twenty-two completed producer workflow attempts preserved. Attempt22 at2b41b830 retains image2/3 with corresponding sources/notices after the official overlay metadata clarification and payload-specific notice review. Download, all retained member hashes, compressed/raw identities and exact-source attestation verified; independent fresh-worker offline inspection pending. One image attempt remains. Hardware/runtime remain UNTESTED; stable release BLOCKED."
 }
