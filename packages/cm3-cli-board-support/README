@@ -52,8 +52,11 @@ setup and do not grow filesystems or scan attached disks.
 The nine BSP pins remain in project/cm3-cli/source-lock.json. This is a tenth,
 project-owned configuration package. It must enter the signed whitelist with an
 exact revision/hash manifest and pass clean ARM64 install/configure/reinstall/
-removal and provisioning checks before image assembly. Full package preflight
-and image readiness remain incomplete: distinct-version update/recovery,
-attested scoped update trust, source/blob/license/maintenance closure and
-physical qualification are still gates. No public binary redistribution,
-release or production installation is implied.
+removal and offline security checks before experimental image assembly under
+docs/cm3-cli/build.md Stage A. Run 41066891788 passed assembly and independent
+inspection, then discarded the image; no downloadable payload remains. Physical
+provisioning, distinct-version update/recovery, enduring attested update trust,
+source/blob/license/maintenance closure and hardware qualification remain required
+for stable qualification, not prerequisites to the authorized experiment.
+Public binary redistribution remains blocked by OVERLAY-1; no release or
+production installation is implied.

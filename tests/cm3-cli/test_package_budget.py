@@ -15,6 +15,7 @@ class PackageBudgetTests(unittest.TestCase):
         self.ledger = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())
         # Exercise the fixed seven-run baseline, not the moving live run count.
         self.ledger['package_attempts'] = self.ledger['package_attempts'][:7]
+        self.ledger['full_image_attempts'] = []
         self.runs = [dict(id=int(a['run_url'].rsplit('/', 1)[1]), head_sha=a['commit'],
                           run_attempt=a['run_attempt'], event='workflow_dispatch',
                           workflow_id=budget.WORKFLOW, status='completed', conclusion='failure')
@@ -36,6 +37,15 @@ class PackageBudgetTests(unittest.TestCase):
                          ['40294636804', '40655341359', '40656875860'])
         self.assertEqual(self.ledger['maximum_full_image_attempts'], 3)
         self.assertEqual(self.ledger['full_image_attempts'], [])
+
+    def test_package_admission_preserves_independent_image_history(self):
+        images = json.loads((ROOT / 'docs/cm3-cli/attempts.json').read_text())['full_image_attempts']
+        self.ledger['full_image_attempts'] = copy.deepcopy(images)
+        before = copy.deepcopy(self.ledger)
+        run_id = self.append()
+        result = budget.admit(self.ledger, self.runs, run_id, 'a' * 40, 'Changed package-only probe')
+        self.assertEqual(result['cumulative_attempts'], len(self.runs))
+        self.assertEqual(self.ledger, before)
 
     def test_eighth_allowed_but_unreconciled_next_run_rejected(self):
         run_id = self.append()

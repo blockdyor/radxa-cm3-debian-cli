@@ -2,7 +2,9 @@
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
-No image, boot success, performance improvement, stable support or full hardware
+One experimental image was assembled and independently inspected in run
+`41066891788`, then deliberately discarded; no image is retained or downloadable.
+No boot success, performance improvement, stable support or full hardware
 compatibility is claimed. Read `validation.md` and all 28 original matrix rows.
 No missing bench fixture may be relabeled NOT PRESENT. Actual RAM/eMMC/radio/SPI
 population, module/carrier revisions and physical wiring remain unknown.
