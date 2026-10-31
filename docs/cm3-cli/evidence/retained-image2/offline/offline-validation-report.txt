@@ -1,0 +1,104 @@
+RETAINED CM3 IMAGE — PROVENANCE AND OFFLINE VALIDATION
+Task t_6c2ac45f | 31 October 2026 UTC
+EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
+
+VERDICT AND BOUNDARY
+STATIC PASS for the scoped offline checks below. No image boot, target-program execution, QEMU, flashing, repair, rebuild, repository changes, merge or release occurred. This does not simulate or replace RK3566/CM3/CmRat hardware qualification. All 28 physical matrix rows remain UNTESTED. Later cards own userspace execution, first-boot/storage fixtures, broader security audit, negative testing and repository publication; these results do not preempt them.
+
+IDENTITY / ORIGINAL MATERIALS
+Repository: blockdyor/radxa-cm3-debian-cli; draft PR https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1
+Exact built commit: 2b41b830cae9efc313f3d39d85be265b6e3eae25
+Producing run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085
+Workflow attempt1; producer22; real image2/3 (recorded original attempt history, not a new build).
+Artifact13044838581: cm3-EXPERIMENTAL-2b41b830cae9efc313f3d39d85be265b6e3eae25-41199013085
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085/artifacts/13044838581
+Fresh public GitHub API reads establish successful producing run, exact commit, artifact digest and unexpired state; expiry2026-11-14T14:03:12Z. The full ZIP was not downloaded again; an already recovered local copy was freshly hashed against that live API digest. Authentication-dependent gh calls could not run in this profile; public read-only HTTPS API retrieval succeeded instead. No credential was read or changed.
+
+Retained local files, all outside scratch and freshly hashed before AND after inspection:
+/opt/data/artifacts/cm3-qualification/t_ce5ca21d/cm3-trixie-arm64-cli.img
+  1730675712 bytes
+  SHA256 b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8
+/opt/data/artifacts/cm3-qualification/t_ce5ca21d/cm3-trixie-arm64-cli.img.xz
+  207281440 bytes
+  SHA256 6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037
+/opt/data/artifacts/cm3-qualification/t_ce5ca21d/retained-image-sources.zip
+  1497046145 bytes
+  SHA256 cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad
+
+Originals were opened read-only; every filesystem operation targeted disposable bounded partition files. Retained file modes are0644, not an OS-enforced immutable flag or read-only mount. This worker did not change those permissions. Post-inspection hashes establish unchanged bytes, not protection against future writers. Large artifacts exceed Kanban's25MiB per-file cap: local retention only, no off-host backup claim.
+
+Small records preserved in this packet under records/:
+packages.tsv; verification.json; delivery-result.json; SHA256SUMS; RAW-SHA256SUMS; IMAGE-XZ-SHA256SUMS; image-stage-a.json; image-offline-tests.json; image-admission.json.
+sources/source-lock.json; builder-packages.tsv; loader-inputs.json; delivery-inputs.json; installed-source-identities.tsv; firmware-files.json; notice-review.json; hardware-matrix.tsv; original gate snapshots; build.md; provenance.md; limitations.md.
+The exact BSP/builder corresponding source, Debian .dsc/tar source payloads and notices remain in the FULL ZIP at sources/modified-bsp-and-builder-sources.tar.gz, sources/debian-sources/ and sources/installed-notices.tar.gz. Keep the source ZIP with the image, not the image alone.
+built-source/ in this small packet is the preserved builder-and-board regular-file subtree from the retained source archive; not a new checkout/current head or full BSP source substitute. It includes original scripts, board package and27 existing test files for downstream reuse.
+
+PRIOR EVIDENCE PRESERVED, NOT FALSELY CLAIMED AS NEW EXECUTION
+/opt/data/kanban/attachments/t_1c2ec09d/cm3-independent-retained-image-handoff.txt
+/opt/data/kanban/attachments/t_1c2ec09d/cm3-independent-inspection-evidence.zip
+  Published original verdict: https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1#issuecomment-6545317238
+/opt/data/kanban/attachments/t_ce5ca21d/qualification-evidence-index.txt
+/opt/data/kanban/attachments/t_ce5ca21d/qualification-records.zip
+/opt/data/kanban/attachments/t_ce5ca21d/attestation.zip
+Independent predecessor evidence is also copied unchanged under prior/. It records exact-source OIDC attestation verification, negative signature tests,500 delivery hashes,490 source hashes,149 Debian source identities/327 DSC payload hashes,276 firmware paths and full source/notices inspection. Recovery records attest fresh full ZIP CRC/manifest closure. Current full-ZIP hash equals their input bytes and fresh GitHub digest. This worker does not relabel those old cryptographic/source checks as freshly rerun. No new signature, DSC trust, upstream BSP object or bitwise rebuild verification is claimed.
+
+REQUESTED CHECKS / DIRECT EVIDENCE
+1. Partition table: protective MBR signature plus primary AND backup GPT header/array CRCs and array equality; partition-table.json. Header checks are structural/CRC, not a full independent GPT standards-conformance implementation.
+2. Offsets/alignment: three partitions, starts32768/65536/679936512-byte sectors; byte offsets16777216/33554432/348127232. All starts align to1MiB. Lengths16777216/314572800/1382531584 bytes. All ranges within the verified raw file. Evidence filesystem-identities.json and partition-table.json.
+3. Filesystem types: configFAT16, EFI-labelled filesystemFAT16, rootext4. GPT types/partition identifiers recorded exactly, not inferred from labels. EFI partition does not establish a UEFI boot chain.
+4. Integrity: fresh e2fsck -fn rootfs.ext4 and fsck.fat -n -v fat1.img/fat2.img all exit0. Copies hashed before/after each checker to verify no modification. Logs evidence/*-fsck.txt.
+5. Boot contents: both FAT volumes contain no allocated data clusters (their one counted file is the volume label); actual /boot contains config, System.map, extlinux, kernel and initrd under the root filesystem. evidence/boot-contents.json and FAT logs.
+6. Root contents: root/major directory listing, /usr/lib/os-release DebianTrixie and bash ELF AArch64; actual package/security/service/lifecycle files inspected. evidence/root-and-apt-inventory.json. Not every file payload/inode was semantically audited.
+7. UUID/PARTUUID: actual UUIDs3F73-3340,3F75-DBFF,517983f5-e8fa-4876-803a-ddff8cef58bf; GPT partition UUIDs in filesystem-identities.json. fstab and both extlinux entries/cmdline agree with filesystem UUIDs. No PARTUUID-based boot reference is present in these inspected files; no claim of scanning every binary/config for hidden references.
+8. fstab: exactly /config vfat, /boot/efi vfat and / ext4 with correct UUIDs; no data/NVMe mount. Full text evidence/boot-contract.json.
+9. Boot configuration: normal/rescue extlinux paths resolve, selected exact CM3/carrier DTB, ttyFIQ0/1500000 and AppArmor/LSM intent agree. Boot-contract checker from exact retained source passes; no unreviewed overlays. Three raw loader placements match installed bytes and precede partition1: idblock32768 and557056; U-Boot8388608 bytes. evidence/loader-placements.json. Actual boot order remains UNTESTED.
+10. Kernel: ARM64Image magic, exact recorded SHA256, installed6.1.84-18+cm3cli1-rk2410-nocsf and required compiled initrd/ext4/cgroup/namespaces/seccomp/AppArmor configuration; evidence/kernel-config-summary.json. No kernel boot/runtime capability claim.
+11. Initramfs: exact recorded hash; independently parsed uncompressed early CPIO plus gzipCPIO,364 member records including init; per-member mode/size/hash, gzip expansion capped256MiB. evidence/initramfs-members.json. Parser positive and malformed-input self-checks passed. Init and its scripts were not executed; archive membership does not prove successful root discovery.
+12. DTBs: exact selected DTB hash, FDT magic and radxa,cm3-rpi-cm4-io / rockchip,rk3566 compatibles. Other DTBs, pinmux/electrical routing and applied live tree are not qualified.
+13. Modules: inventory under matching kernel release;1258 paths referenced by modules.dep all exist; two XZ-decompressed module samples pass AArch64ELF/vermagic matching release. evidence/module-inventory.json and modules-summary.json. Initial inspection helper assumed plain.ko; it was corrected to recognize actual.ko.xz and rerun successfully, without changing image bytes. Not every module payload/vermagic was checked; no module load/dependency execution.
+14. Firmware:276 actual installed path hashes match preserved firmware manifest; evidence/firmware-summary.json. No physical device request/load or radio calibration test.
+15. Package database:270 unique installed/configured arm64/all entries equal packages.tsv exactly; empty dpkg updates directory recorded. evidence/package-summary.json. No live apt/dpkg run, transaction or package-wide dpkg --verify here.
+16. APT configuration: Trixie main/non-free-firmware, trixie-updates and trixie-security, Debian archive signed-by keyring, no inspected trusted=yes/Bookworm/Sid feed and no temporary build feed/key/repo. evidence/apt-sources.json, apt-config.json and root-and-apt-inventory.json inventory ordinary config/trust paths. No new cryptographic repository/package verification or complete effective-option resolution; security worker owns that depth.
+17. machine-id: /etc/machine-id and /var/lib/dbus/machine-id absent. Build identity cleanup verified statically, not proof of two independently booted unique IDs.
+18. SSH host keys: no ssh_host_ entries in /etc/ssh; /root/.ssh absent. Key generation and uniqueness remain unexecuted. No broader secret-free warranty.
+19. Account policy:22 shadow entries all password-locked; no regular UID1000..65533 account, no owner.json. Only lock/count summaries persisted, no shadow values or sensitive hashes. Owner/key enrollment is intentionally incomplete until separately provisioned; no universal login credential.
+20. Permissions: critical passwd/group/shadow/gshadow/sudoers/root/SSH and13 board-policy files root-owned, non-group/world-writable; shadow/gshadow0640root:shadow, sudoers0440, root0700; board enroller/boot-update0755, data0644. evidence/account-security-summary.json. Not an exhaustive filesystem ACL/capability/setuid/world-writable audit.
+21. systemd units: actual project enrollment/firewall, SSH and NetworkManager drop-ins preserved; enrollment requires firewall/AppArmor, SSH requires enrollment/firewall plus --check. evidence/systemd-unit-inventory.json. No systemd --verify, dependency-cycle, generator or runtime ordering result implied.
+22. Enabled services:30/etc/systemd/system symlinks include wants, aliases, default target and masks, NOT30enabled services. Required project/network/SSH/AppArmor/time/serial wants resolve; default multi-user.target; ssh.socket and systemd-networkd service/socket masked. Full exact inventory in lifecycle-handoff.txt and unit JSON. Vendor enablement/generator output, users' services and live activation remain outside this static link check.
+
+LIFECYCLE / DOWNSTREAM SAFE ENTRY POINTS
+Complete83-entry selected-directory inventory (metadata, not83 executable scripts) is evidence/lifecycle-inventory.json. Actual ordinary script text and resolved symlink scripts are evidence/lifecycle-script-text.json; lifecycle-handoff.txt indexes content hashes and systemd links.
+
+Firstboot: /usr/lib/cm3-cli/enroll.py and owner_config.py; cm3-cli-enroll.service. Requires exact DT compatibles and root-owned0600owner.json, rejects collision/adoption; writes pending/completed state, creates password-locked owner, root-held public key, explicit passwordless sudo, ssh-keygen -A and AppArmor readiness. The absence of owner.json is intentional fail-closed shipping state, not a defect. Systemd is expected to initialize machine-id. Do not run this script against the host. Use existing retained tests/cm3-cli/test_firstboot_boundaries.py, test_owner_config.py, test_board_support.py and test_service_ordering.py as fixture starting points; this worker did not execute their suites.
+
+Package installation/removal: actual /var/lib/dpkg/info/cm3-cli-board-support.{postinst,prerm,postrm}, plus original package build.py. postinst regenerates initramfs/extlinux and enables policy units without starting them; prerm closes SSH/removal sentinel and postrm handles package cleanup. Firstboot/storage fixture worker must exercise actual script logic with isolated command stubs, never real systemctl/adduser/disk commands.
+
+Boot update: /usr/lib/cm3-cli/boot-update, /etc/kernel/{postinst.d,postrm.d}/zz-cm3-cli; standard u-boot-menu/initramfs/DKMS hooks; bootutils yz-uncompress-kernel. boot-update only calls u-boot-update when OS fstab exists; no media selection/resize. The vendor99-update-overlay.install hook is a symlink requiring mask interpretation, not proof it executes. Kernel compressed-package-to-raw-Image transformation is documented by the prior canonical correction; do not blanket-ignore dpkg discrepancies.
+
+Installation/loader writing: /usr/lib/u-boot/radxa-cm3-rpi-cm4-io/setup.sh and setup.ps1 are present. setup.sh includes real block-device write operations; full text preserved specifically for isolated simulation/review, NEVER authorized on host/data devices by this report. Builder-side src/share/rsdk/build/lib/image/install_bootloader.jsonnet and scripts/cm3-assemble-image.py are in built-source/. RSDK installer documentation/source is build-host material, not proof that any target installer is safe against data-NVMe selection.
+
+Expansion: no project OS-root firstboot expansion implementation exists in this retained candidate; boot-update explicitly never scans/resizes disks. Generic resize utilities may exist but do not constitute safe root-media selection or an automatic grow implementation. G1/H03 remain unmet. Already-expanded/needs-expansion fixtures must report this missing entry point, not invent a replacement and call it validated.
+
+Recovery: normal/rescue extlinux menu, board README's offline owner/account repair boundary, exact-source docs/cm3-cli/limitations.md describe offline sacrificial-OS repair/reflash. No project automatic rollback/recovery program is demonstrated. Loader setup is not a safe disk-discovery/recovery orchestrator. RockchipMaskrom/rescue-media/boot-source precedence need separate approved hardware procedure; no SPI writes authorized.
+
+REPRODUCTION / SAFETY PROCEDURE
+Use an isolated ordinary directory on a host with enough space; do not mount or loop-attach any image, expose host block devices, chroot or execute target files.
+1. Preserve originals and compare SHA256s above; any mismatch stops the procedure. Do not substitute image1/currentHEAD/rebuild.
+2. Recover this small packet; python3 prepare.py rehashes originals, opens raw/ZIP read-only, extracts selected regular source/record files, creates exact bounded partition copies and unpacks tools inside workspace only. Existing workspace outputs are disposable and overwritten; choose a new directory. prepare.py currently uses exact local retained paths; on another host explicitly replace those with verified copied-file paths before running and retain that change in evidence.
+3. python3 offline-inspect.py performs checks and writes evidence/. Its command log records every debugfs/fsckargv/exit. debugfs has NO -w, e2fsck -fn and fsck.fat -n are read-only. Any future repair must use another disposable copy, never original.
+4. python3 finalize.py verifies live/source metadata already fetched into packet, rehashes originals, reads supplementary public configuration and verifies CRC/hash index of the small evidenceZIP. It is a packet builder, not an image builder. No target program is executed.
+5. Fresh remote metadata:
+   curl -fsSL https://api.github.com/repos/blockdyor/radxa-cm3-debian-cli/actions/artifacts/13044838581 -o artifact-current.json
+   curl -fsSL https://api.github.com/repos/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085 -o run-current.json
+   curl -fsSL https://api.github.com/repos/blockdyor/radxa-cm3-debian-cli/pulls/1 -o pr-current.json
+   sha256sum <retained.img> <retained.img.xz> <retained-image-sources.zip>
+6. Preserve source/notice/signature artifacts before GitHub expiry. Verify original hashes again after inspection. This run did so successfully for all three retained payloads.
+
+Environment: aarch64 Linux host; Python3.14.7. debugfs/e2fsck1.47.2, dosfstools/fsck.fat4.2. Exact Debian tool package URLs, sizes and hashes in tool-downloads.json; versions in evidence/tool-versions.json. Tools unpacked via dpkg-deb, not installed into host. Downloaded over official Debian HTTPS; this worker did not separately authenticate tool.deb hashes with signed Release metadata. No new dependencies/configuration/credentials written outside task workspace. Scratch partition copies/tool binaries are deliberately not durable task attachments; rerun prepare.py to regenerate them.
+
+FINDINGS / LIMITATIONS / ORIGINAL MATRIX
+No new demonstrated image-content defect required a rebuild or remediation. OS-only expansion remains missing; G1/G2/G7 and real firstboot/identity/recovery, BSP update/security ownership and reproducibility qualification remain open. These are inherited limitations, not silently waived acceptance gates. Old source documentation saying no retained image refers to discarded run41066891788/image1; the fresh image2 identity/run/artifact above supersedes that status statement without editing historical source bytes. Exact current PR head is captured in evidence/verified-handoff.json and is distinct from the built commit.
+
+evidence/hardware-matrix.tsv is byte-for-byte original (also matching prior/hardware-matrix.tsv and records/sources/hardware-matrix.tsv), SHA25624c30e0964dcec3326c723ad8f8b84c39104ff7a8688f33a7e997b2ef2098232,28rows all UNTESTED. It has not been annotated or rewritten in this phase. Repository publication/row-specific annotations belong to downstream t_3dac8608.
+
+Canonical context: resolved Second Brain entities/blockdyor.md and completed CM3 corrections before work; original ownership/project source kanban:t_bacce4a4 plus GitHub repository. The entity note explicitly delegates engineering evidence/progress to existing Kanban/GitHub, not a duplicate Obsidian backlog. Existing task handoff is updated here; no new authorization, duplicate managed task or unsupported Obsidian sync claim. No new correction was needed: recognising compressed modules was a verifier implementation issue, not an erroneous published image finding.

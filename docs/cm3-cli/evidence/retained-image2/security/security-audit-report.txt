@@ -1,0 +1,95 @@
+RETAINED CM3 IMAGE — SECURITY AUDIT
+Task t_d8a85f3e | 31 October 2026 UTC
+EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
+
+BOUNDARY AND VERDICT
+Completed an offline security audit of the actual retained image, not only its builder scripts. No target code, chroot, SSH daemon, package manager, virtual machine or target kernel was executed. No remediation, rebuild, installation, repository edit or hardware/storage write occurred. Physical CM3/CmRat results remain UNTESTED.
+
+This is NOT an unconditional security clearance. Of 13 requirement areas: 10 STATIC PASS within stated scope, 1 SCOPED EXCEPTION (literal no-private-keys requirement not met), and 2 UNTESTED. These are requirement-area verdicts, not a runtime test-suite pass count. Runtime PASS=0. No defects corrected. The self-test-key exception and package-signature evidence gap must remain visible in prerelease decisions.
+
+IDENTITY
+Repository: blockdyor/radxa-cm3-debian-cli
+Built commit: 2b41b830cae9efc313f3d39d85be265b6e3eae25
+Producing run: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085
+Retained original directory: /opt/data/artifacts/cm3-qualification/t_ce5ca21d
+cm3-trixie-arm64-cli.img SHA256:
+ b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8
+cm3-trixie-arm64-cli.img.xz SHA256:
+ 6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037
+retained-image-sources.zip SHA256:
+ cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad
+All three originals freshly hashed before and after inspection; unchanged. Hash integrity is NOT publisher signature authentication. Parent t_6c2ac45f supplies current artifact metadata/provenance and original 28-row hardware matrix; this task does not repeat the parent as fresh cryptographic verification.
+
+METHOD AND COVERAGE
+Created an exact bounded root partition copy from raw offset348127232, length1382531584; no mount, loop device or repair. Native debugfs1.47.2 used WITHOUT -w to rdump the copy into a private0700 workspace directory; target files never executed. Independent read-only directory traversal covered2631 directories and checked every allocated regular-file path and size against extraction:30051 files,871005658 bytes. Every extracted allocated regular-file payload was scanned for PEM private-key markers, common GitHub/AWS token shapes, authenticated HTTP URLs and SSH public-key lines. Configuration/mutable directories additionally scanned for credential-like assignments. No match values, secret hashes, password databases or private-key payloads are included in deliverables. All19 initial path/category hits were reviewed; candidate records are not19 leaked secrets.
+
+Scope limits: no complete encoded/encrypted/opaque/archive recursion, raw free-space/deleted-file/slack/journal forensics, exhaustive arbitrary-token recognition, comprehensive ACL/xattr/capability audit, supply-chain malware assessment or CVE/vulnerability clearance. Full rootfs allocated regular files were scanned; empty FAT boot/config volumes are established in parent evidence, not rescanned here. Symlinks were not followed during byte scanning; actual sensitive metadata and keyring link were separately inspected through debugfs. All data/path inventory remains local unless included in the sanitized evidence packet.
+
+REQUIREMENT VERDICTS AND REPRODUCIBLE EVIDENCE
+1. Embedded private keys: SCOPED EXCEPTION — literal absence NOT MET.
+ /usr/lib/aarch64-linux-gnu/libgnutls.so.30.40.3 contains8 complete PEM private-key blocks. Each matches exact retained upstream gnutls-3.8.9/lib/crypto-selftests-pk.c bytes after decoding C string literals, from sources/debian-sources/gnutls28_3.8.9.orig.tar.xz in the retained ZIP. This is direct source-byte matching, not a source signature verification or proof of a bitwise library rebuild. These are public upstream crypto self-test vectors, not identified device/build/developer credentials. Other header hits are ELF format-recognition strings or /usr/lib/file/magic.mgc with no complete PEM block. See secret-scan.json, candidate-review.json, gnutls-key-provenance.json and key-provenance.py.
+ Action: document an explicit public-self-test-vector exception if policy means no usable deployment secrets. If literal zero embedded private-key bytes is mandatory, this retained image fails that condition; review upstream/library alternatives through a separate authorized change. Do not strip library bytes or rebuild silently. Never use test-vector keys as credentials.
+
+2. Build credentials: STATIC PASS, bounded detection.
+ No GitHub/AWS token-shape hits; no discovered deployment credential assignments in /etc,/root,/home,/var,/opt,/run. No .netrc, .git-credentials, .aws/.gnupg or developer .git/.ssh file leads. Six assignment-lead files are NSS database mapping, OpenSSL packaged configuration examples, shell account-lookup variables and OpenSSH debconf booleans, not identified live secrets. HTTP::Tiny URL hits occur in request/proxy documentation examples, not active account configuration. Temporary build repository/feed/key absence also recorded by parent. See assignment-leads.json, assignment-review.json, url-candidate-review.json and secret-scan.json. The initial narrow placeholder checker returned false for HTTP::Tiny; contextual review established documentation/example role instead of treating that boolean as a secret-leak finding.
+ Action: retain build secret-cleanup checks; expand detection formats if specific additional providers/credential types are introduced. Negative scans are not a secret-free warranty.
+
+3. Developer SSH keys: STATIC PASS, bounded detection.
+ No SSH public-key-line hit; no authorized_keys/id_rsa/id_ed25519/id_ecdsa file lead and no /root/.ssh. No /etc/ssh/ssh_host_* entries. No enrolled owner document. See secret-scan.json, trust-inventory.json and metadata.json. Public keys embedded as non-line binary/test data are outside the SSH-line matcher; private self-test exception above remains explicit.
+ Action: provision only the owner's fresh public key offline, never ship a developer key.
+
+4. Password hashes/default credentials: STATIC PASS.
+ All22 /etc/shadow entries locked; no empty password field or recognizable crypt hash material, including after lock markers. /etc/gshadow contains no hashes/empty-password field. Backup /etc/shadow-21 entries and /etc/gshadow-51 entries also all locked with no recognizable crypt hash material. /etc/security/opasswd empty. No regular UID1000..65533 account. Values withheld. See accounts.json, backup-password-review.json, metadata.json and extra-metadata.json.
+ Action: preserve password locks and fresh public-key ownership enrollment; do not invent universal/default login credentials.
+
+5. Account access/enrollment: STATIC PASS, not login execution.
+ root has /bin/bash but locked password; sync has /bin/sync (not an interactive shell despite inclusion in the raw non-nologin-shell summary). No regular user or owner.json. Actual /usr/lib/cm3-cli/enroll.py requires exact CM3/RK3566 compatible strings, root-owned private regular owner.json with validated Ed25519 key, refuses account adoption/collisions, locks root/owner passwords and verifies ownership/group/state/key/identity/LSM before readiness. Owner configuration absent intentionally ships fail-closed. See policy-text.json and installed code lines103-149,152-204. PAM common-auth includes Debian nullok, but no shipped empty-password entry and SSH explicitly disallows password authentication. Account creation/PAM behavior not executed.
+ Action: follow owner provisioning and offline recovery documentation; recovery/physical console controls remain separate qualification.
+
+6. SSH policy: STATIC PASS, configuration only.
+ /etc/ssh/sshd_config includes sorted drop-ins early; only00-cm3-cli.conf supplies project server policy. PermitRootLogin no; PasswordAuthentication no; KbdInteractiveAuthentication no; PermitEmptyPasswords no; PubkeyAuthentication yes; AuthenticationMethods publickey; AllowGroups cm3-cli-owner; root-held AuthorizedKeysFile /etc/cm3-cli/authorized_keys/%u; X11Forwarding no; UsePAM yes. SSH service requires enrollment/firewall, runs enroller --check plus vendor sshd -t; SSHD_OPTS empty. ssh.socket is masked in parent inventory. No claim that SSH forwarding generally is disabled: TCP/agent forwarding were not explicitly prohibited by the project drop-in. Firewall statically drops input/forward except loopback, established traffic, ICMP/DHCP and TCP22, while allowing output; no rules were loaded. See policy-text.json, policy-summary.json and parent systemd inventory.
+ Action: runtime worker must run effective sshd -T/-t and startup/login negative tests in its isolated environment; physical reachability remains UNTESTED.
+
+7. Sudo policy: STATIC PASS, configuration only.
+ /etc/sudoers0440root:root has env_reset, secure_path,use_pty and ordinary root/%sudo rules; sudo group empty; /etc/sudoers.d contains README only. Installed enrollment deliberately creates owner ALL=(ALL:ALL) NOPASSWD: ALL in0440root-owned file and calls visudo --check --strict. This is intentional full owner administration, not least-privilege command access. See policy-text.json, policy-summary.json, metadata.json and enroll.py lines128-130,189-192. No visudo/parser or sudo command executed here.
+ Action: treat the enrolled owner's SSH key as root-equivalent and protect/revoke it accordingly; do not call intentional NOPASSWD an accidental default password.
+
+8. APT sources/trust configuration: STATIC PASS, static scope only.
+ /etc/apt/sources.list points exclusively to Debian HTTPS trixie,trixie-updates,trixie-security main/non-free-firmware with signed-by=/usr/share/keyrings/debian-archive-keyring.gpg. That path is an actual root-owned symlink to existing debian-archive-keyring.pgp, not a broken/missing keyring. Debian release public key files in trusted.gpg.d include older stable releases; these are public archive keys, not build credentials or active Bookworm sources. No trusted=yes, insecure/unauthenticated override or additional source appears in inspected /etc/apt configuration. APT::Update::Error-Mode any present. No auth.conf or build key/feed discovered. See trust-inventory.json, extra-metadata.json and policy-text.json. This does not authenticate key provenance or calculate a target apt-config effective dump/environment.
+ Action: validate signed repositories at runtime; retain explicit Signed-By and removal of temporary build feed. Do not add insecure flags to make update work.
+
+9. Package-signature verification: UNTESTED in this audit; evidence gap explicit.
+ No fresh OpenPGP signature verification performed. Native gpg/gpgv were unavailable; target binaries deliberately not executed. Actual /var/lib/apt/lists and /var/cache/apt/archives contain only lock files, so this image cannot supply a complete retained installed-package .deb/index/InRelease signature chain. Debian APT authenticates signed repository metadata and package hashes, not generally individual .deb signatures. Dpkg database/file hashes alone are not signatures.
+ Retained ZIP related-path inventory is signature-evidence-inventory.json; source detached signatures are present but their presence is not verification. Preserved build scripts cm3-package-preflight.py / cm3-rsdk-profile.py implement local signed-feed checks and reject tampering; code inspection is not proof those checks ran. Parent preserved prior exact-source OIDC attestation and source-manifest checks, not a fresh authentication of every installed binary package. This audit does not claim these historical checks are false or relabel them as new execution. Fresh SHA256 matching of raw/XZ/ZIP is the cryptographic hashing actually performed; no package-signature test was passed here.
+ Action: preserve/recover exact build-time signed repository metadata, package payloads, archive key provenance and verification logs, then independently verify signature -> index -> package-hash -> installed-byte/allowed-transformation closure. A live apt update tests current trust/update operation but cannot retrospectively authenticate the exact installed270-package image by itself. Respect canonical bootutils gzip-to-raw kernel transformation correction; no blanket dpkg checksum exceptions.
+
+10. AppArmor/LSM configuration: STATIC PASS for activation intent, not blanket confinement.
+ Actual kernel CONFIG_SECURITY_APPARMOR=y and audit/securityfs options; /etc/kernel/cmdline and extlinux append apparmor=1 security=apparmor lsm=landlock,lockdown,yama,integrity,apparmor,bpf. Built CONFIG_DEFAULT_SECURITY_DAC=y / CONFIG_LSM omit AppArmor, making correct boot-command-line override important. apparmor.service enabled; enrollment Requires/After AppArmor and checks aa-status --enabled plus actual /sys/kernel/security/lsm containing apparmor. See lsm.json and policy-text.json. Several named command-line LSMs are compiled out; listing them does not prove those protections are available.
+ Installed top-level profile text includes76 explicit unconfined profiles and38 complain-mode profiles; no ssh-named profile file. An explicit flags=(enforce) string is not required for normal default enforce behavior, so its zero text count is NOT zero enforcing profiles. No loaded-profile counts/enforcement claim. Activation readiness only is checked by enroller, not comprehensive service confinement.
+ Action: boot target, inspect effective cmdline/LSM and loaded/enforce/complain profile state; define any service-specific confinement requirement rather than equating installed AppArmor with confinement of SSH/all services.
+
+11. Runtime LSM activation: UNTESTED.
+ No virtual kernel or physical CM3 boot observed. Host kernel state is not target evidence. /sys/kernel/security/lsm expectations in scripts are configuration only. Physical AppArmor/LSM status stays UNTESTED. Any downstream virtual observation must name its actual virtual kernel/environment and cannot qualify physical CM3.
+
+12. machine-id/host-key cleanup/provisioning: STATIC PASS, cleanup/intent only.
+ Both /etc/machine-id and /var/lib/dbus/machine-id absent. No shipped host-key files or owner state. Systemd is expected to initialize machine identity. Vendor sshd-keygen.service is ConditionFirstBoot=yes, requires writable non-symlink /etc/ssh, runs ssh-keygen -A before SSH. Enroller also invokes ssh-keygen -A and checks valid nonzero32-hex machine-id plus nonempty private host-key files. It does not prove that existing host keys are unique/cryptographically valid, and ssh-keygen -A preserves existing keys. See metadata.json, trust-inventory.json and policy-text.json. No nonempty /var/log files found.
+ Action: test two independent boots for distinct machine/host identity; exercise missing/stale-key fixtures and provisioning failures in sibling firstboot lane. Never assume retained stale keys would rotate automatically.
+
+13. Account/security-file permissions: STATIC PASS for inspected metadata.
+ Actual /etc/shadow,/etc/gshadow0640root:shadow; /etc/sudoers0440root:root; /root0700; passwd0644; project SSH/enrollment/apt trust parents root-owned and not group/world writable in recorded metadata. Entire allocated regular-file mode inventory contains no world-writable regular file;15 SUID/SGID paths inventoried (standard account, sudo,mount,SSH/DBus helpers), not a proof that every privileged payload is vulnerability-free. See metadata.json, extra-metadata.json, allocated-file-inventory.json and coverage.json. Full directory writeability, ACL/xattr/capability topology remains outside this verdict.
+ Action: retain root ownership/modes and review privileged helpers against desired threat model without removing package files silently.
+
+REPRODUCTION / ENVIRONMENT
+In a fresh private ordinary workspace with ample space and the verified originals at paths above:
+ python3 audit.py
+ python3 supplement.py
+ python3 key-provenance.py
+ python3 coverage.py
+ python3 finalize.py
+These are audit/evidence tools, not image builders. audit.py hardcodes existing parent's native debugfs/library paths; restore equivalent verified tools before reproduction if that parent scratch workspace has been cleaned. Prepare debugfs1.47.2/e2fsprogs dependencies using tool-downloads.json from /opt/data/kanban/attachments/t_6c2ac45f/cm3-offline-validation-evidence.zip. That parent's tool retrieval was HTTPS plus recorded hashes, not separately authenticated by signed Release metadata. This is a tool-trust limitation, not hidden fresh package-signature evidence.
+Host aarch64 Linux, Python3.14.7; no target binary execution. audit.py only writes in its workspace and opens originals read-only; output files remain private under umask077. First two scanner assertions are tiny matcher self-checks, not a full general-purpose secret-scanner qualification suite. The complete-block assertion initially stopped classification at GnuTLS; investigation correctly established public self-test source provenance. No initial incomplete result was published as a no-keys PASS.
+
+Evidence ZIP contains sanitized summaries, safe installed policy text, file metadata inventory, scripts, parent tool manifest and verification index, NOT raw rootfs, passwords, keys, private candidate snippets or their sensitive hashes. Packet CRC/member hashes and preserved-original hashes are verified by finalize.py; final packet verification accompanies report. Keep large originals and full corresponding source ZIP together in their retained directory; this packet does not replace them.
+
+CANONICAL CONTEXT / HANDOFF
+Resolved Second Brain completed CM3 corrections and entities/blockdyor.md before auditing. Source references are kanban:t_bacce4a4 and GitHub repository; that identity/index explicitly delegates engineering evidence/progress to existing Kanban/GitHub. No duplicate Obsidian task/index, authorization change or unsupported sync claim. Existing task handoff updated with current verified findings. Downstream t_3dac8608/t_42fcbb26 own publication/reconciliation; their physical matrix must preserve28 UNTESTED statuses. Security audit completion means evidence/limitations recorded, not that every security property is proven or exceptions waived.

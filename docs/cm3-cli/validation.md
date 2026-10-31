@@ -2,6 +2,14 @@
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
+For the retained image2 and subsequent offline, native-fixture and QEMU evidence,
+see [validation levels and evidence index](virtual-validation-report.md) and the
+[row-specific evidence matrix](hardware-matrix-evidence.tsv). The current index
+supersedes historical no-retained-image/pending-inspection statements below;
+it does not supersede the original gate texts, physical procedures or 28 UNTESTED
+hardware statuses. `hardware-matrix.tsv` remains byte-for-byte locked; annotations
+are additive in the companion matrix, preserving every original field.
+
 Original definitions are preserved byte-for-byte in
 `gates-validation-verbatim.txt` and `gates-consolidated-verbatim.txt`.
 `evidence-hashes.json` locks those texts and the complete original

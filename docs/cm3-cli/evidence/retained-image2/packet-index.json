@@ -1,0 +1,92 @@
+[
+  {
+    "path": "offline/offline-validation-report.txt",
+    "task_id": "t_6c2ac45f",
+    "bytes": 18528,
+    "sha256": "38bf6ab63886b5b7ff9932af7eeec940324c04aa3961209a1cf003c58e61db5a"
+  },
+  {
+    "path": "offline/cm3-offline-validation-evidence.zip",
+    "task_id": "t_6c2ac45f",
+    "bytes": 769553,
+    "sha256": "3ac9b24db47ab8aa6409c0bb104609960e324b322a97a715498a180fb99b83b5"
+  },
+  {
+    "path": "offline/packet-verification.json",
+    "task_id": "t_6c2ac45f",
+    "bytes": 1529,
+    "sha256": "ce0f7d3d8eb28508f8f7054ba197f866ef5de9b581f817d8388ca43dca4a382e"
+  },
+  {
+    "path": "virtual/virtual-validation-report.txt",
+    "task_id": "t_f1e96835",
+    "bytes": 7933,
+    "sha256": "320ac626cae9855ec47fdea2beb527fb18be0152b3f1333d164f447409fbe852"
+  },
+  {
+    "path": "virtual/cm3-virtual-execution-evidence.zip",
+    "task_id": "t_f1e96835",
+    "bytes": 146740,
+    "sha256": "8f6aca1f7af73c7a9abe9f120f9eabd60820e044173cfbb3265325f4254acdf6"
+  },
+  {
+    "path": "virtual/packet-verification.json",
+    "task_id": "t_f1e96835",
+    "bytes": 341,
+    "sha256": "9bd9f5c61fb047ba39ab06de23e61c96b3ee06b6600cb73aae5ff4c6bef9d5da"
+  },
+  {
+    "path": "lifecycle/lifecycle-safety-report.txt",
+    "task_id": "t_23036e0d",
+    "bytes": 11161,
+    "sha256": "ebf63f042ab0176f7c68d5ee1dc4bb03a870b8396b861345a99a29b713cc17b0"
+  },
+  {
+    "path": "lifecycle/cm3-lifecycle-safety-evidence.zip",
+    "task_id": "t_23036e0d",
+    "bytes": 71491,
+    "sha256": "f7c2a5f5c3592f230fac05e8140dcdea5ee738b84f6f5e68438f9d5c71fdb1ff"
+  },
+  {
+    "path": "lifecycle/packet-verification.json",
+    "task_id": "t_23036e0d",
+    "bytes": 482,
+    "sha256": "8a9154d0bdeadc1dbc19e414a1f8fcd0f8eadc1818d7528d437fe2e31ba51660"
+  },
+  {
+    "path": "security/security-audit-report.txt",
+    "task_id": "t_d8a85f3e",
+    "bytes": 18204,
+    "sha256": "1be221b8b08379e50f2b3e72b9ac0a8384d70bca7b187f00141c9d53d9d9ba76"
+  },
+  {
+    "path": "security/cm3-security-audit-evidence.zip",
+    "task_id": "t_d8a85f3e",
+    "bytes": 423454,
+    "sha256": "1c964ac54403130a9f75f234443af8489cf5f992b7baed3c26612f924e2acb8b"
+  },
+  {
+    "path": "security/packet-verification.json",
+    "task_id": "t_d8a85f3e",
+    "bytes": 661,
+    "sha256": "83257b4b91b1a4adedbfe8d080096fff6ede21c5f99d282cae6771899d85eb9b"
+  },
+  {
+    "path": "negative/negative-test-report.txt",
+    "task_id": "t_52443539",
+    "bytes": 10690,
+    "sha256": "93eb8947df83e2b4a716d81ceda945240a5cf771236d7c2aa963061b203092d2"
+  },
+  {
+    "path": "negative/cm3-negative-test-evidence.zip",
+    "task_id": "t_52443539",
+    "bytes": 1052509,
+    "sha256": "6975e3169b8eb61d5c707d68f85c293c5af6a9bcab68af1e8ffb239976ff95bf"
+  },
+  {
+    "path": "negative/packet-verification.json",
+    "task_id": "t_52443539",
+    "bytes": 865,
+    "sha256": "61ca61bd5fa593bfbe130d9e7bfe965c6162d7e605dfa08f445176a81f4d893a"
+  }
+]

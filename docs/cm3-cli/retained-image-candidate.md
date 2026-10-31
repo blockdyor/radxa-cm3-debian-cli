@@ -2,6 +2,12 @@
 
 EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION
 
+Historical acquisition record. The independent inspection and extended software
+validation are now complete within their documented scopes; see the current
+[validation levels, findings and evidence index](virtual-validation-report.md).
+The pending-inspection language below records the original handoff, not current
+status. No physical hardware qualification or release is implied.
+
 This is the retained build-worker handoff, not the independent inspection verdict.
 The separate fresh-worker inspection task remains pending. No boot, flashing,
 physical-device action, production deployment or GitHub release was performed.
