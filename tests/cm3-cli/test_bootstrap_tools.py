@@ -14,6 +14,28 @@ SPEC.loader.exec_module(tools)
 
 
 class BootstrapTools(unittest.TestCase):
+    def test_jsonnet_only_reuses_verified_archive_without_frontend_or_apt(self):
+        import io
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            def isolated_path(value):
+                path = Path(value)
+                return root / path.relative_to('/usr/local') if str(path).startswith('/usr/local/') else path
+            (root / 'bin').mkdir()
+            with patch.object(tools, 'Path', side_effect=isolated_path), \
+                    patch.object(tools.os, 'geteuid', return_value=0), \
+                    patch.dict('os.environ', GITHUB_ACTIONS='true', GITHUB_REPOSITORY='blockdyor/radxa-cm3-debian-cli'), \
+                    patch.object(tools.urllib.request, 'urlopen', return_value=io.BytesIO(b'archive fixture')) as download, \
+                    patch.object(tools, 'verified_jsonnet', return_value={'jsonnet': b'binary fixture', 'LICENSE': b'notice fixture'}) as verify, \
+                    patch.object(tools.subprocess, 'run') as runner:
+                tools.main(jsonnet_only=True)
+            self.assertEqual(download.call_args.args[0], tools.JSONNET_URL)
+            self.assertEqual(download.call_count, 1)
+            self.assertEqual(verify.call_count, 1)
+            self.assertEqual([call.args[0] for call in runner.call_args_list], [['jsonnet', '--version']])
+            self.assertEqual((root / 'bin/jsonnet').read_bytes(), b'binary fixture')
+            self.assertEqual((root / 'share/doc/go-jsonnet/LICENSE').read_bytes(), b'notice fixture')
+
     def test_corrupt_download_rejected_before_package_parsing(self):
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / 'tool.deb'

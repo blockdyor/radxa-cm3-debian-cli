@@ -39,19 +39,20 @@ def verify_package(path):
         raise ValueError('unexpected builder frontend identity')
 
 
-def main():
+def main(jsonnet_only=False):
     if (os.geteuid() != 0 or os.environ.get('GITHUB_ACTIONS') != 'true' or
             os.environ.get('GITHUB_REPOSITORY') != 'blockdyor/radxa-cm3-debian-cli'):
         raise ValueError('only the disposable external builder is supported')
     with tempfile.TemporaryDirectory(prefix='cm3-bootstrap-tools-') as temporary:
-        path = Path(temporary) / 'bdebstrap.deb'
-        with urllib.request.urlopen(URL, timeout=60) as response, path.open('xb') as output:
-            shutil.copyfileobj(response, output)
-        verify_package(path)
-        # Dependencies resolve only from the builder's existing signed Trixie sources.
-        subprocess.run(['apt-get', 'install', '-y', '--no-install-recommends',
-                        'jsonnet', str(path)], check=True)
-        subprocess.run(['bdebstrap', '--help'], check=True, stdout=subprocess.DEVNULL)
+        if not jsonnet_only:
+            path = Path(temporary) / 'bdebstrap.deb'
+            with urllib.request.urlopen(URL, timeout=60) as response, path.open('xb') as output:
+                shutil.copyfileobj(response, output)
+            verify_package(path)
+            # Dependencies resolve only from the builder's existing signed Trixie sources.
+            subprocess.run(['apt-get', 'install', '-y', '--no-install-recommends',
+                            'jsonnet', str(path)], check=True)
+            subprocess.run(['bdebstrap', '--help'], check=True, stdout=subprocess.DEVNULL)
         # Trixie's C++ Jsonnet cannot render unchanged sibling std.contains calls.
         # The pinned Go implementation supports full regression parity and avoids
         # hiding that dependency failure behind skipped rendering tests.
@@ -66,8 +67,12 @@ def main():
         notice.parent.mkdir(parents=True)
         notice.write_bytes(contents['LICENSE'])
         subprocess.run(['jsonnet', '--version'], check=True)
-        print('Pinned builder frontend verified:', SHA256, flush=True)
+        if not jsonnet_only:
+            print('Pinned builder frontend verified:', SHA256, flush=True)
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--jsonnet-only', action='store_true')
+    main(parser.parse_args().jsonnet_only)

@@ -20,7 +20,11 @@ jobs:
       - name: Install only offline fixture tools on this disposable runner
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y jsonnet kmod gnupg gcc libc6-dev openssh-client
+          sudo apt-get install --no-install-recommends -y jsonnet kmod gnupg gcc-14 gcc-aarch64-linux-gnu make libc6-dev openssh-client
+          sudo --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY python3 scripts/cm3-bootstrap-tools.py --jsonnet-only
+          mkdir "$RUNNER_TEMP/cm3-tools"
+          ln -s "$(command -v gcc-14)" "$RUNNER_TEMP/cm3-tools/gcc"
+          printf '%s\n' "$RUNNER_TEMP/cm3-tools" >> "$GITHUB_PATH"
       - name: Require complete offline suite without skips (no source or image builds)
         run: |
           set -euo pipefail
