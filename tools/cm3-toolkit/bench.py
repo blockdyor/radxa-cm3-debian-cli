@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Explicit, bounded benchmark procedures. No workload runs by default."""
 import argparse
-import contextlib
 import datetime
 import hashlib
 import ipaddress
@@ -17,11 +16,11 @@ import stat
 import subprocess
 import sys
 import time
-import uuid
 
 from common import make_result, add_record, emit_result, validate_result
 
 LIMIT = 1024 * 1024
+STORAGE_DISABLED = 'live storage execution disabled: protected-volume safety not implemented'
 PROCEDURES = ('idle', 'cpu', 'memory', 'storage', 'network', 'boot-ssh')
 CONDITION_KEYS = ('image_hash', 'source_lock', 'debian', 'kernel', 'dtb', 'bootloader',
                   'firmware', 'module_revision', 'carrier_revision', 'ram_sku',
@@ -105,39 +104,9 @@ def open_directory(path):
         raise
 
 
-@contextlib.contextmanager
 def storage_file(directory, size, name=None):
-    if not 0 < size <= 64 * LIMIT:
-        raise ValueError('storage budget outside 1..64 MiB')
-    dfd = open_directory(directory)
-    fd = None
-    identity = None
-    name = name or ('cm3-bench-' + uuid.uuid4().hex + '.tmp')
-    try:
-        if Path(name).name != name or name in ('.', '..'):
-            raise ValueError('unsafe test filename')
-        space = os.fstatvfs(dfd)
-        if space.f_blocks <= 0 or space.f_frsize <= 0:
-            raise ValueError('unmeasurable disk capacity')
-        if space.f_bavail * space.f_frsize - size < space.f_blocks * space.f_frsize * .25:
-            raise ValueError('insufficient free space: 25 percent reserve required')
-        fd = os.open(name, os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
-        st = os.fstat(fd)
-        if not stat.S_ISREG(st.st_mode) or st.st_uid != os.getuid():
-            raise ValueError('test file not regular/owned')
-        identity = (st.st_dev, st.st_ino)
-        yield fd
-    finally:
-        if fd is not None:
-            os.close(fd)
-        if identity is not None:
-            try:
-                st = os.stat(name, dir_fd=dfd, follow_symlinks=False)
-                if identity == (st.st_dev, st.st_ino):
-                    os.unlink(name, dir_fd=dfd)
-            except FileNotFoundError:
-                pass
-        os.close(dfd)
+    # Path approval alone cannot establish expendable backing-volume identity.
+    raise ValueError(STORAGE_DISABLED)
 
 
 def run_process(argv, timeout, monitor=None, pass_fds=()):
@@ -240,19 +209,6 @@ while time.monotonic()<end:
  start=time.monotonic(); time.sleep(.01); delays.append(max(0,time.monotonic()-start-.01)); n+=1
 print(json.dumps({'allocated_bytes':size,'wake_lateness_ms':[x*1000 for x in delays]}))
 '''
-STORAGE_CODE = '''import json,os,sys,time
-fd=int(sys.argv[1]); size=int(sys.argv[2]); block=os.urandom(65536); written=0; lat=[]; start=time.monotonic()
-while written<size:
- t=time.monotonic(); n=os.write(fd,block[:min(len(block),size-written)]); os.fsync(fd); lat.append((time.monotonic()-t)*1000)
- if n<=0: raise RuntimeError('short write')
- written+=n
-write_s=time.monotonic()-start; os.lseek(fd,0,0); start=time.monotonic(); read=0
-while read<size:
- chunk=os.read(fd,min(65536,size-read))
- if not chunk: raise RuntimeError('short read')
- read+=len(chunk)
-print(json.dumps({'bytes':written,'write_s':write_s,'read_s':time.monotonic()-start,'write_fsync_latency_ms':lat}))
-'''
 
 
 def sample_idle(duration):
@@ -322,10 +278,7 @@ def execute_live(args, conditions, runner=run_process):
         raw['thermal_samples'] = samples
         return raw
     if args.procedure == 'storage':
-        with storage_file(args.approved_dir, args.file_mib*LIMIT) as fd:
-            out, _ = runner([sys.executable, '-c', STORAGE_CODE, str(fd), str(args.file_mib*LIMIT)],
-                            duration+2, pass_fds=(fd,))
-        return json.loads(out)
+        storage_file(args.approved_dir, args.file_mib*LIMIT)
     ping, iperf = shutil.which('ping'), shutil.which('iperf3')
     if not ping or not iperf:
         raise FileNotFoundError('tool-missing: ping/iperf3')
@@ -467,6 +420,8 @@ def build(args):
         raise ValueError('--allow-load required')
     if args.procedure == 'storage' and (not args.allow_write or not args.approved_dir):
         raise ValueError('--allow-write and --approved-dir required')
+    if args.procedure == 'storage' and not synthetic:
+        storage_file(args.approved_dir, args.file_mib*LIMIT)
     if args.procedure == 'network' and (not args.allow_network or not args.peer):
         raise ValueError('--allow-network and --peer required')
     start = time.monotonic()
@@ -510,6 +465,9 @@ def main():
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, interrupted)
     args = parser().parse_args()
+    if args.procedure == 'storage' and args.execute and not args.fixture_root:
+        print(STORAGE_DISABLED, file=sys.stderr)
+        return 2
     output_fd = None
     result = None
     try:

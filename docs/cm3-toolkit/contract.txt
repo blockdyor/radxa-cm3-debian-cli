@@ -71,7 +71,7 @@ python3 -m unittest discover -s tests/cm3-toolkit -p 'test_*.py'
 Collect without fixture is bounded allowlisted inspection, not an automatic
 hardware run in this phase. Bench without --execute returns a plan and starts
 NO workloads/probes. Idle execution needs --execute; CPU/memory need both
---execute --allow-load; storage additionally --allow-write --approved-dir;
+--execute --allow-load; storage flags are fixture-only; live storage is disabled;
 network additionally --allow-network --peer. Boot-SSH requires separate external
 observer event input, never reboots or initiates power control. Execution flag
 is not authority: conditions must cite separately approved test scope. Fixture

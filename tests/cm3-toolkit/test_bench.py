@@ -79,30 +79,7 @@ class BenchTests(unittest.TestCase):
         self.assertEqual(code, 4)
         validate_result(result)
 
-    def test_storage_cleanup_and_existing_rejection(self):
-        with tempfile.TemporaryDirectory() as td:
-            with bench.storage_file(td, 1024, 'owned') as fd:
-                os.write(fd, b'fixture')
-                self.assertTrue((Path(td)/'owned').exists())
-            self.assertFalse((Path(td)/'owned').exists())
-            (Path(td)/'existing').write_text('user data')
-            with self.assertRaises(FileExistsError):
-                with bench.storage_file(td, 1024, 'existing'):
-                    pass
-            self.assertEqual((Path(td)/'existing').read_text(), 'user data')
-            with self.assertRaises(RuntimeError):
-                with bench.storage_file(td, 1024, 'exception'):
-                    raise RuntimeError('fixture')
-            self.assertFalse((Path(td)/'exception').exists())
-
-    def test_cleanup_preserves_replacement(self):
-        with tempfile.TemporaryDirectory() as td:
-            with bench.storage_file(td, 1024, 'test'):
-                (Path(td)/'test').rename(Path(td)/'original')
-                (Path(td)/'test').write_text('replacement')
-            self.assertEqual((Path(td)/'test').read_text(), 'replacement')
-
-    def test_safe_paths_and_space(self):
+    def test_safe_directory_paths(self):
         for path in ('/dev', '/proc', '/sys', '/', '/etc', 'relative', '/opt/../dev'):
             with self.assertRaises(ValueError):
                 bench.open_directory(path)
@@ -110,14 +87,6 @@ class BenchTests(unittest.TestCase):
             (Path(td)/'link').symlink_to(td, target_is_directory=True)
             with self.assertRaises(OSError):
                 bench.open_directory(str(Path(td)/'link'))
-            with self.assertRaises(ValueError):
-                with bench.storage_file(td, 1024, '../escape'):
-                    pass
-            space = os.statvfs_result((1, 1, 100, 10, 10, 0, 0, 0, 0, 255))
-            with patch.object(os, 'fstatvfs', return_value=space):
-                with self.assertRaises(ValueError):
-                    with bench.storage_file(td, 1):
-                        pass
             self.assertEqual(list(Path(td).iterdir()), [Path(td)/'link'])
 
     def test_timeout_cleanup_descendant(self):
@@ -200,17 +169,6 @@ class BenchTests(unittest.TestCase):
         with patch.object(bench.shutil, 'which', return_value=None):
             with self.assertRaises(FileNotFoundError):
                 bench.execute_live(args, {}, runner=fake)
-
-    def test_storage_timeout_cleanup(self):
-        args = self.args('storage', '--execute', '--allow-load', '--allow-write')
-        args.duration_s = 1
-        def timeout(*a, **kw):
-            raise TimeoutError('fixture deadline')
-        with tempfile.TemporaryDirectory() as td:
-            args.approved_dir = td
-            with self.assertRaises(TimeoutError):
-                bench.execute_live(args, {}, runner=timeout)
-            self.assertEqual(list(Path(td).iterdir()), [])
 
 
 if __name__ == '__main__':

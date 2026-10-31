@@ -1,4 +1,4 @@
-CM3 TOOLKIT RUNBOOK — TOOLKIT READY, HARDWARE UNTESTED
+CM3 TOOLKIT RUNBOOK — LIVE STORAGE DISABLED, HARDWARE UNTESTED
 
 Scope and entry point
   Run all commands from the repository root. Python 3 standard library on Linux;
@@ -33,14 +33,15 @@ Separate approval required before ALL following target commands
   PSU/undervoltage fault, corruption, kernel errors or lost mandatory interface.
   User-space sampling is not an interlock and cannot rescue a failed kernel.
 
-  Choose an existing dedicated operator-owned scratch directory without symlinks
-  or concurrent writers, on expendable approved media; not /dev, /proc, /sys,
-  /etc or /boot. Approve at most 64 MiB written once/invocation, leave >=25% of
-  filesystem capacity free afterwards, and set a finite aggregate repeat budget.
-  No existing user file/raw device can be selected as a workload file. Random
-  owned O_EXCL/O_NOFOLLOW files are removed with identity checks on normal/error
-  unwind; SIGKILL/power loss may leave an owned file requiring manual inspection.
-  Kernel uninterruptible I/O can exceed a user-space deadline.
+  LIVE STORAGE IS DISABLED (audit F02). --approved-dir and a scope string do
+  not prove an expendable backing volume. The CLI, live executor and file helper
+  refuse before creating a workload file or launching a storage child, even with
+  all opt-in flags. Do not use an older toolkit revision to bypass this refusal.
+  Storage plans, synthetic fixture parsing and offline reports remain available.
+  This contains unsafe execution; it does NOT implement topology validation or
+  complete storage-test readiness. Re-enabling needs a separately reviewed
+  protected-volume/ancestry/identity policy and regression evidence. No hardware
+  test is authorized here; all original storage/compatibility gates remain open.
 
   CPU/memory require a valid thermal zone and observer. Single CPU worker only.
   Memory <=min(request,256 MiB,25% available,available minus reserve); reserve is
@@ -98,7 +99,7 @@ Target commands — documentation only, NOT EXECUTED for this delivery
     python3 tools/cm3-toolkit/bench.py idle --execute --duration-s 5 --conditions /approved/results/idle-conditions.json --output /approved/results/idle-r1.json
     python3 tools/cm3-toolkit/bench.py cpu --execute --allow-load --duration-s 10 --conditions /approved/results/cpu-conditions.json --output /approved/results/cpu-r1.json
     python3 tools/cm3-toolkit/bench.py memory --execute --allow-load --duration-s 10 --memory-mib 64 --conditions /approved/results/memory-conditions.json --output /approved/results/memory-r1.json
-    python3 tools/cm3-toolkit/bench.py storage --execute --allow-load --allow-write --duration-s 10 --file-mib 16 --approved-dir /approved/scratch --conditions /approved/results/storage-conditions.json --output /approved/results/storage-r1.json
+    Storage: no live execution command is supported; plan/fixture/report only.
     python3 tools/cm3-toolkit/bench.py network --execute --allow-load --allow-network --peer 192.0.2.1 --duration-s 10 --conditions /approved/results/network-conditions.json --output /approved/results/network-r1.json
   192.0.2.1 is documentation-only; replace with the individually approved peer.
   For separately authorized sustained work use protocol_id cm3-cpu-sustained/v1
@@ -107,7 +108,7 @@ Target commands — documentation only, NOT EXECUTED for this delivery
   A 600-second single-worker observation cannot satisfy G6's 15-minute windows,
   three thermal runs or 8-hour soak. These require a separate approved protocol.
   Memory wake lateness is not authenticated SSH latency or memory correctness.
-  Storage readback is cache-affected, not cold-media throughput. No watts/energy
+  Synthetic storage readback is not physical throughput evidence. No watts/energy
   claims without an external meter/uncertainty. See benchmarks.txt for definitions.
 
 External boot-to-SSH timing

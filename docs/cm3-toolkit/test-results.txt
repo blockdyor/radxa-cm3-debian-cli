@@ -1,4 +1,18 @@
 CM3 TOOLKIT OFFLINE TEST RESULTS
+
+2026-10-31 F02 containment update (supersedes live-storage readiness below):
+  Fresh complete toolkit suite: 63 tests, 49.971 seconds, zero failures/skips.
+  Fresh existing branch cm3-cli suite: 9 tests, zero failures/skips.
+  Source-lock validation and git diff --check passed. No image build or target run.
+  Watched new refusal tests fail on the original code, then pass after removal
+  of the live storage writer. CLI, direct executor and helper refuse before
+  workload creation; existing files/aliases remain untouched. Synthetic storage,
+  all non-executing plans, collector and reporting checks still pass.
+  Three obsolete storage-write/cleanup tests were replaced by six fail-closed
+  regressions; this is NOT new protected-volume/topology implementation.
+  Live storage readiness remains OPEN; all hardware rows remain UNTESTED.
+
+HISTORICAL INTEGRATION RESULTS — unchanged original evidence follows:
 Verified 2026-10-25 UTC; integration task t_dbbb5b95.
 
 Base: dba5cba3eafb948a22787560bea56da2b9f8f163
