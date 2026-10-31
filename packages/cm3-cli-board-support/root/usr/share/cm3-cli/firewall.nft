@@ -1,0 +1,15 @@
+#!/usr/sbin/nft -f
+# Only this table is owned here; never globally flush unrelated rules.
+add table inet cm3_cli
+flush table inet cm3_cli
+add chain inet cm3_cli input { type filter hook input priority 0; policy drop; }
+add chain inet cm3_cli forward { type filter hook forward priority 0; policy drop; }
+add chain inet cm3_cli output { type filter hook output priority 0; policy accept; }
+add rule inet cm3_cli input iifname "lo" accept
+add rule inet cm3_cli input ct state established,related accept
+add rule inet cm3_cli input ct state invalid drop
+add rule inet cm3_cli input meta l4proto icmp accept
+add rule inet cm3_cli input meta l4proto ipv6-icmp accept
+add rule inet cm3_cli input udp sport 67 udp dport 68 accept
+add rule inet cm3_cli input udp sport 547 udp dport 546 accept
+add rule inet cm3_cli input tcp dport 22 ct state new accept

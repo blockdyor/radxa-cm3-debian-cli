@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+if [ "$1" = configure ]; then
+    install -d -m 0755 /etc/cm3-cli /etc/cm3-cli/authorized_keys
+    install -d -m 0700 /var/lib/cm3-cli
+    # Apply policy on board-package upgrades too, not only on kernel installs.
+    update-initramfs -u -k all
+    /usr/lib/cm3-cli/boot-update
+    # Enable only; package configuration must not start services in the builder.
+    systemctl --root=/ enable cm3-cli-firewall.service cm3-cli-enroll.service ssh.service NetworkManager.service systemd-timesyncd.service apparmor.service serial-getty@ttyFIQ0.service
+    systemctl --root=/ set-default multi-user.target
+    rm -f /etc/ssh/sshd_config.d/00-cm3-cli-removed.conf
+fi

@@ -1,0 +1,11 @@
+Package: cm3-cli-board-support
+Version: 0.1.0
+Section: admin
+Priority: optional
+Architecture: all
+Maintainer: blockdyor <noreply@users.noreply.github.com>
+Depends: python3, bash, coreutils, adduser, passwd, openssh-server, sudo, systemd, systemd-sysv, udev, initramfs-tools, u-boot-menu, e2fsprogs, util-linux, apparmor, apparmor-profiles, network-manager, systemd-timesyncd, nftables, linux-image-radxa-cm3-rpi-cm4-io (= 6.1.84-18+cm3cli1), linux-headers-radxa-cm3-rpi-cm4-io (= 6.1.84-18+cm3cli1), u-boot-radxa-cm3-rpi-cm4-io (= 2017.09-71+cm3cli1), radxa-overlays-dkms (= 0.2.25+cm3cli1), radxa-bootutils (= 0.2.6+cm3cli1), radxa-udev (= 0.1.4+cm3cli1), dkms, gcc, make, libc6-dev, libssl-dev, libelf-dev, device-tree-compiler, grep
+Conflicts: rsetup, radxa-system-config-common, radxa-system-config-kernel-cmdline-ttyfiq0
+Description: Experimental exact-carrier CM3 CLI boot and key enrollment policy
+ Radxa CM3/RK3566 on Raspberry Pi CM4 IO only. No default credentials,
+ image assembly, media writes, hardware qualification or performance claims.

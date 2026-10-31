@@ -13,6 +13,9 @@
 
 # Build output
 /out
+/package-work
+/preflight-work
+__pycache__/
 
 # Local VS Code configuration
 /.vscode*

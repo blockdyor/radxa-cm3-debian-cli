@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+"""External source-package probe. Never assembles an image or touches media."""
+
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import shlex
+import shutil
+import subprocess
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+TARGET = {
+    'product': 'radxa-cm3-rpi-cm4-io', 'soc': 'rk3566', 'suite': 'trixie',
+    'edition': 'cli', 'architecture': 'arm64', 'sector_size': 512,
+}
+RECIPES = {'linux-rk2410-nocsf', 'u-boot-rk2601', 'radxa-overlays',
+           'radxa-bootutils', 'radxa-udev'}
+# Exact inputs at the locked rkbin commit, including the proprietary tool/notice.
+RKBIN_INPUTS = {
+    'LICENSE': 'd2765124a2c24d71aba3cbc6cdd6975a5a297821264eb6c26378a4c16cd16e92',
+    'RKBOOT/RK3566MINIALL.ini': 'fd2deb59cc2f5b0aeae8a2b035fdbde289944897c7014adb9f359db8f9c8ef16',
+    'bin/rk35/rk3566_ddr_1056MHz_v1.25.bin': 'c2a1b37673bf03ed338bc39efbe942136459cb3621dad09351144d744d78db26',
+    'bin/rk35/rk356x_usbplug_v1.17.bin': '4038b7857b840f539760decc0daf1601b8ff61cc17798101e93b11128a7f333e',
+    'bin/rk35/rk3568_bl31_v1.46.elf': 'c81ac7e8e1fd727cf7f0db62a9aaea760bde2b270e34d98eb264a264b86df749',
+    'tools/boot_merger': 'a431921abe40207cda19c271fc7b47144c735172f542a0153754601802704f58',
+}
+
+
+def load_lock(path):
+    lock = json.loads(Path(path).read_text())
+    if lock['schema_version'] != 1 or lock['target'] != TARGET:
+        raise ValueError('not the exact CM3/Trixie/CLI/ARM64/512 target')
+    if len(lock['recipes']) != 5 or {r['name'] for r in lock['recipes']} != RECIPES:
+        raise ValueError('expected the five audited recipe projects')
+    for recipe in [*lock['recipes'], lock['configuration_reference']]:
+        for source in [recipe, *recipe.get('gitlinks', {}).values()]:
+            if not re.fullmatch(r'[0-9a-f]{40}', source['commit']):
+                raise ValueError('source must use a full lowercase commit ID')
+            if not re.fullmatch(r'radxa(?:-pkg)?/[a-zA-Z0-9_.-]+', source['repository']):
+                raise ValueError('unexpected source repository')
+    for field in ['builder_image', 'binfmt_image']:
+        if not re.fullmatch(r'[a-z0-9/.-]+@sha256:[0-9a-f]{64}', lock[field]):
+            raise ValueError('OCI inputs must be digest-pinned')
+    if lock['packaging_suffix'] != '+cm3cli1':
+        raise ValueError('unexpected packaging version policy')
+    return lock
+
+
+def expected_packages(lock):
+    versions = {r['name']: r['version'] + lock['packaging_suffix'] for r in lock['recipes']}
+    kernel = versions['linux-rk2410-nocsf']
+    loader = versions['u-boot-rk2601']
+    return {
+        'linux-image-radxa-cm3-rpi-cm4-io': (kernel, 'all'),
+        'linux-headers-radxa-cm3-rpi-cm4-io': (kernel, 'all'),
+        f'linux-image-{kernel}-rk2410-nocsf': (kernel, 'arm64'),
+        f'linux-headers-{kernel}-rk2410-nocsf': (kernel, 'arm64'),
+        'u-boot-radxa-cm3-rpi-cm4-io': (loader, 'all'),
+        'u-boot-rk2601': (loader, 'all'),
+        'radxa-overlays-dkms': (versions['radxa-overlays'], 'all'),
+        'radxa-bootutils': (versions['radxa-bootutils'], 'all'),
+        'radxa-udev': (versions['radxa-udev'], 'all'),
+    }
+
+
+def verify_kernel_config(text):
+    settings = {}
+    for line in text.splitlines():
+        if re.match(r'^CONFIG_[A-Z0-9_]+=', line):
+            name, value = line.split('=', 1)
+            if name in settings:
+                raise ValueError('duplicate kernel configuration: ' + name)
+            settings[name] = value
+    builtin = '''BLK_DEV_INITRD RD_GZIP MODULES CGROUPS NAMESPACES UTS_NS IPC_NS
+USER_NS PID_NS NET_NS SECCOMP SECCOMP_FILTER MULTIUSER SECURITY SECURITYFS
+SECURITY_APPARMOR'''.split()
+    modular = 'OVERLAY_FS BRIDGE BRIDGE_NETFILTER NETFILTER NF_TABLES TUN IPV6'.split()
+    for names, allowed in [(builtin, {'y'}), (modular, {'y', 'm'})]:
+        for name in names:
+            symbol = 'CONFIG_' + name
+            if settings.get(symbol) not in allowed:
+                raise ValueError('required kernel support absent: ' + symbol)
+    # Compiled support is not proof of an active target LSM or loaded policy.
+
+
+def run(*args, cwd=None, capture=False):
+    print('+', ' '.join(map(str, args)), flush=True)
+    return subprocess.run(list(map(str, args)), cwd=cwd, check=True, text=True,
+                          stdout=subprocess.PIPE if capture else None).stdout
+
+
+def checkout(source, destination):
+    destination.mkdir()
+    run('git', 'init', '--quiet', destination)
+    run('git', '-C', destination, 'remote', 'add', 'origin',
+        'https://github.com/' + source['repository'] + '.git')
+    run('git', '-C', destination, 'fetch', '--depth=1', '--no-tags', 'origin', source['commit'])
+    run('git', '-C', destination, 'checkout', '--detach', 'FETCH_HEAD')
+    actual = run('git', '-C', destination, 'rev-parse', 'HEAD', capture=True).strip()
+    if actual != source['commit']:
+        raise ValueError('source checkout drift')
+    tree = run('git', '-C', destination, 'ls-tree', '-r', 'HEAD', capture=True)
+    actual_links = {}
+    for line in tree.splitlines():
+        metadata, path = line.split('\t', 1)
+        mode, _, revision = metadata.split()
+        if mode == '160000':
+            actual_links[path] = revision
+    links = source.get('gitlinks', {})
+    if actual_links != {name: item['commit'] for name, item in links.items()}:
+        raise ValueError(f'unreviewed gitlink closure: {actual_links}')
+    for name, item in links.items():
+        path = destination / name
+        if path.is_dir():
+            path.rmdir()  # Git creates empty gitlink directories.
+        checkout(item, path)
+
+
+def local_patch(recipe, name, before, after):
+    path = recipe / name
+    text = path.read_text()
+    if text.count(before) != 1:
+        raise ValueError(f'patch context drift: {path}')
+    path.write_text(text.replace(before, after))
+
+
+def prepare_kernel_recipe(source, evidence):
+    local_patch(source, 'Makefile.extra', 'DPKG_FLAGS ?= -d', 'DPKG_FLAGS ?=')
+    local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
+    # HOSTCC intentionally produces ARM64 header helpers, not native AMD64 tools.
+    flags = {name: run('env', 'DEB_HOST_ARCH=arm64', 'dpkg-buildflags', '--get', name,
+                       capture=True).strip()
+             for name in ['CFLAGS', 'CPPFLAGS', 'CXXFLAGS', 'LDFLAGS']}
+    definitions = ' '.join(name + '=' + shlex.quote(value) for name, value in {
+        'HOSTCFLAGS': flags['CFLAGS'] + ' ' + flags['CPPFLAGS'],
+        'HOSTCXXFLAGS': flags['CXXFLAGS'] + ' ' + flags['CPPFLAGS'],
+        'HOSTLDFLAGS': flags['LDFLAGS'],
+    }.items())
+    local_patch(source, '.github/local/Makefile.local',
+                'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config',
+                'KERNEL_DEFCONFIG := rockchip_linux_defconfig rk3576.config radxa.config radxa_custom.config\n'
+                'CUSTOM_MAKE_DEFINITIONS := ' + definitions + '\n'
+                '# Do not race configuration against compilation under make -j2.\n'
+                'build-all: build-defconfig')
+    (evidence / 'kernel-helper-flags.json').write_text(json.dumps(flags, indent=2) + '\n')
+    # Clean parses resolve_btfids' LP64 probe with target CC but inherited AMD64 CFLAGS.
+    local_patch(source, 'src/Makefile',
+                'O=$(resolve_btfids_O) clean',
+                'O=$(resolve_btfids_O) CFLAGS="$(HOSTCFLAGS)" clean')
+    # Backport Linux 6ff09b6b8c2fb6b3edda4ffaa173153a40653067, context unchanged.
+    local_patch(source, 'src/fs/btrfs/send.c',
+                'kvcalloc(sizeof(*sctx->clone_roots),\n'
+                '\t\t\t\t     arg->clone_sources_count + 1,',
+                'kvcalloc(arg->clone_sources_count + 1,\n'
+                '\t\t\t\t     sizeof(*sctx->clone_roots),')
+
+
+def verify_loader_inputs(source, evidence):
+    rkbin = source / 'rkbin'
+    for name, expected in RKBIN_INPUTS.items():
+        relative = Path('rkbin') / name
+        path = source / relative
+        if (any((source / p).is_symlink() for p in [relative, *relative.parents]) or
+                not path.is_file()):
+            raise ValueError('loader inputs must be regular non-symlink files')
+        with path.open('rb') as stream:
+            if hashlib.file_digest(stream, 'sha256').hexdigest() != expected:
+                raise ValueError('loader input hash drift: ' + name)
+    alias = rkbin / 'bin/rk35/rk3566_bl31_v1.46.elf'
+    if not alias.is_symlink() or os.readlink(alias) != 'rk3568_bl31_v1.46.elf':
+        raise ValueError('unexpected RK3566 BL31 alias')
+    # dh_installdocs preserves Rockchip's notice alongside the existing GPL copyright.
+    with (source / 'debian/u-boot-rk2601.docs').open('x') as stream:
+        stream.write('rkbin/LICENSE\n')
+    report = {'sha256': RKBIN_INPUTS, 'bl31_alias': os.readlink(alias),
+              'license_text': (rkbin / 'LICENSE').read_text(),
+              'distribution_review': 'INCOMPLETE: full corresponding-source and payload review required'}
+    (evidence / 'loader-inputs.json').write_text(json.dumps(report, indent=2) + '\n')
+
+
+def prepare_overlay_license(source):
+    # Official Radxa issue606 closing commit; metadata only, no source upgrade.
+    patch = ROOT / 'project/cm3-cli/overlay-license.patch'
+    if hashlib.sha256(patch.read_bytes()).hexdigest() != 'e08dd7d5f575c557653f2cc72669d9deb1622da95bdd5951e2afd531ddaedce7':
+        raise ValueError('official overlay clarification patch changed')
+    run('git', '-C', source, 'apply', '--check', patch)
+    run('git', '-C', source, 'apply', patch)
+
+
+def build_recipe(recipe, lock, work, evidence):
+    source = work / recipe['name']
+    checkout(recipe, source)
+    version = run('dpkg-parsechangelog', '-S', 'Version', cwd=source, capture=True).strip()
+    if version != recipe['version']:
+        raise ValueError(f'upstream package version drift: {version}')
+    # Install and check declared Build-Depends; never use upstream's default -d.
+    run('apt-get', 'build-dep', '--no-install-recommends', '-y', '.', cwd=source)
+    run('dpkg-checkbuilddeps', cwd=source)
+    run('dch', '--newversion', version + lock['packaging_suffix'], '--distribution', 'trixie',
+        '--force-distribution', 'Exact-carrier experimental rebuild; source pins in source-lock.json.',
+        cwd=source)
+    if recipe['name'] == 'linux-rk2410-nocsf':
+        prepare_kernel_recipe(source, evidence)
+        # dpkg-source applies the two recorded config patches before dh_auto_build.
+        run('dpkg-source', '--before-build', '.', cwd=source)
+        for name in ['radxa.config', 'radxa_custom.config']:
+            if not (source / 'src/arch/arm64/configs' / name).is_file():
+                raise ValueError('required kernel configuration patch not applied')
+    if recipe['name'] == 'u-boot-rk2601':
+        verify_loader_inputs(source, evidence)
+        run('git', '-C', source, 'add', '--intent-to-add', 'debian/u-boot-rk2601.docs')
+        # The first successful fuel-gauge poll still gates display/boot decisions.
+        # Explicit zero defaults let GCC 14 prove the cached diagnostic values safe.
+        local_patch(source, 'src/drivers/power/charge_animation.c',
+                    '\tint soc, voltage, current, key_state;',
+                    '\tint soc = 0, voltage, current = 0, key_state;')
+        path = source / '.github/local/Makefile.local'
+        text = path.read_text()
+        _, separator, rest = text.partition('PACKING_VARIANTS :=')
+        if not separator:
+            raise ValueError('loader recipe shape changed')
+        path.write_text('UBOOT_PRODUCTS := radxa-cm3-rpi-cm4-io\n\nPACKING_VARIANTS :=' + rest)
+        local_patch(source, '.github/local/Makefile.local',
+                    'BL31=$(call find_latest_file,rkbin/bin,"$(1)_bl31_v*.elf")',
+                    'BL31=$(abspath rkbin/bin/rk35/rk3568_bl31_v1.46.elf)')
+        local_patch(source, 'Makefile.extra', '-j$(shell nproc)', '-j2')
+        run('file', source / 'rkbin/tools/boot_merger')
+        run('readelf', '-l', source / 'rkbin/tools/boot_merger')
+    if recipe['name'] == 'radxa-overlays':
+        prepare_overlay_license(source)
+    (evidence / (recipe['name'] + '-local.diff')).write_text(
+        run('git', '-C', source, 'diff', '--binary', capture=True))
+    for name in recipe.get('gitlinks', {}):
+        (evidence / (recipe['name'] + '-' + name + '-local.diff')).write_text(
+            run('git', '-C', source / name, 'diff', '--binary', capture=True))
+    run('dpkg-buildpackage', '--no-sign', '-b', '-j2', cwd=source)
+    if recipe['name'] == 'linux-rk2410-nocsf':
+        shutil.copyfile(source / 'src/.config', evidence / 'kernel.config')
+        verify_kernel_config((evidence / 'kernel.config').read_text())
+    for suffix in ['*.buildinfo', '*.changes']:
+        for path in work.glob(suffix):
+            shutil.copyfile(path, evidence / path.name)
+
+
+def inspect_packages(lock, work, evidence):
+    expected = expected_packages(lock)
+    found = {}
+    output = work / 'selected-debs'
+    output.mkdir()
+    for deb in sorted(work.glob('*.deb')):
+        fields = run('dpkg-deb', '--show', '--showformat=${Package}\t${Version}\t${Architecture}\n',
+                     deb, capture=True).strip().split('\t')
+        name, version, arch = fields
+        if name not in expected:
+            continue
+        if (version, arch) != expected[name] or name in found:
+            raise ValueError(f'package identity mismatch: {fields}')
+        with deb.open('rb') as stream:
+            digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+        found[name] = {'version': version, 'architecture': arch, 'sha256': digest}
+        shutil.copyfile(deb, output / deb.name)
+    if set(found) != set(expected):
+        raise ValueError(f'missing exact packages: {sorted(set(expected) - set(found))}')
+    (evidence / 'bsp-manifest.json').write_text(json.dumps(found, indent=2) + '\n')
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--lock', type=Path, default=ROOT / 'project/cm3-cli/source-lock.json')
+    parser.add_argument('--workdir', type=Path)
+    parser.add_argument('--check-lock', action='store_true')
+    args = parser.parse_args()
+    # CLI builds and their evidence must use the same checked-in lock as admission.
+    lock_path = ROOT / 'project/cm3-cli/source-lock.json'
+    if args.lock.resolve() != lock_path:
+        parser.error('--lock must identify the checked-in source lock')
+    lock = load_lock(lock_path)
+    if args.check_lock:
+        print(json.dumps({'target': lock['target'], 'packages': expected_packages(lock)}, indent=2))
+        return
+    if (os.environ.get('GITHUB_ACTIONS') != 'true' or
+            os.environ.get('GITHUB_REPOSITORY') != 'blockdyor/radxa-cm3-debian-cli' or
+            platform.machine() != 'x86_64' or os.geteuid() != 0):
+        parser.error('package builds are restricted to the external AMD64 CI container')
+
+    admission_path = ROOT / 'preflight-work/evidence/package-admission.json'
+    if not admission_path.is_file():
+        parser.error('verified Actions package admission required before compilation')
+    admission = json.loads(admission_path.read_text())
+    if (admission['status'] != 'ADMITTED' or admission['maximum_attempts'] is not None or
+            admission.get('authorization') != 'owner-2026-10-29-evidence-based-development' or
+            admission['cumulative_attempts'] < 1 or
+            str(admission['run_id']) != os.environ.get('GITHUB_RUN_ID') or
+            admission['commit'] != os.environ.get('GITHUB_SHA')):
+        parser.error('package admission does not match this run/revision/budget')
+    if args.workdir is None or not args.workdir.is_absolute():
+        parser.error('an explicit absolute, empty workdir is required')
+    work = args.workdir
+    if not work.is_dir() or any(work.iterdir()):
+        parser.error('workdir must exist and be empty; no stale artifact reuse')
+    evidence = work / 'evidence'
+    evidence.mkdir()
+    os.environ.update(DEBIAN_FRONTEND='noninteractive', DEBFULLNAME='CM3 CLI project',
+                      DEBEMAIL='noreply@users.noreply.github.com', DEB_BUILD_OPTIONS='parallel=2')
+    started = time.time()
+    result = {'stage': 'source-package-build', 'status': 'FAIL',
+              'full_package_preflight': 'NOT RUN', 'image_build': 'NOT RUN'}
+    shutil.copyfile(lock_path, evidence / 'source-lock.json')
+    try:
+        sources = Path('/etc/apt/sources.list.d/debian.sources')
+        if not sources.is_file() or 'trixie' not in sources.read_text():
+            raise ValueError('builder is not the expected Trixie container')
+        run('dpkg', '--add-architecture', 'arm64')
+        run('apt-get', '-o', 'APT::Update::Error-Mode=any', '-o', 'Debug::Acquire::gpgv=true', 'update')
+        run('apt-get', 'install', '--no-install-recommends', '-y',
+            'ca-certificates', 'git', 'build-essential', 'devscripts', 'debhelper', 'fakeroot',
+            'crossbuild-essential-arm64', 'qemu-user-static', 'binutils', 'file',
+            'libssl-dev:arm64', 'libelf-dev:arm64', 'libncurses-dev:arm64', 'libyaml-dev:arm64',
+            'bc', 'cpio', 'kmod', 'flex', 'bison', 'libelf-dev', 'dwarves', 'rsync')
+        hello = work / 'arm64-probe.c'
+        hello.write_text('int main(void) { return 0; }\n')
+        run('aarch64-linux-gnu-gcc', hello, '-o', work / 'arm64-probe')
+        run(work / 'arm64-probe')
+        for recipe in lock['recipes']:
+            build_recipe(recipe, lock, work, evidence)
+        inspect_packages(lock, work, evidence)
+        result['status'] = 'PASS'
+    finally:
+        (evidence / 'builder-packages.tsv').write_text(run(
+            'dpkg-query', '-W', '-f=${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\n',
+            capture=True))
+        result['elapsed_seconds'] = round(time.time() - started, 2)
+        (evidence / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+        shutil.copyfile('/etc/apt/sources.list.d/debian.sources', evidence / 'builder-debian.sources')
+        for path in Path('/var/lib/apt/lists').glob('*InRelease'):
+            shutil.copyfile(path, evidence / path.name)
+
+
+if __name__ == '__main__':
+    main()
