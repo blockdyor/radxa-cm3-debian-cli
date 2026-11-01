@@ -167,7 +167,7 @@ def diagnostics(work):
              'Source: ' + revision + '\nRun: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/' + run_id + '\n'
              'Raw image SHA256: ' + result['image_sha256'] + '\nRaw image bytes: ' + str(result['image_bytes']) + '\n'
              'Compressed image SHA256: ' + result['compressed_sha256'] + '\nCompressed bytes: ' + str(result['compressed_bytes']) + '\n\n'
-             'BUILD-ONLY: payloads are not uploaded or retained; discarded with the disposable runner.\n'
+             'BUILD-ONLY: no public payload upload; allowlisted producer outputs have encrypted internal recovery.\n'
              'Diagnostics-only mode; no payload or corresponding sources delivered.\n'
              'No default owner, passwords, SSH host keys or private credentials are supplied.\n'
              'Owner document schema/validation: scripts/cm3-owner-config.py in corresponding builder sources.\n'
@@ -184,7 +184,7 @@ def diagnostics(work):
     (destination / 'IMAGE-XZ-SHA256SUMS').write_text(result['compressed_sha256'] + '  ' + assembly.NAME + '.xz\n')
     engineering = dict(label=LABEL, source_revision=revision, run_id=run_id,
                        engineering='PASS', redistribution='NOT REQUESTED: diagnostics only',
-                       payload='NOT RETAINED; discarded with disposable runner',
+                       payload='No public payload; allowlisted producer outputs retained by encrypted internal recovery',
                        image_sha256=result['image_sha256'], compressed_sha256=result['compressed_sha256'],
                        image_bytes=result['image_bytes'], compressed_bytes=result['compressed_bytes'],
                        hardware='UNTESTED',

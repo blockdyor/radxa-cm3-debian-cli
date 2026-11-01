@@ -95,3 +95,8 @@ header-only templates are reported separately. This is not literal zero PEM
 bytes, global secret certification or deleted/free-space forensic inspection.
 Reports, package-chain material and unchanged notices/sources must survive final
 retention and independent corrected-payload review before release acceptance.
+The workflow also encrypts allowlisted producer deliverables if image inspection
+or public staging fails. It retains the exact XZ when its decompression matches
+raw SHA256; otherwise failed raw bytes are retained too. This recovery includes
+completed hash-bound source/notices/chain files, not arbitrary roots, keys or
+private investigation archives. It does not qualify failed bytes for release.
