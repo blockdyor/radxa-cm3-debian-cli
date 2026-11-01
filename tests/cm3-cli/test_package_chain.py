@@ -1,6 +1,7 @@
 """Real signed, disposable repository fixtures; no installation or storage writes."""
 import hashlib
 import importlib.util
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -15,6 +16,37 @@ SPEC.loader.exec_module(chain)
 
 
 class IdentityTests(unittest.TestCase):
+    def test_only_exact_guest_local_aliases_use_regular_in_root_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            lists = root / 'var/lib/apt/lists'
+            lists.mkdir(parents=True)
+            repository = root / 'opt/cm3-repo'
+            repository.mkdir(parents=True)
+            for name in ['Packages', 'InRelease']:
+                source = repository / name
+                source.write_bytes(b'fixture metadata')
+                alias = lists / ('_opt_cm3-repo_._' + name)
+                alias.symlink_to('/opt/cm3-repo/./' + name)
+                self.assertEqual(chain.apt_list_input(root, alias), source)
+                alias.unlink()
+                for target in ['/etc/passwd', '/opt/cm3-repo/../other/' + name, str(source)]:
+                    alias.symlink_to(target)
+                    with self.assertRaises(ValueError):
+                        chain.apt_list_input(root, alias)
+                    alias.unlink()
+                alias.symlink_to('/opt/cm3-repo/' + name)
+                source.unlink()
+                source.symlink_to(root / 'outside')
+                with self.assertRaisesRegex(ValueError, 'redirected or missing'):
+                    chain.apt_list_input(root, alias)
+            other = lists / 'remote_Packages'
+            other.symlink_to('/opt/cm3-repo/Packages')
+            with self.assertRaises(ValueError):
+                chain.apt_list_input(root, other)
+            with self.assertRaisesRegex(ValueError, 'directory'):
+                chain.apt_list_input(root, root / '_opt_cm3-repo_._Packages')
+
     def test_capture_refuses_agent_supplied_paths_before_any_command(self):
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -124,7 +156,7 @@ class SignedChainTests(unittest.TestCase):
             (apt / 'lists/partial').mkdir(parents=True)
             options = ['-o', 'Dir::Etc::sourcelist=' + str(sources), '-o', 'Dir::Etc::sourceparts=-',
                        '-o', 'Dir::State::lists=' + str(apt / 'lists'), '-o', 'Dir::Cache=' + str(apt / 'cache'),
-                       '-o', 'APT::Update::Error-Mode=any']
+                       '-o', 'APT::Update::Error-Mode=any', '-o', 'Acquire::GzipIndexes=false']
             subprocess.run(['apt-get', *options, 'update'], check=True, capture_output=True)
             download = apt / 'download'
             download.mkdir()
@@ -135,7 +167,20 @@ class SignedChainTests(unittest.TestCase):
             self.assertEqual(chain.digest(payloads[0]), chain.digest(self.deb))
             indexes = [path for path in (apt / 'lists').iterdir() if '_Packages' in path.name]
             self.assertEqual(len(indexes), 1)
-            decoded = subprocess.check_output(['/usr/lib/apt/apt-helper', 'cat-file', str(indexes[0])])
+            self.assertTrue(indexes[0].is_symlink())
+            self.assertEqual(Path(os.readlink(indexes[0])), repository / 'Packages')
+            # Reproduce the same APT alias inside the actual guest-root layout.
+            root = apt / 'root'
+            local = root / 'opt/cm3-repo'
+            local.mkdir(parents=True)
+            shutil.copyfile(repository / 'Packages', local / 'Packages')
+            lists = root / 'var/lib/apt/lists'
+            lists.mkdir(parents=True)
+            alias = lists / '_opt_cm3-repo_._Packages'
+            alias.symlink_to('/opt/cm3-repo/./Packages')
+            with self.assertRaises(ValueError):
+                chain.regular(alias)
+            decoded = subprocess.check_output(['/usr/lib/apt/apt-helper', 'cat-file', str(chain.apt_list_input(root, alias))])
             self.assertEqual(decoded, self.index.read_bytes())
 
     def test_modified_package_index_release_and_anchor_rejected(self):

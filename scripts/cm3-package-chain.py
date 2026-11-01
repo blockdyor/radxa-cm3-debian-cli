@@ -28,6 +28,19 @@ def paragraphs(text):
     return [email.parser.Parser().parsestr(part) for part in text.strip().split('\n\n') if part.strip()]
 
 
+def apt_list_input(root, path):
+    if path.parent != root / 'var/lib/apt/lists':
+        raise ValueError('unexpected APT list directory')
+    if path.is_symlink():
+        for name in ['Packages', 'InRelease']:
+            if path.name == '_opt_cm3-repo_._' + name:
+                # APT's file-method alias is guest-absolute, not a host path.
+                if Path(os.readlink(path)) != Path('/opt/cm3-repo') / name:
+                    raise ValueError('redirected local repository alias')
+                return regular(root / 'opt/cm3-repo' / name)
+    return regular(path)
+
+
 def identities(text):
     found = set()
     for line in text.splitlines():
@@ -158,9 +171,9 @@ def capture(root, output):
     lists = root / 'var/lib/apt/lists'
     for path in sorted(lists.iterdir()):
         if path.name.endswith('_InRelease'):
-            shutil.copyfile(regular(path), output / 'releases' / path.name)
+            shutil.copyfile(apt_list_input(root, path), output / 'releases' / path.name)
         elif re.search(r'_Packages(?:\.(?:lz4|gz|xz))?$', path.name):
-            data = subprocess.check_output(['/usr/lib/apt/apt-helper', 'cat-file', str(regular(path))])
+            data = subprocess.check_output(['/usr/lib/apt/apt-helper', 'cat-file', str(apt_list_input(root, path))])
             (output / 'indexes' / (path.name + '.decoded')).write_bytes(data)
     with tempfile.TemporaryDirectory(prefix='cm3-chain-', dir=root / 'var/tmp') as temporary:
         target = Path(temporary)

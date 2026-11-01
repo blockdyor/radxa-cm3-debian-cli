@@ -357,7 +357,21 @@
       "artifact_id": 13075270297,
       "artifact_sha256": "0008779f38d5ff6eec16a654e59ff514397ec96a54fae131d6e29afaee1dd532",
       "retained_payloads": "Encrypted recovery artifact downloaded, API SHA256 and ZIP CRC verified (77428931 bytes, one CMS member). Not decrypted/imported or authenticated for package reuse; provenance skipped. No corrected image or public source/notices bundle. Historical image2 NO-PUBLISH and physical UNTESTED preserved."
+    },
+    {
+      "number": 24,
+      "commit": "9c764cddd40b496abbef1309727ea1041f39ad1a",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41317826487",
+      "run_attempt": 1,
+      "hypothesis": "Install fdisk and cloud-guest-utils in early authenticated bootstrap before board-policy unpack in both preflight and RSDK profile; real APT dependency regression and exact-head no-skip CI/Sonar pass; preserve full corrected payload source chain and encrypted failure recovery",
+      "result": "FAIL after signed ARM64 package preflight passed, during exact-product RSDK bootstrap full-chain capture. Actual package install/configure, clean audit and extlinux generation passed; capture rejected APT's local file-repository Packages alias as a redirected input. Correction maps only exact guest-absolute local Packages/InRelease aliases to strict regular files under the admitted guest repository; unrelated, traversing and redirected-source paths remain rejected. Actual isolated APT alias reproduction and old/new policy replay retained; no signature/index/payload checks waived. Source/notices, Stage A, image reservation, assembly and provenance SKIPPED; no image consumed.",
+      "failure_stage": "rsdk-profile-package-chain-local-apt-alias",
+      "demonstrable_progress": true,
+      "completed_at": "2026-11-01T16:43:21Z",
+      "artifact_id": 13091876814,
+      "artifact_sha256": "5615ae6f0ae24018fc607d7fb3af520393cd57577af68576a97c59eb34a87932",
+      "retained_payloads": "Encrypted recovery artifact independently downloaded, API SHA256/ZIP CRC verified (77441696 bytes, one CMS member). Not decrypted/imported or authenticated for reuse; provenance skipped. No corrected image or public source/notices bundle. Historical image2 NO-PUBLISH and physical UNTESTED preserved."
     }
   ],
-  "status": "Twenty-three completed producer workflow attempts preserved. Attempt23 failed signed ARM64 package bootstrap before source/notices and assembly; no image entry consumed. Image2 remains historical NO-PUBLISH after extended validation; one of the unchanged three image entries remains. Local corrected bootstrap dependency regression verified separately; actual corrected payload acceptance remains pending. Physical hardware UNTESTED; stable release BLOCKED."
+  "status": "Twenty-four completed producer workflow attempts preserved. Attempt24 passed signed ARM64 preflight then failed exact-product chain capture on a local APT alias before source/notices or assembly. Image2 remains historical NO-PUBLISH; one of the unchanged three image entries remains. Corrected source tests do not establish actual corrected payload acceptance. Physical hardware UNTESTED; stable release BLOCKED."
 }
