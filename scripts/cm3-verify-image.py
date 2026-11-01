@@ -78,6 +78,20 @@ def board_payload(guest):
     return hashes
 
 
+def loader_payload(raw, root):
+    # CM3's MMC-only setup deliberately omits the upstream UFS LUN offset.
+    placements = [('idblock.img', 64 * 512), ('u-boot.itb', 16384 * 512)]
+    with assembly.regular(raw).open('rb') as stream:
+        for name, offset in placements:
+            path = root / 'usr/lib/u-boot' / contract.PRODUCT / name
+            payload = assembly.regular(path).read_bytes()
+            if offset + len(payload) > 32768 * 512:
+                raise ValueError('loader overlaps first partition')
+            stream.seek(offset)
+            if stream.read(len(payload)) != payload:
+                raise ValueError('loader placement differs from exact pinned payload')
+
+
 def inspect(work):
     revision = assembly.boundary(work)
     assembly.experimental_admission(work, revision, os.environ['GITHUB_RUN_ID'])
@@ -147,18 +161,7 @@ def inspect(work):
         policy_hashes = board_payload(guest)
         packages = inventory(text('/var/lib/dpkg/status'),
                              (work / 'evidence/rsdk-profile-packages.tsv').read_text())
-        # Loader offsets come from the actual pinned package's setup.sh, checked in tests.
-        placements = [('idblock.img', 64 * 512), ('idblock.img', 136 * 4096),
-                      ('u-boot.itb', 16384 * 512)]
-        with raw.open('rb') as stream:
-            for name, offset in placements:
-                path = root / 'usr/lib/u-boot' / contract.PRODUCT / name
-                payload = assembly.regular(path).read_bytes()
-                if offset + len(payload) > 32768 * 512:
-                    raise ValueError('loader overlaps first partition')
-                stream.seek(offset)
-                if stream.read(len(payload)) != payload:
-                    raise ValueError('loader placement differs from exact pinned payload')
+        loader_payload(raw, root)
         guest.umount_all()
     finally:
         guest.close()

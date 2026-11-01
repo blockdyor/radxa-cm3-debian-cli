@@ -38,9 +38,9 @@ Before any write, inspect the exact artifact on an external host: authenticated
 provenance, xz integrity, compressed/raw hashes, partition map, exact DTB, extlinux
 root identity, matching initramfs/modules/headers and loader payload. Preserve
 GPT/512-byte sectors/ext4; partition name `efi` does not imply a UEFI boot chain.
-The audited assembly places partition 1 at LBA32768, ID block at bs=512 seek=64
-and bs=4096 seek=136, and FIT at bs=512 seek=16384. The later image checker must
-assert both raw ranges are disjoint from GPT/partitions and within an image-only
+The MMC-only assembly places partition 1 at LBA32768, ID block at bs=512 seek=64
+and FIT at bs=512 seek=16384. The upstream UFS LUN offset is not an MMC placement.
+The image checker must assert both raw ranges are disjoint from GPT/partitions and within an image-only
 regular file. These offsets are source evidence, NOT a command to write media.
 
 Physical testing needs separate approval naming sacrificial hardware and the

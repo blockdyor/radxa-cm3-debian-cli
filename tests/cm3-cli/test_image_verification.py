@@ -13,6 +13,36 @@ SPEC.loader.exec_module(verify)
 
 
 class ImageContract(unittest.TestCase):
+    def test_mmc_loader_bytes_without_unrelated_ufs_copy_and_corruption_rejection(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            raw = directory / 'image.img'
+            root = directory / 'root'
+            loaders = root / 'usr/lib/u-boot' / verify.contract.PRODUCT
+            loaders.mkdir(parents=True)
+            payloads = [('idblock.img', 64 * 512, b'fixture-idblock'),
+                        ('u-boot.itb', 16384 * 512, b'fixture-fit')]
+            with raw.open('wb') as stream:
+                stream.truncate(32768 * 512)
+                for name, offset, data in payloads:
+                    (loaders / name).write_bytes(data)
+                    stream.seek(offset)
+                    stream.write(data)
+            verify.loader_payload(raw, root)
+            for name, offset, data in payloads:
+                with self.subTest(name=name):
+                    with raw.open('r+b') as stream:
+                        stream.seek(offset)
+                        stream.write(b'X')
+                    with self.assertRaises(ValueError):
+                        verify.loader_payload(raw, root)
+                    with raw.open('r+b') as stream:
+                        stream.seek(offset)
+                        stream.write(data)
+            (loaders / 'idblock.img').unlink()
+            with self.assertRaises(FileNotFoundError):
+                verify.loader_payload(raw, root)
+
     def test_board_payload_inspects_real_package_files_and_rejects_changed_policy(self):
         spec = importlib.util.spec_from_file_location('board_build', ROOT / 'packages/cm3-cli-board-support/build.py')
         board = importlib.util.module_from_spec(spec)
