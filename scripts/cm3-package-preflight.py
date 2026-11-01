@@ -28,7 +28,8 @@ initramfs-tools u-boot-menu openssh-server sudo adduser passwd iproute2 iputils-
 network-manager wpasupplicant iw wireless-regdb systemd-timesyncd nftables e2fsprogs
 dosfstools util-linux tzdata locales less nano pciutils usbutils radxa-bootutils
 radxa-udev'''.split()
-TOOLS = '''apparmor apparmor-profiles firmware-brcm80211 firmware-realtek dkms gcc
+# Install growth dependencies before dpkg-unpacking board policy leaves APT broken.
+TOOLS = '''fdisk cloud-guest-utils apparmor apparmor-profiles firmware-brcm80211 firmware-realtek dkms gcc
 make libc6-dev libssl-dev libelf-dev device-tree-compiler file python3 gzip'''.split()
 
 

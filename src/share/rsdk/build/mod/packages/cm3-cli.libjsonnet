@@ -1,6 +1,6 @@
 // Exact experimental tuple only; never compose upstream task/first-boot hooks.
 local seeds = std.split('apt debian-archive-keyring ca-certificates systemd-sysv udev dbus kmod initramfs-tools u-boot-menu openssh-server sudo adduser passwd iproute2 iputils-ping network-manager wpasupplicant iw wireless-regdb systemd-timesyncd nftables e2fsprogs dosfstools util-linux tzdata locales less nano pciutils usbutils radxa-bootutils radxa-udev', ' ');
-local tools = std.split('apparmor apparmor-profiles firmware-brcm80211 firmware-realtek dkms gcc make libc6-dev libssl-dev libelf-dev device-tree-compiler file python3 gzip', ' ');
+local tools = std.split('fdisk cloud-guest-utils apparmor apparmor-profiles firmware-brcm80211 firmware-realtek dkms gcc make libc6-dev libssl-dev libelf-dev device-tree-compiler file python3 gzip', ' ');
 local debian_sources = [
     'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] https://deb.debian.org/debian trixie main non-free-firmware',
     'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] https://deb.debian.org/debian trixie-updates main non-free-firmware',

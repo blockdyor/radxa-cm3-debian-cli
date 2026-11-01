@@ -55,6 +55,10 @@ class ProfileRendering(unittest.TestCase):
         self.assertIn('cm3-package-chain.py capture --root "$1" --directory', hook)
         for seed in profile.probe.SEEDS + profile.probe.TOOLS:
             self.assertIn(seed, hook.split())
+        bootstrap = next(line for line in hook.splitlines() if 'install -y' in line)
+        for dependency in ['fdisk', 'cloud-guest-utils']:
+            self.assertIn(dependency, bootstrap.split())
+        self.assertLess(hook.index(bootstrap), hook.index('dpkg --unpack'))
         self.assertLess(hook.index('sha256sum -c'), hook.index('dpkg --unpack'))
         self.assertLess(hook.index('dpkg --unpack'), hook.index('test "$(readlink'))
         self.assertLess(hook.index('test "$(readlink'), hook.index('linux-image-radxa-cm3-rpi-cm4-io='))
