@@ -4,7 +4,9 @@ import argparse
 import email.parser
 import hashlib
 import json
+import os
 from pathlib import Path
+import platform
 import re
 import shutil
 import subprocess
@@ -130,6 +132,19 @@ def verify(directory, debian_keyring_sha256, local_fingerprint):
 
 def capture(root, output):
     """Run before cleanup while exact authenticated indexes and local feed still exist."""
+    if (root != Path('/work/rsdk-profile-stage/root') or
+            output != Path('/work/rsdk-profile-stage/package-chain') or
+            os.environ.get('GITHUB_ACTIONS') != 'true' or
+            os.environ.get('GITHUB_REPOSITORY') != 'blockdyor/radxa-cm3-debian-cli' or
+            os.environ.get('RUNNER_ENVIRONMENT') != 'github-hosted' or
+            platform.machine() != 'x86_64' or os.geteuid() != 0 or
+            not Path('/.dockerenv').is_file()):
+        raise ValueError('capture only in the fixed external disposable builder')
+    # Use literal producer paths, never agent-supplied chroot/command arguments.
+    root = Path('/work/rsdk-profile-stage/root')
+    output = Path('/work/rsdk-profile-stage/package-chain')
+    if root.resolve() != root or output.parent.resolve() != output.parent:
+        raise ValueError('redirected capture stage')
     output.mkdir()
     installed = subprocess.check_output(['chroot', str(root), 'dpkg-query', '-W',
                                          '-f=${Package}\t${Version}\t${Architecture}\t${db:Status-Status}\n'], text=True)

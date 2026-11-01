@@ -165,10 +165,10 @@ jobs:
             docker container rm --force "$name"
           fi
       - name: Encrypt allowlisted successful compilation for internal recovery
-        if: always() && !inputs.experimental_image
+        if: always()
         run: python3 scripts/cm3-retain-packages.py --workdir package-work --output preflight-work/cm3-recovery.cms
       - name: Retain encrypted recovery output (no plaintext binaries or keys)
-        if: always() && !inputs.experimental_image
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cm3-encrypted-recovery-${{ github.run_id }}-${{ github.run_attempt }}

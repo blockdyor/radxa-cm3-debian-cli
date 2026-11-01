@@ -2,6 +2,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import lzma
 from pathlib import Path
 import shutil
 import subprocess
@@ -99,6 +100,50 @@ class RetentionTests(unittest.TestCase):
         self.assertNotEqual(subprocess.run(command, stdout=subprocess.DEVNULL,
                                            stderr=subprocess.DEVNULL).returncode, 0)
         self.assertFalse(list(self.work.glob('cm3-retention-*')))
+
+    def test_final_image_roundtrip_and_failed_compression_preserve_exact_deliverables(self):
+        directory = self.work / 'delivery-inputs'
+        directory.mkdir()
+        names = ['modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
+                 'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
+                 'loader-inputs.json', 'debian-sources/example.dsc', 'package-chain.tar.gz',
+                 'package-chain-verification.json', 'public-test-vectors.json']
+        for name in names:
+            path = directory / name
+            path.parent.mkdir(exist_ok=True)
+            path.write_bytes(b'producer artifact fixture')
+        (directory / 'delivery-inputs.json').write_text(json.dumps(
+            dict(files={name: retention.packages.digest(directory / name) for name in names})))
+        image_dir = self.work / 'image-output'
+        image_dir.mkdir()
+        raw = image_dir / 'cm3-trixie-arm64-cli.img'
+        raw.write_bytes(b'exact disposable raw image fixture' * 100)
+        compressed = image_dir / (raw.name + '.xz')
+        compressed.write_bytes(lzma.compress(raw.read_bytes()))
+        (image_dir / 'private.key').write_bytes(b'not a key, excluded sentinel')
+        files = retention.image_files(self.work)
+        self.assertIn(compressed, files)
+        self.assertNotIn(raw, files)
+        output, plain = self.root / 'image.cms', self.root / 'image.tar.gz'
+        retention.seal(self.work, self.certificate, output, {'commit': 'a' * 40}, retain_image=True)
+        subprocess.run(['openssl', 'cms', '-decrypt', '-binary', '-inform', 'DER',
+                        '-in', str(output), '-recip', str(self.certificate), '-inkey', str(self.key),
+                        '-out', str(plain)], check=True)
+        with tarfile.open(plain) as archive:
+            record = json.load(archive.extractfile('retention-manifest.json'))
+            self.assertEqual(record['raw_image_sha256'], retention.packages.digest(raw))
+            retained = archive.extractfile(str(compressed.relative_to(self.work))).read()
+            self.assertEqual(lzma.decompress(retained), raw.read_bytes())
+            self.assertIn('delivery-inputs/package-chain.tar.gz', archive.getnames())
+            self.assertNotIn('image-output/private.key', archive.getnames())
+        compressed.write_bytes(compressed.read_bytes()[:12])
+        self.assertIn(raw, retention.image_files(self.work))
+        compressed.unlink()
+        self.assertIn(raw, retention.image_files(self.work))
+        raw.unlink()
+        raw.symlink_to(self.work / 'private-key')
+        with self.assertRaisesRegex(ValueError, 'redirected retained image'):
+            retention.image_files(self.work)
 
     def test_tenth_package_and_separate_manifest_are_retained_without_keys(self):
         spec = importlib.util.spec_from_file_location('board_builder', ROOT / 'packages/cm3-cli-board-support/build.py')

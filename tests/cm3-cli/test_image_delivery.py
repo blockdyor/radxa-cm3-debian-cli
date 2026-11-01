@@ -173,6 +173,8 @@ class SourceDelivery(unittest.TestCase):
                 self.assertIn('if: inputs.experimental_image && !inputs.public_distribution', step)
             elif 'path: package-work/public-image/' in step:
                 self.assertIn('if: inputs.experimental_image && inputs.public_distribution', step)
+            elif 'path: preflight-work/cm3-recovery.cms' in step:
+                self.assertIn('if: always()', step)
             else:
                 self.assertIn('if: always() && !inputs.experimental_image', step)
         self.assertIn('test "$PUBLIC_DISTRIBUTION" = false || test "$EXPERIMENTAL_IMAGE" = true', workflow)
@@ -180,7 +182,7 @@ class SourceDelivery(unittest.TestCase):
         self.assertNotIn('actions/cache@', workflow)
         self.assertIn('provenance-input/engineering-result.json', provenance)
         self.assertIn('--source-digest "$APPROVED_SHA"', provenance)
-        self.assertIn('if: always() && !inputs.experimental_image',
+        self.assertIn('if: always()',
                       next(step for step in steps if step.startswith('Encrypt allowlisted')))
 
     def test_actual_build_configs_are_required_and_kernel_evidence_must_match(self):

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Seal successful compilation for internal recovery, never publish plaintext BSPs."""
 import argparse
+import hashlib
 import importlib.util
 import io
 import json
+import lzma
 import os
 from pathlib import Path
 import subprocess
@@ -19,7 +21,43 @@ profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
 
 
-def seal(work, recipient, output, provenance):
+def image_files(work):
+    """Allowlisted producer deliverables only, including failed final-image bytes."""
+    spec = importlib.util.spec_from_file_location('cm3_publish', ROOT / 'scripts/cm3-publish-image.py')
+    assert spec is not None and spec.loader is not None
+    publish = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(publish)
+    directory = work / 'delivery-inputs'
+    manifest = directory / 'delivery-inputs.json'
+    if not manifest.is_file():
+        return []  # Assembly cannot start before completed source/notices preparation.
+    names = publish.checked_materials(directory, json.loads(manifest.read_text()))
+    files = [directory / name for name in names]
+    image_dir = work / 'image-output'
+    raw = image_dir / 'cm3-trixie-arm64-cli.img'
+    compressed = image_dir / 'cm3-trixie-arm64-cli.img.xz'
+    for path in [raw, compressed]:
+        if path.is_symlink():
+            raise ValueError('redirected retained image')
+    retain_raw = raw.is_file()
+    if compressed.is_file():
+        files.append(compressed)
+        if retain_raw:
+            try:
+                with lzma.open(compressed, 'rb') as stream:
+                    uncompressed = hashlib.file_digest(stream, 'sha256').hexdigest()
+                retain_raw = uncompressed != packages.digest(raw)
+            except (OSError, EOFError, lzma.LZMAError):
+                pass
+    if retain_raw:
+        files.append(raw)
+    for name in ['verification.json', 'packages.tsv']:
+        if (image_dir / name).is_file():
+            files.append(image_dir / name)
+    return files
+
+
+def seal(work, recipient, output, provenance, retain_image=False):
     lock = packages.source.load_lock(ROOT / 'project/cm3-cli/source-lock.json')
     if json.loads((work / 'evidence/result.json').read_text())['status'] != 'PASS':
         raise ValueError('only a complete verified source build can be retained')
@@ -29,6 +67,8 @@ def seal(work, recipient, output, provenance):
         inputs.update(packages.inspect_board_input(work, provenance['GITHUB_SHA']))
     # Explicit allowlist: no target roots, private keys, logs or arbitrary trees.
     files = list(inputs.values())
+    if retain_image:
+        files.extend(image_files(work))
     repository = work / 'signed-repository'
     if repository.is_symlink():
         raise ValueError('repository symlinks prohibited')
@@ -42,6 +82,8 @@ def seal(work, recipient, output, provenance):
         raise ValueError('retention requires regular non-symlink files')
     metadata = json.dumps({'label': 'EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION',
                            'provenance': provenance,
+                           'raw_image_sha256': packages.digest(work / 'image-output/cm3-trixie-arm64-cli.img')
+                           if retain_image and (work / 'image-output/cm3-trixie-arm64-cli.img').is_file() else None,
                            'files': {str(p.relative_to(work)): packages.digest(p) for p in files}},
                           indent=2).encode()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -77,7 +119,8 @@ def main():
         print('No complete source build to retain')
         return
     provenance = {k: os.environ[k] for k in ['GITHUB_REPOSITORY', 'GITHUB_SHA', 'GITHUB_RUN_ID']}
-    seal(work, ROOT / 'project/cm3-cli/retention-recipient.pem', output, provenance)
+    seal(work, ROOT / 'project/cm3-cli/retention-recipient.pem', output, provenance,
+         retain_image=os.environ.get('EXPERIMENTAL_IMAGE') == 'true')
     print('Encrypted recovery output SHA256:', packages.digest(output))
 
 

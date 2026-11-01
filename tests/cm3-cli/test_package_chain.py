@@ -15,6 +15,13 @@ SPEC.loader.exec_module(chain)
 
 
 class IdentityTests(unittest.TestCase):
+    def test_capture_refuses_agent_supplied_paths_before_any_command(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            with self.assertRaisesRegex(ValueError, 'fixed external'):
+                chain.capture(directory, directory / 'output')
+            self.assertEqual(list(directory.iterdir()), [])
+
     def test_invalid_empty_duplicate_or_unconfigured_identities_rejected(self):
         for value in ['', 'a\t1\tarm64\tunpacked\n', 'a;bad\t1\tarm64\tinstalled\n',
                       'a\t1\tamd64\tinstalled\n', 'a\t1\tall\tinstalled\n' * 2]:
@@ -58,6 +65,7 @@ class SignedChainTests(unittest.TestCase):
         shutil.copyfile(self.deb, self.payload)
         self.index = self.directory / 'indexes/Packages'
         self.index.write_text('Package: cm3-chain-fixture\nVersion: 1\nArchitecture: all\n'
+                              'Filename: packages/fixture.deb\n'
                               'SHA256: ' + chain.digest(self.payload) + '\nSize: ' + str(self.payload.stat().st_size) + '\n\n')
         (self.directory / 'installed.tsv').write_text('cm3-chain-fixture\t1\tall\tinstalled\n')
         for index, filename in enumerate(['debian-archive-keyring.gpg', 'local-archive-key.gpg']):
@@ -99,6 +107,36 @@ class SignedChainTests(unittest.TestCase):
         extra.symlink_to(self.deb)
         with self.assertRaisesRegex(ValueError, 'contents'):
             self.verify()
+
+    @unittest.skipUnless(shutil.which('apt-get'), 'actual isolated APT required')
+    def test_real_apt_exact_all_arch_download_and_index_decode_without_install(self):
+        # Same specification shape as capture(); no network, install or host APT state.
+        with tempfile.TemporaryDirectory(prefix='cm3-chain-apt-') as temporary:
+            apt = Path(temporary)
+            repository = apt / 'repository'
+            (repository / 'packages').mkdir(parents=True)
+            shutil.copyfile(self.payload, repository / 'packages/fixture.deb')
+            shutil.copyfile(self.index, repository / 'Packages')
+            shutil.copyfile(self.directory / 'releases/local', repository / 'InRelease')
+            sources = apt / 'sources.list'
+            sources.write_text('deb [signed-by=' + str(self.directory / 'local-archive-key.gpg') +
+                               '] file:' + str(repository) + ' ./\n')
+            (apt / 'lists/partial').mkdir(parents=True)
+            options = ['-o', 'Dir::Etc::sourcelist=' + str(sources), '-o', 'Dir::Etc::sourceparts=-',
+                       '-o', 'Dir::State::lists=' + str(apt / 'lists'), '-o', 'Dir::Cache=' + str(apt / 'cache'),
+                       '-o', 'APT::Update::Error-Mode=any']
+            subprocess.run(['apt-get', *options, 'update'], check=True, capture_output=True)
+            download = apt / 'download'
+            download.mkdir()
+            subprocess.run(['apt-get', *options, 'download', '--', 'cm3-chain-fixture:all=1'],
+                           cwd=download, check=True, capture_output=True)
+            payloads = list(download.glob('*.deb'))
+            self.assertEqual(len(payloads), 1)
+            self.assertEqual(chain.digest(payloads[0]), chain.digest(self.deb))
+            indexes = [path for path in (apt / 'lists').iterdir() if '_Packages' in path.name]
+            self.assertEqual(len(indexes), 1)
+            decoded = subprocess.check_output(['/usr/lib/apt/apt-helper', 'cat-file', str(indexes[0])])
+            self.assertEqual(decoded, self.index.read_bytes())
 
     def test_modified_package_index_release_and_anchor_rejected(self):
         for path in [self.payload, self.index, self.directory / 'releases/debian',
