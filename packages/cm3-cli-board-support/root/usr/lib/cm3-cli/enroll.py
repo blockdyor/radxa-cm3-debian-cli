@@ -112,6 +112,32 @@ def document(root):
     return config, digest
 
 
+def machine_identity(root):
+    machine_id = read_private(root, 'etc/machine-id', public=True).decode('ascii').strip()
+    if re.fullmatch('[0-9a-f]{32}', machine_id) is None or machine_id == '0' * 32:
+        raise ValueError('machine identity not initialized')
+
+
+def host_identities(root, allow_missing=False):
+    for kind, algorithm in [('ed25519', 'ssh-ed25519'), ('rsa', 'ssh-rsa'),
+                            ('ecdsa', 'ecdsa-sha2-nistp256')]:
+        relative = 'etc/ssh/ssh_host_' + kind + '_key'
+        path = root / relative
+        if allow_missing and not path.exists() and not path.is_symlink():
+            if (root / (relative + '.pub')).exists() or (root / (relative + '.pub')).is_symlink():
+                raise ValueError('orphan host public key; offline identity recovery required')
+            continue
+        read_private(root, relative)
+        derived = subprocess.run(['/usr/bin/ssh-keygen', '-y', '-P', '', '-f', str(path)],
+                                 check=True, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                 stderr=subprocess.DEVNULL, timeout=10,
+                                 env={'PATH': '/usr/bin:/bin', 'LC_ALL': 'C'}).stdout.split()
+        public = read_private(root, relative + '.pub', public=True).split()
+        if (len(derived) < 2 or derived[0] != algorithm.encode() or
+                len(public) < 2 or public[:2] != derived[:2]):
+            raise ValueError('invalid or mismatched host identity')
+
+
 def check(root):
     target(root)
     config, digest = document(root)
@@ -138,13 +164,8 @@ def check(root):
         if (len(fields) != 7 or not fields[3].isascii() or not fields[3].isdigit() or
                 (fields[0] != config['username'] and int(fields[3]) == int(groups[0][2]))):
             raise ValueError('SSH owner group has unsafe primary membership')
-    machine_id = (root / 'etc/machine-id').read_text().strip()
-    if re.fullmatch('[0-9a-f]{32}', machine_id) is None or machine_id == '0' * 32:
-        raise ValueError('machine identity not initialized')
-    for kind in ['ed25519', 'rsa', 'ecdsa']:
-        path = root / ('etc/ssh/ssh_host_' + kind + '_key')
-        if not read_private(root, str(path.relative_to(root))):
-            raise ValueError('host key missing')
+    machine_identity(root)
+    host_identities(root)
     if 'apparmor' not in (root / 'sys/kernel/security/lsm').read_text().strip().split(','):
         raise ValueError('AppArmor is not active in the booted target kernel')
 
@@ -164,6 +185,8 @@ def enroll(root, command=run):
             raise ValueError('enrollment differs; offline administrator recovery required')
     elif account(root, username) is not None:
         raise ValueError('refusing to adopt an existing account')
+    machine_identity(root)
+    host_identities(root, allow_missing=True)
     if account(root, username) is not None:
         rows = [line for line in (root / 'etc/shadow').read_text().splitlines()
                 if line.split(':', 1)[0] == username]
@@ -191,13 +214,14 @@ def enroll(root, command=run):
     atomic(root, 'etc/sudoers.d/cm3-cli-owner', (username + ' ALL=(ALL:ALL) NOPASSWD: ALL\n').encode(), 0o440)
     command('/usr/sbin/visudo', '--check', '--strict')
     command('/usr/bin/ssh-keygen', '-A')
+    host_identities(root)
     command('/usr/sbin/apparmor_parser', '--version')
     command('/usr/sbin/aa-status', '--enabled')
     state['status'] = 'complete'
     encoded = (json.dumps(state, sort_keys=True) + '\n').encode()
     atomic(root, STATE, encoded)
-    atomic(root, READY, encoded)
     try:
+        atomic(root, READY, encoded)
         check(root)
     except Exception:
         (root / READY).unlink(missing_ok=True)
@@ -221,7 +245,7 @@ def main():
                 check(ROOT)
             else:
                 enroll(ROOT)
-    except (OSError, ValueError, subprocess.CalledProcessError):
+    except (OSError, ValueError, subprocess.SubprocessError):
         parser.exit(1, 'CM3 enrollment incomplete; SSH remains gated. Use offline owner-key recovery.\n')
 
 

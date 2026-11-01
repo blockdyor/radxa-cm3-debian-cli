@@ -1,7 +1,7 @@
 [Unit]
 Description=Enroll the CM3 owner before permitting SSH
-Requires=cm3-cli-firewall.service apparmor.service
-After=local-fs.target cm3-cli-firewall.service apparmor.service
+Requires=cm3-cli-firewall.service apparmor.service cm3-cli-grow-os.service
+After=local-fs.target cm3-cli-firewall.service apparmor.service cm3-cli-grow-os.service
 Before=ssh.service
 
 [Service]

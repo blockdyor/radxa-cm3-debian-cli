@@ -22,8 +22,10 @@ PAYLOAD = (
     'usr/lib/systemd/system/NetworkManager.service.d/cm3-cli.conf',
     'usr/lib/systemd/system/cm3-cli-enroll.service',
     'usr/lib/systemd/system/cm3-cli-firewall.service',
+    'usr/lib/systemd/system/cm3-cli-grow-os.service',
     'usr/lib/cm3-cli/enroll.py',
     'usr/lib/cm3-cli/boot-update',
+    'usr/lib/cm3-cli/grow_os.py',
     'usr/share/cm3-cli/firewall.nft',
 )
 

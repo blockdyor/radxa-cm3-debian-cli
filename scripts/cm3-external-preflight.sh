@@ -10,7 +10,7 @@ command -v jsonnet
 arch-test arm64
 if [ "$EXPERIMENTAL_IMAGE" = true ]; then
     # Qualify the actual software appliance before any expensive compilation.
-    apt-get install -y --no-install-recommends libguestfs-tools python3-guestfs linux-image-amd64 qemu-system-x86 gdisk xz-utils
+    apt-get install -y --no-install-recommends libguestfs-tools python3-guestfs linux-image-amd64 qemu-system-x86 gdisk fdisk xz-utils
     export LIBGUESTFS_BACKEND=direct LIBGUESTFS_BACKEND_SETTINGS=force_tcg
     python3 /src/scripts/cm3-image-stage-a.py sonar
     timeout 300 libguestfs-test-tool

@@ -277,8 +277,11 @@ class BoardPackageTests(unittest.TestCase):
         # Scan actual package inputs, not generated import bytecode on CI hosts.
         for name in builder.PAYLOAD:
             text = (root / name).read_text()
-            for prohibited in ['resize2fs', 'mkfs', '/dev/nvme', 'setup.sh', 'eval ', 'shell=True']:
+            for prohibited in ['mkfs', '/dev/nvme', 'setup.sh', 'eval ', 'shell=True']:
                 self.assertNotIn(prohibited, text)
+            # Mandatory growth is isolated from enrollment and boot-menu updates.
+            if name != 'usr/lib/cm3-cli/grow_os.py':
+                self.assertNotIn('resize2fs', text)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,75 @@
+CM3 beta remediation — source scope (NOT a corrected-image release verdict)
+
+Historical image2 / 2b41b830 / run41199013085 remains NO-PUBLISH. These source
+changes are not proof that corrected image bytes exist or pass validation.
+Physical Radxa CM3 / CmRat validation has NOT BEEN PERFORMED.
+
+Loader safety
+The pinned u-boot-rk2601 recipe's exact setup helper is replaced during source
+preparation, with an old-byte digest drift check. Both the replacement and its
+read-only Python target guard must be present in the resulting package. The
+applied recipe/source diff is retained. This fork builds only the exact CM3
+product; its real payload is idblock.img + u-boot.itb + rkboot.bin. Legacy RK33,
+UFS, SPI writes, unbounded dumps and undocumented automatic erase entrypoints
+are not supported CM3 beta interfaces. The PowerShell helper only builds a
+local SPI file; it is not an authorized physical flashing workflow.
+
+Default device action:
+    setup.sh update_bootloader /dev/mmcblkN
+Only the positively verified running CM3 OS parent may be mounted: exact MMC
+ancestry, three-partition reserved GPT layout, vfat/vfat/ext4 filesystems,
+root-device identity, board identity and matching UUID/fstab mounts. An alias,
+partition, NVMe, USB stack, readonly/stacked/swap disk or unrelated mounted
+filesystem is refused. This is an explicit destructive loader update, never
+automatic first-device discovery. Physical update/recovery remains UNTESTED.
+
+Unmounted provisioning media requires an explicit role:
+    setup.sh update_bootloader /dev/mmcblkN provisioning
+The selected disk must already contain the exact supported three-partition
+layout/filesystem types. This does not identify the owner of arbitrary media;
+the operator must positively identify the sacrificial intended disk. It is not
+a general whole-image flasher and cannot initialize an unrelated/blank disk.
+Direct update_idblock and erase_bootloader use the same admission.
+
+Builder-only regular-file entrypoint:
+    setup.sh update_image /absolute/existing/image.img 512
+This validates an owned single-link unredirected regular image and its exact
+reserved GPT layout. Both current and legacy RSDK renderers explicitly select
+this action only for the CM3 product; device actions never admit regular files.
+The entire selected payload is checked before the first write intent. db/dd/wl,
+sync and reset failures propagate in sourced/conditional contexts, not merely
+under set -e. No reset follows a failed write. Missing-input preflight does not
+promise rollback after device failure, concurrent replacement or power loss.
+
+Enrollment / identity
+Machine-id must already have been initialized by the normal systemd lifecycle;
+malformed IDs fail before account changes. Host private keys are parsed with
+OpenSSH noninteractively and checked against their expected algorithm/public
+companions, both before reuse and at readiness. Valid existing identities are
+preserved. A fully cloned enrolled disk cannot locally prove global uniqueness:
+prepare independent fresh images before enrollment; do not clone enrolled disks
+as new installations. Never ship developer/build machine IDs or host keys.
+
+Every observed enrollment error must close READY. Final READY replacement,
+directory fsync and subsequent verification share cleanup. Faults/retries are
+tested on disposable fixture roots; account commands are doubles. Interrupted
+account creation may require offline recovery if passwd/shadow is inconsistent.
+There is no promise of transactional account rollback or global clone detection.
+
+OS-only expansion
+The board package supplies a oneshot before enrollment, with explicit growpart
+and ext4 resize dependencies. The handler defaults to a read-only plan; only
+--execute mutates. It accepts only the running native MMC OS partition3 and the
+exact config/EFI/root layout, UUID/fstab mount identities, readonly/ancestry and
+capacity checks. It does not discover or resize data NVMe/USB. It rechecks state
+before mutation, preserves protected partitions and identities in readback, and
+retries ext4 growth if an earlier invocation stopped after GPT growth. This is
+bounded retry behavior, NOT tested physical power-loss recovery or automatic
+rollback. No shrink/reformat or general update architecture is implemented.
+The service deliberately inspects the original mount namespace: systemd-created
+bind mounts would conflict with exact alias refusal. DevicePolicy remains MMC-only.
+
+Source tests and mocked command intent cannot qualify a physical device, a
+healthy systemd boot or a corrected payload. New exact-subject image/source,
+distribution, signature-chain and independent payload reviews are still required
+before staging a release-ready bundle. Preserve old evidence and failed checks.

@@ -7,7 +7,7 @@ if [ "$1" = configure ]; then
     update-initramfs -u -k all
     /usr/lib/cm3-cli/boot-update
     # Enable only; package configuration must not start services in the builder.
-    systemctl --root=/ enable cm3-cli-firewall.service cm3-cli-enroll.service ssh.service NetworkManager.service systemd-timesyncd.service apparmor.service serial-getty@ttyFIQ0.service
+    systemctl --root=/ enable cm3-cli-firewall.service cm3-cli-grow-os.service cm3-cli-enroll.service ssh.service NetworkManager.service systemd-timesyncd.service apparmor.service serial-getty@ttyFIQ0.service
     systemctl --root=/ set-default multi-user.target
     rm -f /etc/ssh/sshd_config.d/00-cm3-cli-removed.conf
 fi

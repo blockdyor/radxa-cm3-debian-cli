@@ -7,6 +7,7 @@ PLACEHOLDER = '11111111-1111-4111-8111-111111111111'
 SERVICE_LINKS = [
     'multi-user.target.wants/cm3-cli-firewall.service',
     'multi-user.target.wants/cm3-cli-enroll.service',
+    'multi-user.target.wants/cm3-cli-grow-os.service',
     'multi-user.target.wants/ssh.service',
     'multi-user.target.wants/NetworkManager.service',
     'sysinit.target.wants/systemd-timesyncd.service',

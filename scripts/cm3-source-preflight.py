@@ -3,6 +3,7 @@
 
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -12,6 +13,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tarfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -184,6 +186,49 @@ def verify_loader_inputs(source, evidence):
     (evidence / 'loader-inputs.json').write_text(json.dumps(report, indent=2) + '\n')
 
 
+def verify_loader_package(package):
+    payload = subprocess.check_output(['dpkg-deb', '--fsys-tarfile', str(package)])
+    with tarfile.open(fileobj=io.BytesIO(payload), mode='r:') as archive:
+        result = {}
+        for installed, original in [('setup.sh', 'loader-setup.sh'), ('loader-target.py', 'loader-target.py')]:
+            member = archive.getmember('./usr/lib/u-boot/radxa-cm3-rpi-cm4-io/' + installed)
+            if not member.isfile():
+                raise ValueError('redirected packaged loader helper')
+            stream = archive.extractfile(member)
+            if stream is None:
+                raise ValueError('missing packaged loader helper')
+            data = stream.read()
+            if data != (ROOT / 'project/cm3-cli' / original).read_bytes():
+                raise ValueError('packaged loader safety helper differs')
+            result[installed] = hashlib.sha256(data).hexdigest()
+    return result
+
+
+def prepare_loader_safety(source):
+    path = source / 'setup/u-boot_setup-rockchip.sh'
+    if (path.is_symlink() or hashlib.sha256(path.read_bytes()).hexdigest() !=
+            'b56117ef1982e72911a836432bbe3a5d22b82161b93eb592ef2751dd44d44a69'):
+        raise ValueError('pinned loader setup drift')
+    path.write_bytes((ROOT / 'project/cm3-cli/loader-setup.sh').read_bytes())
+    helper = source / 'setup/loader-target.py'
+    if helper.exists() or helper.is_symlink():
+        raise ValueError('unexpected loader target helper')
+    helper.write_bytes((ROOT / 'project/cm3-cli/loader-target.py').read_bytes())
+    run('git', '-C', source, 'add', '--intent-to-add', 'setup/loader-target.py')
+    local_patch(source, '.github/local/Makefile.local',
+                '\tcp setup/u-boot_setup-rockchip.sh out/$@/setup.sh',
+                '\tcp setup/u-boot_setup-rockchip.sh out/$@/setup.sh\n'
+                '\tcp setup/loader-target.py out/$@/loader-target.py')
+    license_path = source / 'setup/CM3-LOADER-LICENSE'
+    with license_path.open('xb') as stream:
+        stream.write((ROOT / 'LICENSE').read_bytes())
+    with (source / 'debian/u-boot-rk2601.docs').open('a') as stream:
+        stream.write('setup/CM3-LOADER-LICENSE\n')
+    run('git', '-C', source, 'add', '--intent-to-add', 'setup/CM3-LOADER-LICENSE')
+    local_patch(source, 'debian/control', 'Depends: ${misc:Depends},\nProvides: u-boot-rk2410',
+                'Depends: ${misc:Depends}, python3, bash, coreutils, util-linux, fdisk,\nProvides: u-boot-rk2410')
+
+
 def prepare_overlay_license(source):
     # Official Radxa issue606 closing commit; metadata only, no source upgrade.
     patch = ROOT / 'project/cm3-cli/overlay-license.patch'
@@ -214,6 +259,7 @@ def build_recipe(recipe, lock, work, evidence):
                 raise ValueError('required kernel configuration patch not applied')
     if recipe['name'] == 'u-boot-rk2601':
         verify_loader_inputs(source, evidence)
+        prepare_loader_safety(source)
         run('git', '-C', source, 'add', '--intent-to-add', 'debian/u-boot-rk2601.docs')
         # The first successful fuel-gauge poll still gates display/boot decisions.
         # Explicit zero defaults let GCC 14 prove the cached diagnostic values safe.
@@ -240,6 +286,12 @@ def build_recipe(recipe, lock, work, evidence):
         (evidence / (recipe['name'] + '-' + name + '-local.diff')).write_text(
             run('git', '-C', source / name, 'diff', '--binary', capture=True))
     run('dpkg-buildpackage', '--no-sign', '-b', '-j2', cwd=source)
+    if recipe['name'] == 'u-boot-rk2601':
+        packages = list(work.glob('u-boot-rk2601_*.deb'))
+        if len(packages) != 1:
+            raise ValueError('one actual loader package required for safety readback')
+        (evidence / 'loader-script-safety.json').write_text(
+            json.dumps(verify_loader_package(packages[0]), indent=2) + '\n')
     if recipe['name'] == 'linux-rk2410-nocsf':
         shutil.copyfile(source / 'src/.config', evidence / 'kernel.config')
         verify_kernel_config((evidence / 'kernel.config').read_text())
