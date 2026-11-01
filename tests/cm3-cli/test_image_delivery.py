@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
+from test_security_delivery import security_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -100,12 +101,15 @@ class SourceDelivery(unittest.TestCase):
             (image / 'packages.tsv').write_text('example\t1\tarm64\n')
             names = ['modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
                      'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
-                     'loader-inputs.json', 'debian-sources/example.dsc']
+                     'loader-inputs.json', 'debian-sources/example.dsc', 'package-chain.tar.gz',
+                     'package-chain-verification.json', 'public-test-vectors.json']
             for name in names:
                 path = sources / name
                 path.parent.mkdir(exist_ok=True)
                 path.write_text('source fixture, must not be published')
-            delivery_report = dict(identity, files={name: publish.assembly.profile.probe.digest(sources / name) for name in names})
+            security_fixture(sources, identity)
+            delivery_report = dict(identity, authenticated_input_receipt=dict(signing_fingerprint='A' * 40),
+                                   files={name: publish.assembly.profile.probe.digest(sources / name) for name in names})
             (sources / 'delivery-inputs.json').write_text(json.dumps(delivery_report))
             for name in ['image-stage-a.json', 'image-admission.json', 'image-offline-tests.json']:
                 (evidence / name).write_text('{}')
@@ -239,14 +243,15 @@ class SourceDelivery(unittest.TestCase):
             directory = Path(temporary)
             names = ['modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
                      'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
-                     'loader-inputs.json', 'debian-sources/example.dsc']
+                     'loader-inputs.json', 'debian-sources/example.dsc', 'package-chain.tar.gz',
+                     'package-chain-verification.json', 'public-test-vectors.json']
             for name in names:
                 path = directory / name
                 path.parent.mkdir(exist_ok=True)
                 path.write_text('fixture')
             (directory / 'delivery-inputs.json').write_text('{}')
             manifest = dict(files={name: publish.assembly.profile.probe.digest(directory / name) for name in names})
-            self.assertEqual(len(publish.checked_materials(directory, manifest)), 8)
+            self.assertEqual(len(publish.checked_materials(directory, manifest)), 11)
             incomplete = dict(files={name: digest for name, digest in manifest['files'].items()
                                      if name != 'loader-inputs.json'})
             (directory / 'loader-inputs.json').unlink()

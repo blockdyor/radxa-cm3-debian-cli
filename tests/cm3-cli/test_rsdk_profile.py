@@ -52,6 +52,7 @@ class ProfileRendering(unittest.TestCase):
         self.assertIn('ca-certificates', config['mmdebstrap']['packages'])
         self.assertIn('debian-archive-keyring', config['mmdebstrap']['packages'])
         hook = config['mmdebstrap']['customize-hooks'][0]
+        self.assertIn('cm3-package-chain.py capture --root "$1" --directory', hook)
         for seed in profile.probe.SEEDS + profile.probe.TOOLS:
             self.assertIn(seed, hook.split())
         self.assertLess(hook.index('sha256sum -c'), hook.index('dpkg --unpack'))

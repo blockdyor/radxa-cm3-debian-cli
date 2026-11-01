@@ -1,17 +1,64 @@
 #!/usr/bin/env python3
 """Stage verified experimental delivery or explicitly selected build-only diagnostics."""
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
 import shutil
 import sys
+import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location('assembly', ROOT / 'scripts/cm3-assemble-image.py')
 assembly = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(assembly)
 LABEL = 'EXPERIMENTAL — NOT HARDWARE VALIDATED — NOT FOR PRODUCTION'
+
+
+def checked_security(directory, delivery):
+    chain = json.loads(assembly.regular(directory / 'package-chain-verification.json').read_text())
+    vectors = json.loads(assembly.regular(directory / 'public-test-vectors.json').read_text())
+    for report in [chain, vectors]:
+        if (not isinstance(report, dict) or
+                any(report.get(key) != delivery.get(key) for key in ['source_revision', 'run_id'])):
+            raise ValueError('exact-run security evidence required')
+    fingerprint = delivery['authenticated_input_receipt']['signing_fingerprint']
+    if (chain.get('status') != 'PASS' or chain.get('local_fingerprint') != fingerprint or
+            type(chain.get('installed')) is not int or chain['installed'] < 1 or
+            len(chain.get('packages', [])) != chain['installed']):
+        raise ValueError('complete authenticated package chain required')
+    spec = importlib.util.spec_from_file_location('cm3_vectors', ROOT / 'scripts/cm3-public-test-vectors.py')
+    assert spec is not None and spec.loader is not None
+    public = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(public)
+    bound = vectors.get('public_vectors', {})
+    if (bound.get('path') != public.LIBRARY or bound.get('blocks') != 8 or
+            bound.get('library_sha256') != public.LIBRARY_SHA256 or
+            bound.get('source_archive_sha256') != public.SOURCE_SHA256 or
+            bound.get('source_member_sha256') != public.MEMBER_SHA256 or
+            vectors.get('literal_zero_private_key_bytes') is not False):
+        raise ValueError('exact public-vector disposition required')
+    expected = chain.get('files_sha256')
+    if not isinstance(expected, dict) or not expected or expected.get('debian-archive-keyring.gpg') != chain.get('debian_keyring_sha256'):
+        raise ValueError('package-chain inventory/trust binding required')
+    found = {}
+    with tarfile.open(assembly.regular(directory / 'package-chain.tar.gz'), 'r:gz') as archive:
+        for member in archive:
+            path = Path(member.name)
+            if path.is_absolute() or '..' in path.parts or not path.parts or path.parts[0] != 'package-chain':
+                raise ValueError('unsafe package-chain archive path')
+            name = str(path.relative_to('package-chain'))
+            if member.isdir() and name in ['.', 'releases', 'indexes', 'packages']:
+                continue
+            if not member.isfile() or name not in expected or name in found:
+                raise ValueError('unexpected package-chain archive member')
+            stream = archive.extractfile(member)
+            if stream is None:
+                raise ValueError('unreadable package-chain archive member')
+            found[name] = hashlib.file_digest(stream, 'sha256').hexdigest()
+    if found != expected:
+        raise ValueError('package-chain archive differs from verified inventory')
 
 
 def checked_materials(directory, manifest):
@@ -27,7 +74,8 @@ def checked_materials(directory, manifest):
             raise ValueError('source/notice material hash mismatch')
     if not {'modified-bsp-and-builder-sources.tar.gz', 'installed-notices.tar.gz',
             'firmware-files.json', 'installed-source-identities.tsv', 'source-lock.json',
-            'loader-inputs.json'} <= set(expected):
+            'loader-inputs.json', 'package-chain.tar.gz', 'package-chain-verification.json',
+            'public-test-vectors.json'} <= set(expected):
         raise ValueError('corresponding source/notices incomplete')
     if not any(name.startswith('debian-sources/') and name.endswith('.dsc') for name in expected):
         raise ValueError('exact Debian source delivery absent')
@@ -47,6 +95,7 @@ def stage(work):
     if result.get('status') != 'PASS' or result.get('hardware') != 'UNTESTED' or result.get('stable_release') != 'BLOCKED':
         raise ValueError('independent offline verification required; no hardware/release qualification')
     materials = checked_materials(delivery_dir, delivery)
+    checked_security(delivery_dir, delivery)
     if 'notice-review.json' not in materials:
         raise ValueError('payload-specific notice review required')
     review = json.loads((delivery_dir / 'notice-review.json').read_text())
@@ -74,7 +123,7 @@ def stage(work):
         '\n14-day GitHub Actions development artifact; no release or hardware authority.\n'
         'Original component licenses apply. Sources/notices accompany these exact bytes in sources/.\n'
         'Rockchip and radio firmware are proprietary; retain their notices and restrictions.\n'
-        'OS expansion is not implemented; maintenance/support ownership and reproducibility remain unqualified.\n'
+        'Guarded MMC OS-root expansion is implemented; physical expansion remains UNTESTED.\n'
         'All physical tests remain UNTESTED. Obtain separate hardware authorization before use.\n')
     (destination / 'RAW-SHA256SUMS').write_text(result['image_sha256'] + '  ' + assembly.NAME + '\n')
     (destination / 'IMAGE-XZ-SHA256SUMS').write_text(result['compressed_sha256'] + '  ' + image.name + '\n')
@@ -107,6 +156,7 @@ def diagnostics(work):
     if assembly.profile.probe.digest(image) != result['compressed_sha256']:
         raise ValueError('verified image changed before upload')
     checked_materials(delivery_dir, delivery)
+    checked_security(delivery_dir, delivery)
     destination = work / 'public-diagnostics'
     destination.mkdir()
     for name in ['packages.tsv', 'verification.json']:

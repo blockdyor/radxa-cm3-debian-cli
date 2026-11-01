@@ -2,6 +2,9 @@
 # Invoked only inside the existing disposable, pinned x86_64 builder container.
 set -eu
 export DEBIAN_FRONTEND=noninteractive
+# Preserve the pinned image's trust root before any package upgrade.
+install -d -m 0700 /trusted-builder
+cp /usr/share/keyrings/debian-archive-keyring.gpg /trusted-builder/debian-archive-keyring.gpg
 apt-get -o APT::Update::Error-Mode=any update
 apt-get install -y --no-install-recommends python3 ca-certificates apt-utils gnupg gpgv mmdebstrap arch-test debian-archive-keyring mount git gcc make gcc-aarch64-linux-gnu gh binutils libc6-dev openssh-client kmod
 git config --global --add safe.directory /src

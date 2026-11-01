@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import tempfile
@@ -110,11 +111,15 @@ def render(stage, receipt, output):
             str(ROOT / 'src/share/rsdk/build/rootfs.jsonnet')]
     config = subprocess.check_output(args, text=True)
     parsed = json.loads(config)
+    # Capture before the next hook removes the local feed and before APT cleanup.
+    parsed['mmdebstrap']['customize-hooks'][0] += '\n' + (
+        'python3 ' + shlex.quote(str(ROOT / 'scripts/cm3-package-chain.py')) +
+        ' capture --root "$1" --directory ' + shlex.quote(str(stage / 'package-chain')) + '\n')
     for key in ['essential-hooks', 'customize-hooks', 'cleanup-hooks']:
         for hook in parsed['mmdebstrap'].get(key, []):
             subprocess.run(['sh', '-n'], input=hook, check=True, text=True)
     with output.open('x') as stream:
-        stream.write(config)
+        stream.write(json.dumps(parsed, indent=2) + '\n')
     return parsed
 
 

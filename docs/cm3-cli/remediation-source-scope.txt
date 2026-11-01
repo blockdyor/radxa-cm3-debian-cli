@@ -73,3 +73,25 @@ Source tests and mocked command intent cannot qualify a physical device, a
 healthy systemd boot or a corrected payload. New exact-subject image/source,
 distribution, signature-chain and independent payload reviews are still required
 before staging a release-ready bundle. Preserve old evidence and failed checks.
+
+Corrected-producer retention and cryptographic scope
+The profile captures the exact installed identities, all matching binary .debs,
+decoded Packages indexes and signed InRelease files before deleting the local
+feed or APT lists. Delivery replays gpgv -> Release SHA256 -> Packages -> every
+installed name/version/architecture/payload, without refreshing those indexes.
+The Debian keyring is preserved from the pinned builder before apt upgrades;
+the ephemeral local signer must match the same-run authenticated receipt. The
+retained archive carries only the verified flat allowlist and a full file-hash
+inventory; publication rechecks exact source/run and archive/report agreement.
+Installation transformations remain separately verified by authenticate(): exact
+gzip-to-ARM64 kernel bytes and independently regenerated module indexes, not a
+general dpkg checksum exception. This does not supply individual .deb signatures,
+future repository trust, or fresh retrospective closure for historical image2.
+
+The producer scans allocated regular target files using the exact library path,
+library digest, public GnuTLS source archive/member digests and cardinality of
+eight complete public self-test PEM blocks. Added/changed/copied keys are refused;
+header-only templates are reported separately. This is not literal zero PEM
+bytes, global secret certification or deleted/free-space forensic inspection.
+Reports, package-chain material and unchanged notices/sources must survive final
+retention and independent corrected-payload review before release acceptance.

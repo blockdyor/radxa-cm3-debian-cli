@@ -120,6 +120,28 @@ def prepare(work):
     download_sources(work, source_dir, specs)
     if not list(source_dir.glob('*.dsc')):
         raise ValueError('actual authenticated Debian source downloads required')
+    chain_spec = importlib.util.spec_from_file_location('cm3_package_chain', ROOT / 'scripts/cm3-package-chain.py')
+    chain = importlib.util.module_from_spec(chain_spec)
+    chain_spec.loader.exec_module(chain)
+    chain_dir = work / 'rsdk-profile-stage/package-chain'
+    trusted_keyring_hash = assembly.profile.probe.digest(
+        assembly.regular(Path('/trusted-builder/debian-archive-keyring.gpg')))
+    chain_result = chain.verify(chain_dir, trusted_keyring_hash, receipt['signing_fingerprint'])
+    if (chain_dir / 'installed.tsv').read_bytes() != (work / 'evidence/rsdk-profile-packages.tsv').read_bytes():
+        raise ValueError('retained package-chain identities differ from configured root')
+    chain_result['source_revision'] = revision
+    chain_result['run_id'] = os.environ['GITHUB_RUN_ID']
+    chain_result['trust_anchor_origin'] = dict(builder_image=lock['builder_image'],
+                                              debian_keyring='/usr/share/keyrings/debian-archive-keyring.gpg')
+    (output / 'package-chain-verification.json').write_text(json.dumps(chain_result, indent=2) + '\n')
+    with tarfile.open(output / 'package-chain.tar.gz', 'x:gz') as archive:
+        archive.add(chain_dir, arcname='package-chain')
+    vector_spec = importlib.util.spec_from_file_location('cm3_vectors', ROOT / 'scripts/cm3-public-test-vectors.py')
+    vectors = importlib.util.module_from_spec(vector_spec)
+    vector_spec.loader.exec_module(vectors)
+    vector_result = vectors.scan(root, assembly.regular(source_dir / 'gnutls28_3.8.9.orig.tar.xz').read_bytes())
+    vector_result.update(source_revision=revision, run_id=os.environ['GITHUB_RUN_ID'])
+    (output / 'public-test-vectors.json').write_text(json.dumps(vector_result, indent=2) + '\n')
     with tarfile.open(output / 'modified-bsp-and-builder-sources.tar.gz', 'x:gz') as archive:
         archive_checkout(archive, ROOT, 'builder-and-board')
         for recipe in lock['recipes']:
