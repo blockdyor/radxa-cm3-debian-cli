@@ -1,7 +1,7 @@
 import hashlib
 import json
 import os
-from pathlib import Path
+
 import unittest
 from unittest.mock import patch
 
@@ -42,8 +42,9 @@ class PublicationPolicyTests(unittest.TestCase):
         self.assertEqual(set(inventory), set(package_oci.FILES))
         self.assertEqual(len(inventory), 24)
         self.assertEqual(inventory['SHA256SUMS']['sha256'], package_oci.SUMS_SHA)
-        self.assertEqual(package_oci.digest(Path(__file__).with_name('package_oci.py')),
-                         '54b038bed38fd4990c48d8e5bd63ef42dae4ec164638eaa7beec3693af557eb0')
+        self.assertEqual(package_oci.REVISION, 'b71152296933808f99d7dc169fc6811861a9001b')
+        self.assertEqual(package_oci.LABELS['org.opencontainers.image.source'],
+                         'https://github.com/blockdyor/radxa-cm3-debian-cli')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Local-only OCI distribution recipe. Never authenticates or publishes."""
-import argparse
+
 import hashlib
 import json
 import lzma
@@ -165,15 +165,4 @@ def verify(layout, bundle, pinned=True):
     return desc['digest']
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('build', 'verify'))
-    parser.add_argument('bundle', type=Path)
-    parser.add_argument('layout', type=Path)
-    args = parser.parse_args()
-    try:
-        result = build(args.bundle, args.layout) if args.action == 'build' else verify(args.layout, args.bundle)
-        print(result)
-        print('LOCAL VERIFICATION ONLY. Publication belongs to t_b25bb59f; hardware UNTESTED.')
-    except (ValueError, OSError, KeyError, tarfile.TarError) as error:
-        parser.exit(1, str(error) + '\n')
+
