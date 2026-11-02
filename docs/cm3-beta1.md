@@ -41,9 +41,11 @@ It is an OCI data-distribution artifact, not a runnable container or a target
 Docker installation. OCI-CONTRACT.json specifies the exact mapped inputs and
 labels; OCI-USAGE.txt supplies digest-based pull/export instructions. The separate
 publication workflow verifies the exact wrapper digest and authenticated roundtrip.
-Expected digest: sha256:c73e39347a86a6def34eec67eb637c6712bbfab4e2da0aa266551b377eb0b344.
-The package may initially be private until the owner sets it Public; anonymous
-access is not established merely by a successful push. No latest/stable tags.
+Published digest: sha256:c73e39347a86a6def34eec67eb637c6712bbfab4e2da0aa266551b377eb0b344.
+Package visibility is Public and the associated repository is this repository,
+verified by publication run41440663848 on 2026-11-02. The anonymous package page is
+https://github.com/blockdyor/radxa-cm3-debian-cli/pkgs/container/radxa-cm3-debian-cli.
+No latest/stable tags.
 The release assets retain their reviewed staging text byte-for-byte so the pinned
 inventory and OCI identity remain unchanged; this page records publication status.
 
