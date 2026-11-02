@@ -54,6 +54,27 @@
       "redistribution": "Scoped reviewed aggregate; original file/component notices and restrictions apply; no blanket relicensing",
       "hardware": "UNTESTED",
       "remaining_image_attempts": 1
+    },
+    {
+      "number": 3,
+      "commit": "b71152296933808f99d7dc169fc6811861a9001b",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41331537371",
+      "run_attempt": 1,
+      "hypothesis": "Correct dependency bootstrap and exact guest-root APT aliases, preserving signed package/source/notices closure and encrypted failed-image retention",
+      "source_lock_sha256": "320cea35c319e260971ea0d40b98027a3c9b507b15bcb965d3edf3022f2bfbd8",
+      "started_at": "2026-11-01T19:24:29Z",
+      "assembly_completed_at": "2026-11-01T19:29:08Z",
+      "result": "Assembly PASS; workflow FAILURE in stale verifier requiring the upstream UFS LUN offset on an MMC-only image. Validator-only correction 33f8500455faf1fbfac20f989f62fee359b8724a retains both real MMC placement checks. Same image recovered with authenticated CMS and all563 manifest hashes verified; actual offline, signature-chain, installed-transform, lifecycle and alternate-kernel userspace probes passed within their recorded scopes. Independent final actual-payload review and missing producer-attestation/distribution recovery remain PENDING; NOT release-ready.",
+      "image_sha256": "d514bf7be20e45771eb043e2e620b22e5d584df0f10afe343d6ae47b28b2beca",
+      "compressed_sha256": "e189249e76a527b1680b4c1667ca58c923ab59d7567e1792b8019cc537c72e57",
+      "image_bytes": 1866085376,
+      "compressed_bytes": 207029824,
+      "artifact_id": 13098325406,
+      "artifact_sha256": "ce21e4b76f2d6de82dd8780486a21d121c8e857159d242702d37d4d9d08719f8",
+      "payload": "RETAINED: authenticated recovery includes actual image3 and complete source/notices/chain. Secure hash-checked candidate retained at /opt/data/artifacts/cm3-qualification/t_dce11de0-image3/; not a public release.",
+      "attestation": "NOT ISSUED; original producer provenance job skipped",
+      "hardware": "UNTESTED",
+      "remaining_image_attempts": 0
     }
   ],
   "maximum_package_attempts": null,
@@ -371,7 +392,20 @@
       "artifact_id": 13091876814,
       "artifact_sha256": "5615ae6f0ae24018fc607d7fb3af520393cd57577af68576a97c59eb34a87932",
       "retained_payloads": "Encrypted recovery artifact independently downloaded, API SHA256/ZIP CRC verified (77441696 bytes, one CMS member). Not decrypted/imported or authenticated for reuse; provenance skipped. No corrected image or public source/notices bundle. Historical image2 NO-PUBLISH and physical UNTESTED preserved."
+    },
+    {
+      "number": 25,
+      "commit": "b71152296933808f99d7dc169fc6811861a9001b",
+      "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41331537371",
+      "run_attempt": 1,
+      "hypothesis": "Replay strict local APT aliases without weakening signature closure, prepare complete corresponding sources/notices and retain final corrected image even if postassembly checks fail",
+      "result": "Source/package/profile, sources/notices, Stage A, cumulative admission and actual image3 assembly PASS. Workflow failed stale UFS-on-MMC loader verifier; corrected same-byte inspection passes after verifier-only fix33f8500. Actual signature-chain replay independently anchored to pinned builder OCI layer, installed-file transformations and source/notices closure pass. Original producer attestation skipped; final independent review and authenticated distribution recovery remain pending. No rebuild or fourth image authorized.",
+      "failure_stage": "postassembly-stale-ufs-loader-verifier",
+      "demonstrable_progress": true,
+      "artifact_id": 13098325406,
+      "artifact_sha256": "ce21e4b76f2d6de82dd8780486a21d121c8e857159d242702d37d4d9d08719f8",
+      "retained_payloads": "1771517207-byte encrypted recovery ZIP API SHA256/CRC verified. Bounded streaming CMS authentication and563-file manifest checks passed before extraction. Exact image/source/notices candidate retained securely with12hash-checked assets. No private key uploaded, no producer-attestation PASS claimed, no public release."
     }
   ],
-  "status": "Twenty-four completed producer workflow attempts preserved. Attempt24 passed signed ARM64 preflight then failed exact-product chain capture on a local APT alias before source/notices or assembly. Image2 remains historical NO-PUBLISH; one of the unchanged three image entries remains. Corrected source tests do not establish actual corrected payload acceptance. Physical hardware UNTESTED; stable release BLOCKED."
+  "status": "Twenty-five producer attempts and all three actual image entries preserved. Image3 assembled successfully, was retained and privately authenticated/recovered after stale UFS-on-MMC validator failure. No fourth image capacity remains. Executed actual-byte checks pass within their documented scopes, but final independent actual-payload review and truthful provenance/distribution recovery remain pending: NOT release-ready. Historical image2 NO-PUBLISH unchanged. Physical hardware UNTESTED is a beta limitation, not an administrative prerequisite; stable release BLOCKED."
 }
