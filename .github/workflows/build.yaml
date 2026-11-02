@@ -21,6 +21,11 @@ on:
         required: true
         type: boolean
         default: false
+      recovery_only:
+        description: Attest committed reviewed image3 recovery identities only; NO compilation or assembly
+        required: true
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -30,7 +35,7 @@ concurrency:
 
 jobs:
   packages:
-    if: github.repository == 'blockdyor/radxa-cm3-debian-cli'
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && !inputs.recovery_only
     permissions:
       contents: read
       actions: read
@@ -204,7 +209,7 @@ jobs:
 
   provenance:
     needs: packages
-    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev/cm3-debian-cli'
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev/cm3-debian-cli' && !inputs.recovery_only
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -269,3 +274,68 @@ jobs:
           path: |
             attestation-verification.json
             ${{ steps.attest.outputs.bundle-path }}
+
+  recovery:
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/dev/cm3-debian-cli' && inputs.recovery_only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+      attestations: write
+    env:
+      EXPECTED_SHA: ${{ inputs.expected_sha }}
+      EXPERIMENTAL_IMAGE: ${{ inputs.experimental_image }}
+      PUBLIC_DISTRIBUTION: ${{ inputs.public_distribution }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate reviewed recovery evidence and original run without rebuilding
+        run: python3 scripts/cm3-recovery-attestation.py prepare --approved-sha "$EXPECTED_SHA" --directory recovery-output
+      - name: Issue new recovery-review attestation, NOT original build provenance
+        id: recovery-attest
+        uses: actions/attest@daf44fb950173508f38bd2406030372c1d1162b1 # v3.0.0; same pin as build-provenance v3
+        with:
+          subject-checksums: recovery-output/recovery-subjects.sha256
+          predicate-type: https://github.com/blockdyor/radxa-cm3-debian-cli/attestations/image-recovery/v1
+          predicate-path: recovery-output/recovery-predicate.json
+          push-to-registry: false
+          show-summary: false
+      - name: Enforce exact recovery signer/source/type and real tamper rejection
+        env:
+          BUNDLE: ${{ steps.recovery-attest.outputs.bundle-path }}
+        run: |
+          set -euo pipefail
+          subject=recovery-output/image3-recovery.json
+          type=https://github.com/blockdyor/radxa-cm3-debian-cli/attestations/image-recovery/v1
+          policy=(--bundle "$BUNDLE" --repo "$GITHUB_REPOSITORY"
+            --cert-identity "https://github.com/blockdyor/radxa-cm3-debian-cli/.github/workflows/build.yaml@refs/heads/dev/cm3-debian-cli"
+            --signer-digest "$EXPECTED_SHA" --source-digest "$EXPECTED_SHA"
+            --source-ref refs/heads/dev/cm3-debian-cli
+            --cert-oidc-issuer https://token.actions.githubusercontent.com
+            --deny-self-hosted-runners)
+          gh attestation verify "$subject" "${policy[@]}" --predicate-type "$type" --format json > recovery-output/signature-verification.json
+          cp "$subject" recovery-output/tampered.json
+          printf '\n' >> recovery-output/tampered.json
+          if gh attestation verify recovery-output/tampered.json "${policy[@]}" --predicate-type "$type" > /dev/null 2>&1; then exit 1; fi
+          if gh attestation verify "$subject" "${policy[@]}" --predicate-type https://slsa.dev/provenance/v1 > /dev/null 2>&1; then exit 1; fi
+          if gh attestation verify "$subject" "${policy[@]}" --predicate-type "$type" --source-digest b71152296933808f99d7dc169fc6811861a9001b > /dev/null 2>&1; then exit 1; fi
+          printf '%s\n' 'PASS: actual signed manifest; tampered bytes, wrong predicate and wrong source rejected' > recovery-output/policy-negative-tests.txt
+          cp "$BUNDLE" recovery-output/recovery-attestation.jsonl
+      - name: Retain only public recovery manifest, signature and verification
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cm3-image3-recovery-${{ github.sha }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            recovery-output/image3-recovery.json
+            recovery-output/recovery-predicate.json
+            recovery-output/recovery-subjects.sha256
+            recovery-output/signature-verification.json
+            recovery-output/policy-negative-tests.txt
+            recovery-output/recovery-attestation.jsonl
