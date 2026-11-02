@@ -1,0 +1,43 @@
+name: CM3 reviewed beta publication
+on:
+  pull_request:
+    paths:
+      - scripts/cm3_beta/**
+      - .github/workflows/cm3-beta-publication.yaml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+concurrency:
+  group: cm3-beta-publication
+  cancel-in-progress: false
+jobs:
+  test:
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - run: python3 -m unittest discover -s scripts/cm3_beta -p 'test_*.py' -v
+  publish:
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli' && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && github.run_attempt == 1
+    needs: test
+    environment: cm3-beta-publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install registry transport from signed Ubuntu repositories
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y skopeo
+      - name: Verify public inputs, inspect private namespace, publish exact wrapper and verify roundtrip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/cm3_beta/publish.py

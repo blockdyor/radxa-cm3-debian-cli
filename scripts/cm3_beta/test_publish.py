@@ -1,0 +1,68 @@
+import hashlib
+import json
+import os
+
+import unittest
+from unittest.mock import patch
+
+import package_oci
+import publish
+
+
+class PublicationPolicyTests(unittest.TestCase):
+    def test_verified_registry_absence(self):
+        for code in ('MANIFEST_UNKNOWN', 'NAME_UNKNOWN'):
+            self.assertIsNone(publish.existing_digest(404, json.dumps({'errors': [{'code': code}]}).encode()))
+
+    def test_auth_errors_and_ambiguous_absence_fail_closed(self):
+        for status, body in ((401, b'{}'), (403, b'{}'), (500, b'{}'),
+                             (404, b'{}'), (404, b'{"errors":[{"code":"DENIED"}]}')):
+            with self.subTest(status=status, body=body), self.assertRaises(ValueError):
+                publish.existing_digest(status, body)
+
+    def test_conflicting_version_refused(self):
+        with self.assertRaisesRegex(ValueError, 'conflicting'):
+            publish.existing_digest(200, b'conflicting manifest')
+
+    def test_registry_refreshes_credentials_for_each_lookup(self):
+        replies = [(200, b'{"token":"first-fixture"}', {}), (404, b'{}', {}),
+                   (200, b'{"token":"second-fixture"}', {}), (404, b'{}', {})]
+        with patch.object(publish, 'request', side_effect=replies) as transport:
+            publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+            publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+        calls = transport.call_args_list
+        self.assertEqual(calls[1].args[1]['Authorization'], 'Bearer first-fixture')
+        self.assertEqual(calls[3].args[1]['Authorization'], 'Bearer second-fixture')
+        self.assertEqual(calls[1].args[0], 'https://ghcr.io/v2/' + publish.REPO + '/tags/list')
+
+    def test_registry_denied_token_fails_before_lookup(self):
+        with patch.object(publish, 'request', return_value=(403, b'{}', {})) as transport:
+            with self.assertRaisesRegex(ValueError, 'authorization HTTP 403'):
+                publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+        self.assertEqual(transport.call_count, 1)
+
+    def test_exact_matching_version_reusable(self):
+        # Test digest comparison without credentials or a registry.
+        body = b'exact manifest bytes'
+        digest = 'sha256:' + hashlib.sha256(body).hexdigest()
+        with patch.object(publish, 'DIGEST', digest):
+            self.assertEqual(publish.existing_digest(200, body), digest)
+
+    def test_noncanonical_invocation_rejected_before_network(self):
+        with patch.dict(os.environ, {}, clear=True), self.assertRaisesRegex(ValueError, 'canonical'):
+            publish.main()
+
+    def test_approved_inventory_and_recipe_are_bound(self):
+        self.assertEqual(package_oci.digest(publish.INVENTORY),
+                         '9f840370539f5cf4b02a03b2668b234ed358cf5cd360dc641ea56b4bc7f565fe')
+        inventory = json.loads(publish.INVENTORY.read_text())['inventory']
+        self.assertEqual(set(inventory), set(package_oci.FILES))
+        self.assertEqual(len(inventory), 24)
+        self.assertEqual(inventory['SHA256SUMS']['sha256'], package_oci.SUMS_SHA)
+        self.assertEqual(package_oci.REVISION, 'b71152296933808f99d7dc169fc6811861a9001b')
+        self.assertEqual(package_oci.LABELS['org.opencontainers.image.source'],
+                         'https://github.com/blockdyor/radxa-cm3-debian-cli')
+
+
+if __name__ == '__main__':
+    unittest.main()
