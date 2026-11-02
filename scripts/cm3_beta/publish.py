@@ -121,7 +121,7 @@ def main():
         subprocess.run(['skopeo', 'login', '--authfile', str(auth), '--username', actor,
                         '--password-stdin', 'ghcr.io'], input=token.encode(), check=True)
         auth.chmod(0o600)
-        # Recheck immediately before writing; never overwrite a conflicting tag.
+        # Single authorized publisher; recheck immediately before writing.
         status, body, _ = request(REGISTRY + '/v2/' + REPO + '/manifests/' + recipe.VERSION, headers)
         if existing_digest(status, body) is None:
             subprocess.run(['skopeo', 'copy', '--authfile', str(auth), '--preserve-digests',

@@ -14,6 +14,9 @@ Published 2026-11-02. One canonical image supports the documented SD/eMMC paths;
 NVMe boot/root is outside this beta. Owner-key provisioning is required offline
 before first boot. No default login or password is provided.
 
+Image: `radxa-cm3_debian-13-trixie_arm64_cli_v0.1.0-beta.1.img.xz`.
+Built/tested source: `b71152296933808f99d7dc169fc6811861a9001b`.
+
 Compressed SHA-256:
 `e189249e76a527b1680b4c1667ca58c923ab59d7567e1792b8019cc537c72e57`.
 Download the complete release, including corresponding sources/notices and the

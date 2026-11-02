@@ -163,6 +163,3 @@ def verify(layout, bundle, pinned=True):
             with tar.extractfile(m) as f:
                 require(hashlib.file_digest(f, 'sha256').hexdigest() == expected[reverse[m.name]], 'extracted bytes mismatch')
     return desc['digest']
-
-
-
