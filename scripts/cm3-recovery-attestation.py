@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -152,7 +153,12 @@ def verify(directory, bundle, revision):
             path = directory / item['name']
             if path.stat().st_size != item['bytes'] or digest(path) != item['sha256']:
                 raise ValueError('material digest/size mismatch: ' + item['name'])
-            results = gh_json('attestation', 'verify', str(path), '--bundle', str(snapshot),
+            # gh receives only a private fixed-name snapshot, not a caller's CLI operand.
+            subject = Path(temporary) / 'subject'
+            shutil.copyfile(path, subject)
+            if subject.stat().st_size != item['bytes'] or digest(subject) != item['sha256']:
+                raise ValueError('material changed during snapshot')
+            results = gh_json('attestation', 'verify', str(subject), '--bundle', str(snapshot),
                 '--repo', REPOSITORY, '--hostname', 'github.com', '--cert-identity', WORKFLOW,
                 '--signer-digest', revision, '--source-digest', revision, '--source-ref', REF,
                 '--cert-oidc-issuer', 'https://token.actions.githubusercontent.com',

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('recovery', ROOT / 'scripts/cm3-recovery-attestation.py')
@@ -74,6 +75,37 @@ class RecoveryTests(unittest.TestCase):
             link = Path(directory) / 'link'; link.symlink_to(original)
             with self.assertRaises(ValueError):
                 recovery.digest(link)
+
+    def test_signature_command_uses_same_byte_private_snapshot_not_input_operand(self):
+        # A command-boundary test, NOT evidence of signature validity.
+        import hashlib
+        import lzma
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary) / '--caller-controlled'; directory.mkdir()
+            raw = b'recovery boundary fixture'
+            name = 'fixture.img'
+            compressed = lzma.compress(raw)
+            (directory / (name + '.xz')).write_bytes(compressed)
+            manifest = dict(subjects=[
+                dict(name=name, sha256=hashlib.sha256(raw).hexdigest(), bytes=len(raw)),
+                dict(name=name + '.xz', sha256=hashlib.sha256(compressed).hexdigest(), bytes=len(compressed))])
+            mf = directory / 'image3-recovery.json'; mf.write_text(json.dumps(manifest))
+            bundle = directory / 'bundle'; bundle.write_text('{}')
+            statement = dict(predicateType=recovery.PREDICATE,
+                predicate=dict(manifest, verificationSource='a' * 40),
+                subject=[dict(name=i['name'], digest=dict(sha256=i['sha256'])) for i in manifest['subjects']] +
+                        [dict(name=mf.name, digest=dict(sha256=recovery.digest(mf)))])
+            seen = []
+            def check_command(*args):
+                subject = Path(args[2])
+                self.assertTrue(subject.is_absolute())
+                self.assertNotEqual(subject.parent, directory)
+                self.assertEqual(subject.name, 'subject')
+                seen.append(subject.read_bytes())
+                return [dict(verificationResult=dict(statement=statement))]
+            with patch.object(recovery, 'MANIFEST', mf), patch.object(recovery, 'validate', side_effect=lambda m: m), patch.object(recovery, 'gh_json', side_effect=check_command):
+                recovery.verify(directory, bundle, 'a' * 40)
+            self.assertEqual(seen, [compressed, mf.read_bytes()])
 
     def test_recovery_workflow_cannot_enter_packages_or_assembly(self):
         text = (ROOT / '.github/workflows/build.yaml').read_text()
