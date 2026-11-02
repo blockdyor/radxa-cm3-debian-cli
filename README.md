@@ -25,8 +25,11 @@ overall run failed and original build provenance was skipped. Recovery evidence
 is independently reviewed local evidence, not original trusted-builder provenance.
 
 Companion OCI distribution: `ghcr.io/blockdyor/radxa-cm3-debian-cli:0.1.0-beta.1`.
-The publication workflow verifies the exact reviewed wrapper and registry roundtrip;
-initial package visibility may be private until the owner changes it to Public.
+The [public package](https://github.com/blockdyor/radxa-cm3-debian-cli/pkgs/container/radxa-cm3-debian-cli)
+contains the same 24 release assets. Immutable OCI digest:
+`sha256:c73e39347a86a6def34eec67eb637c6712bbfab4e2da0aa266551b377eb0b344`.
+The [publication workflow](https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41440663848)
+verified the exact reviewed wrapper, registry roundtrip and repository association.
 This is an archive of OS assets, not a runnable container. No `latest` tag.
 
 This repository is based on [RadxaOS RSDK](https://RadxaOS-SDK.github.io/rsdk/).
