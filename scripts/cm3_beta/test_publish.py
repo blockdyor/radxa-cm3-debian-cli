@@ -24,6 +24,23 @@ class PublicationPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'conflicting'):
             publish.existing_digest(200, b'conflicting manifest')
 
+    def test_registry_refreshes_credentials_for_each_lookup(self):
+        replies = [(200, b'{"token":"first-fixture"}', {}), (404, b'{}', {}),
+                   (200, b'{"token":"second-fixture"}', {}), (404, b'{}', {})]
+        with patch.object(publish, 'request', side_effect=replies) as transport:
+            publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+            publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+        calls = transport.call_args_list
+        self.assertEqual(calls[1].args[1]['Authorization'], 'Bearer first-fixture')
+        self.assertEqual(calls[3].args[1]['Authorization'], 'Bearer second-fixture')
+        self.assertEqual(calls[1].args[0], 'https://ghcr.io/v2/' + publish.REPO + '/tags/list')
+
+    def test_registry_denied_token_fails_before_lookup(self):
+        with patch.object(publish, 'request', return_value=(403, b'{}', {})) as transport:
+            with self.assertRaisesRegex(ValueError, 'authorization HTTP 403'):
+                publish.registry('/tags/list', 'fixture-password', 'fixture-actor')
+        self.assertEqual(transport.call_count, 1)
+
     def test_exact_matching_version_reusable(self):
         # Test digest comparison without credentials or a registry.
         body = b'exact manifest bytes'

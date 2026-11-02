@@ -48,6 +48,19 @@ def existing_digest(status, body):
     return actual
 
 
+def registry(path, token, actor):
+    # Registry bearer tokens can expire while multi-gigabyte inputs transfer.
+    basic = base64.b64encode((actor + ':' + token).encode()).decode()
+    status, body, _ = request(REGISTRY + '/token?service=ghcr.io&scope=repository:' + REPO + ':pull,push',
+                              {'Authorization': 'Basic ' + basic})
+    if status != 200:
+        raise ValueError(f'namespace token authorization HTTP {status}')
+    bearer = json.loads(body)['token']
+    return request(REGISTRY + '/v2/' + REPO + path,
+                   {'Authorization': 'Bearer ' + bearer,
+                    'Accept': 'application/vnd.oci.image.manifest.v1+json'})
+
+
 def main():
     if (os.environ.get('GITHUB_REPOSITORY') != REPO or
             os.environ.get('GITHUB_REF') != 'refs/heads/main' or
@@ -79,22 +92,14 @@ def main():
         raise ValueError(f'package namespace API HTTP {package_status}: {package.get("message")}')
     if package_status == 200 and package.get('repository', {}).get('full_name') != REPO:
         raise ValueError('existing package is not associated with this repository')
-    basic = base64.b64encode((actor + ':' + token).encode()).decode()
-    status, body, _ = request(REGISTRY + '/token?service=ghcr.io&scope=repository:' + REPO + ':pull,push',
-                              {'Authorization': 'Basic ' + basic})
-    if status != 200:
-        raise ValueError(f'namespace token authorization HTTP {status}')
-    bearer = json.loads(body)['token']
-    headers = {'Authorization': 'Bearer ' + bearer,
-               'Accept': 'application/vnd.oci.image.manifest.v1+json'}
-    status, body, _ = request(REGISTRY + '/v2/' + REPO + '/tags/list', headers)
+    status, body, _ = registry('/tags/list', token, actor)
     if status == 404:
         errors = json.loads(body).get('errors', [])
         if package_status != 404 or not errors or any(e.get('code') != 'NAME_UNKNOWN' for e in errors):
             raise ValueError('namespace absence ambiguous')
     elif status != 200:
         raise ValueError(f'authenticated namespace inspection HTTP {status}')
-    status, body, _ = request(REGISTRY + '/v2/' + REPO + '/manifests/' + recipe.VERSION, headers)
+    status, body, _ = registry('/manifests/' + recipe.VERSION, token, actor)
     prior = existing_digest(status, body)
     print(json.dumps({'namespace_api': package_status, 'version_lookup': status, 'existing_digest': prior}), flush=True)
 
@@ -122,12 +127,12 @@ def main():
                         '--password-stdin', 'ghcr.io'], input=token.encode(), check=True)
         auth.chmod(0o600)
         # Single authorized publisher; recheck immediately before writing.
-        status, body, _ = request(REGISTRY + '/v2/' + REPO + '/manifests/' + recipe.VERSION, headers)
+        status, body, _ = registry('/manifests/' + recipe.VERSION, token, actor)
         if existing_digest(status, body) is None:
             subprocess.run(['skopeo', 'copy', '--authfile', str(auth), '--preserve-digests',
                 'oci:' + str(layout) + ':' + recipe.VERSION,
                 'docker://ghcr.io/' + REPO + ':' + recipe.VERSION], check=True)
-        status, body, _ = request(REGISTRY + '/v2/' + REPO + '/manifests/' + recipe.VERSION, headers)
+        status, body, _ = registry('/manifests/' + recipe.VERSION, token, actor)
         if existing_digest(status, body) != DIGEST:
             raise ValueError('remote post-push digest missing')
         pulled = root / 'pulled'
