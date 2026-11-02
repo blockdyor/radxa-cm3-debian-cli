@@ -1,0 +1,120 @@
+{
+  "status": "PASS: reviewed beta staging; NOT PUBLISHED",
+  "task": "t_80b80b03",
+  "approval": "kanban:t_dce11de0/run:228",
+  "durable_path": "/opt/data/artifacts/cm3-qualification/t_80b80b03-beta1-final",
+  "files": 24,
+  "checksum_entries": 23,
+  "signed_subjects_unchanged": 7,
+  "modified_unsigned_files": [
+    "GATE-DECISION.txt",
+    "KNOWN-LIMITATIONS.txt",
+    "PUBLISHER-HANDOFF.txt",
+    "README.md",
+    "SHA256SUMS",
+    "build-manifest.json",
+    "validation-report.txt"
+  ],
+  "candidate_preserved": true,
+  "raw_sha256": "d514bf7be20e45771eb043e2e620b22e5d584df0f10afe343d6ae47b28b2beca",
+  "xz_sha256": "e189249e76a527b1680b4c1667ca58c923ab59d7567e1792b8019cc537c72e57",
+  "source_notices_sha256": "2088afb25921bc54a8df60e26d2453e8f6f58617ed55727188f61717c1d4c7fd",
+  "inventory": {
+    "GATE-DECISION.txt": {
+      "sha256": "630176603ee2d887b6db841da59580b626943f8e0e6669246fb95bef58ee2805",
+      "bytes": 3291
+    },
+    "KNOWN-LIMITATIONS.txt": {
+      "sha256": "629e69c2e88b2fc26968b2aa8c3afa79ddb5ded5c0fe74835c138c3573633198",
+      "bytes": 3098
+    },
+    "OCI-CONTRACT.json": {
+      "sha256": "3aaeba9cd192760e528897604ea41881a7c3b05313a879bb8635496f118e2ae3",
+      "bytes": 2912
+    },
+    "OCI-USAGE.txt": {
+      "sha256": "4ee126dea0b6d5ca89571710e840b52ebce541590a3f64aa02047f2f0afd58a8",
+      "bytes": 3075
+    },
+    "PUBLISHER-HANDOFF.txt": {
+      "sha256": "f688740718e30dee3c41c3e281369e0361b44a83ab06b2e6f7d51c6b3ae233e1",
+      "bytes": 3354
+    },
+    "RAW-SHA256SUMS": {
+      "sha256": "6d996636ca58cf267d542d5c23ab358c7d4ba0cf904c3423766482ce05d39f58",
+      "bytes": 121
+    },
+    "README.md": {
+      "sha256": "9a9171c85275d54baf64279be5f5a1e860ffcdc0ea167af05557db36836b73cc",
+      "bytes": 14157
+    },
+    "RECOVERY-VERIFICATION.txt": {
+      "sha256": "44fc36c025c0efe48234ddc47a2469dc56a4d986fd70b3fad04a96e60b847068",
+      "bytes": 2810
+    },
+    "SHA256SUMS": {
+      "sha256": "817d42c2bdf2d7e779d4965134e52d9e4359ea35c3b945ca78ef870ba447e17f",
+      "bytes": 2076
+    },
+    "build-manifest.json": {
+      "sha256": "589af76274efc8748885262e71229bd0fc7bc3c5ba87f81a1354296944eb18a1",
+      "bytes": 11205
+    },
+    "hardware-matrix.txt": {
+      "sha256": "24c30e0964dcec3326c723ad8f8b84c39104ff7a8688f33a7e997b2ef2098232",
+      "bytes": 8637
+    },
+    "image3-recovery.json": {
+      "sha256": "3b16acb96afdc8b8ae8886c5b4bf3ba57339cc96218ddbc22b0f9397c5f1a87f",
+      "bytes": 3324
+    },
+    "independent-payload-review.txt": {
+      "sha256": "52f56213befb4cf1521f71f953fa3bb6185074c8ad827d33ac6657db356139cf",
+      "bytes": 15519
+    },
+    "package-manifest.txt": {
+      "sha256": "c40b35568ee101f67b680d4283e7fe8f666949d6b40e1697363fe7397116ac4c",
+      "bytes": 10875
+    },
+    "radxa-cm3_debian-13-trixie_arm64_cli_v0.1.0-beta.1.img.xz": {
+      "sha256": "e189249e76a527b1680b4c1667ca58c923ab59d7567e1792b8019cc537c72e57",
+      "bytes": 207029824
+    },
+    "recovery-actual-verification.json": {
+      "sha256": "8bcc7d98ac32c2b163e07882bb0aa0d7bb806bf8f04ed93fc46f35a99773ade4",
+      "bytes": 382
+    },
+    "recovery-attestation.jsonl": {
+      "sha256": "93189b0bb0bb863bc4f2061b0813754def28a4dde38ea0e49cd4f5b217dcc46e",
+      "bytes": 15320
+    },
+    "recovery-policy-tests.json": {
+      "sha256": "5ea6d0542b83784a7ff5ba03155bf513ba6431ceb912ef1ead49c5988d57dab6",
+      "bytes": 973
+    },
+    "recovery-predicate.json": {
+      "sha256": "c809fee0e86f0ae1a9fb9bcf12fac5b5665348a622595a310659c4e374c965af",
+      "bytes": 3048
+    },
+    "recovery-signature-verification.json": {
+      "sha256": "9a049b0a787c67f68833933bc4adde72738a47fd9b450338fcf6681ff85958c3",
+      "bytes": 21348
+    },
+    "source-notices.tar.gz": {
+      "sha256": "2088afb25921bc54a8df60e26d2453e8f6f58617ed55727188f61717c1d4c7fd",
+      "bytes": 1487105147
+    },
+    "source-repack.json": {
+      "sha256": "4a86bb3058ea6a3837e2225c5aee8eb8e792ecc7f524ba9619d63a6022509100",
+      "bytes": 636
+    },
+    "validation-report.txt": {
+      "sha256": "fb5219ef5fd221b5e135a4e3b6fca9bb123d5ab4ade6fca5e1ba055906554f4a",
+      "bytes": 2225
+    },
+    "virtual-validation-report.txt": {
+      "sha256": "d4dde39ad4d5a5de6939c3b112396fd3d67524a21319e56eb1828e05e6977aeb",
+      "bytes": 1140
+    }
+  }
+}
