@@ -98,9 +98,6 @@ sha256:c73e39347a86a6def34eec67eb637c6712bbfab4e2da0aa266551b377eb0b344
 ## Documentation and upstream projects
 
 - [Beta installation, verification and recovery guide](docs/cm3-beta1.md)
-- [Build instructions and engineering status](docs/cm3-cli/build.md)
-- [First-boot details](docs/cm3-cli/first-boot.md)
-- [Validation scope](docs/cm3-cli/validation.md)
 - [DTV Electronics CmRat hardware](https://github.com/DTVElectronics/cmrat)
 - [RadxaOS RSDK](https://RadxaOS-SDK.github.io/rsdk/), the upstream build framework this repository is based on
 
