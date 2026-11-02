@@ -122,6 +122,8 @@ def prepare(revision, output):
 
 
 def verify(directory, bundle, revision):
+    if re.fullmatch('[0-9a-f]{40}', revision) is None:
+        raise ValueError('full verification source commit required')
     # Snapshot small trusted-policy inputs; payload files are rehashed by gh itself.
     with tempfile.TemporaryDirectory(prefix='cm3-recovery-verify-') as temporary:
         snapshot = Path(temporary) / 'bundle.jsonl'

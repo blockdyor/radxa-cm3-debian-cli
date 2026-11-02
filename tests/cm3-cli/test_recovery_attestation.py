@@ -69,6 +69,10 @@ class RecoveryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'manifest differs'):
                 recovery.verify(directory, bundle, 'a' * 40)
 
+    def test_cli_source_option_injection_rejected_before_any_file_or_process(self):
+        with self.assertRaisesRegex(ValueError, 'full verification source'):
+            recovery.verify(Path('not-read'), Path('not-read'), '--help')
+
     def test_digest_rejects_symlink(self):
         with tempfile.TemporaryDirectory() as directory:
             original = Path(directory) / 'file'; original.write_text('fixture')
