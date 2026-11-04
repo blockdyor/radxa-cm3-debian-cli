@@ -1,0 +1,164 @@
+{
+  "schema_version": "cm3-toolkit/v1",
+  "kind": "benchmark",
+  "run_id": "dcb84abaa7914b5b85468d9030e21b7c",
+  "target": "radxa-cm3-rpi-cm4-io",
+  "provenance": {
+    "synthetic": true,
+    "fixture_id": "bench-v1",
+    "origin": "fixture",
+    "input_run_ids": [],
+    "tool_revision": null
+  },
+  "time": {
+    "start_utc": "2026-10-25T17:39:53.482161+00:00",
+    "end_utc": "2026-10-25T17:39:53.484537+00:00",
+    "duration_s": 0.0024608710082247853,
+    "clock": "monotonic"
+  },
+  "authorization": {
+    "execute": true,
+    "load": true,
+    "write": false,
+    "network": false,
+    "scope_ref": "SYNTHETIC-ONLY-NO-HARDWARE-AUTHORIZATION"
+  },
+  "conditions": {
+    "scope_ref": "SYNTHETIC-ONLY-NO-HARDWARE-AUTHORIZATION",
+    "protocol_id": "synthetic-short/v1",
+    "role": "baseline",
+    "repetition": 1,
+    "boot_events": {
+      "clock": "external-monotonic",
+      "start_s": 100,
+      "end_s": 108,
+      "uncertainty_s": 0.5,
+      "observer_ref": "synthetic-observer",
+      "start_event": "power-assertion",
+      "end_event": "authenticated-command-complete",
+      "authentication": "preprovisioned-key",
+      "host_key_policy": "pinned"
+    },
+    "image_hash": null,
+    "source_lock": null,
+    "debian": null,
+    "kernel": null,
+    "dtb": null,
+    "bootloader": null,
+    "firmware": null,
+    "module_revision": null,
+    "carrier_revision": null,
+    "ram_sku": null,
+    "cooling": null,
+    "orientation": null,
+    "fan_control": null,
+    "ambient_degc": null,
+    "power": null,
+    "meter_uncertainty": null,
+    "storage": null,
+    "filesystem": null,
+    "fill": null,
+    "cache_state": null,
+    "network": null,
+    "logger_overhead": null,
+    "warmup": null,
+    "exclusions": null,
+    "failures": null,
+    "cpu_policy": null,
+    "zram": null,
+    "unknown_reasons": {
+      "image_hash": "not-supplied",
+      "source_lock": "not-supplied",
+      "debian": "not-supplied",
+      "kernel": "not-supplied",
+      "dtb": "not-supplied",
+      "bootloader": "not-supplied",
+      "firmware": "not-supplied",
+      "module_revision": "not-supplied",
+      "carrier_revision": "not-supplied",
+      "ram_sku": "not-supplied",
+      "cooling": "not-supplied",
+      "orientation": "not-supplied",
+      "fan_control": "not-supplied",
+      "ambient_degc": "not-supplied",
+      "power": "not-supplied",
+      "meter_uncertainty": "not-supplied",
+      "storage": "not-supplied",
+      "filesystem": "not-supplied",
+      "fill": "not-supplied",
+      "cache_state": "not-supplied",
+      "network": "not-supplied",
+      "logger_overhead": "not-supplied",
+      "warmup": "not-supplied",
+      "exclusions": "not-supplied",
+      "failures": "not-supplied",
+      "cpu_policy": "not-supplied",
+      "zram": "not-supplied"
+    },
+    "duration_s": 10,
+    "memory_mib": 64,
+    "file_mib": 16,
+    "sustained": false,
+    "tool_versions": {
+      "python": "3.14.7",
+      "protocol": "cm3-bench/v1"
+    }
+  },
+  "records": [
+    {
+      "name": "cpu.throughput",
+      "status": "ok",
+      "value": 10.0,
+      "unit": "operations/s",
+      "source": "fixture",
+      "reason": null
+    },
+    {
+      "name": "cpu.thermal",
+      "status": "ok",
+      "value": [
+        {
+          "elapsed_s": 0,
+          "degc": 30
+        },
+        {
+          "elapsed_s": 10,
+          "degc": 40
+        }
+      ],
+      "unit": null,
+      "source": "fixture",
+      "reason": null
+    },
+    {
+      "name": "cpu.raw",
+      "status": "ok",
+      "value": {
+        "operations": 100,
+        "elapsed_s": 10,
+        "thermal_samples": [
+          {
+            "elapsed_s": 0,
+            "degc": 30
+          },
+          {
+            "elapsed_s": 10,
+            "degc": 40
+          }
+        ]
+      },
+      "unit": null,
+      "source": "fixture",
+      "reason": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "raw",
+      "kind": "inline",
+      "path_or_ref": "cpu.raw",
+      "sha256": "651127e57237834d626442526bd5da62f9c090b92037b348bc86b65d7123a74b"
+    }
+  ],
+  "errors": []
+}

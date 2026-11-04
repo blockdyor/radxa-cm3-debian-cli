@@ -1,0 +1,338 @@
+{
+  "schema_version": "cm3-toolkit/v1",
+  "kind": "comparison",
+  "run_id": "518bff5e58914c09937ea517a92ec89d",
+  "target": "radxa-cm3-rpi-cm4-io",
+  "provenance": {
+    "synthetic": true,
+    "fixture_id": "bench-v1+bench-v1",
+    "origin": "derived",
+    "input_run_ids": [
+      "dcb84abaa7914b5b85468d9030e21b7c",
+      "f760a2be39924306989270d0c5db4008"
+    ],
+    "tool_revision": null
+  },
+  "time": {
+    "start_utc": null,
+    "end_utc": null,
+    "duration_s": null,
+    "clock": "not-run"
+  },
+  "authorization": {
+    "execute": false,
+    "load": false,
+    "write": false,
+    "network": false,
+    "scope_ref": null
+  },
+  "conditions": {},
+  "records": [
+    {
+      "name": "cpu.raw",
+      "status": "ok",
+      "value": {
+        "baseline": {
+          "operations": 100,
+          "elapsed_s": 10,
+          "thermal_samples": [
+            {
+              "elapsed_s": 0,
+              "degc": 30
+            },
+            {
+              "elapsed_s": 10,
+              "degc": 40
+            }
+          ]
+        },
+        "candidate": {
+          "operations": 100,
+          "elapsed_s": 10,
+          "thermal_samples": [
+            {
+              "elapsed_s": 0,
+              "degc": 30
+            },
+            {
+              "elapsed_s": 10,
+              "degc": 40
+            }
+          ]
+        },
+        "delta": null,
+        "percent": null
+      },
+      "unit": null,
+      "source": null,
+      "reason": null
+    },
+    {
+      "name": "cpu.thermal",
+      "status": "ok",
+      "value": {
+        "baseline": [
+          {
+            "elapsed_s": 0,
+            "degc": 30
+          },
+          {
+            "elapsed_s": 10,
+            "degc": 40
+          }
+        ],
+        "candidate": [
+          {
+            "elapsed_s": 0,
+            "degc": 30
+          },
+          {
+            "elapsed_s": 10,
+            "degc": 40
+          }
+        ],
+        "delta": null,
+        "percent": null
+      },
+      "unit": null,
+      "source": null,
+      "reason": null
+    },
+    {
+      "name": "cpu.throughput",
+      "status": "ok",
+      "value": {
+        "baseline": 10.0,
+        "candidate": 10.0,
+        "delta": null,
+        "percent": null
+      },
+      "unit": "operations/s",
+      "source": null,
+      "reason": null
+    },
+    {
+      "name": "comparison.input_status",
+      "status": "ok",
+      "value": [
+        {
+          "run_id": "dcb84abaa7914b5b85468d9030e21b7c",
+          "records": [
+            {
+              "name": "cpu.throughput",
+              "status": "ok",
+              "reason": null
+            },
+            {
+              "name": "cpu.thermal",
+              "status": "ok",
+              "reason": null
+            },
+            {
+              "name": "cpu.raw",
+              "status": "ok",
+              "reason": null
+            }
+          ],
+          "errors": [],
+          "conditions": {
+            "scope_ref": "SYNTHETIC-ONLY-NO-HARDWARE-AUTHORIZATION",
+            "protocol_id": "synthetic-short/v1",
+            "role": "baseline",
+            "repetition": 1,
+            "boot_events": {
+              "clock": "external-monotonic",
+              "start_s": 100,
+              "end_s": 108,
+              "uncertainty_s": 0.5,
+              "observer_ref": "synthetic-observer",
+              "start_event": "power-assertion",
+              "end_event": "authenticated-command-complete",
+              "authentication": "preprovisioned-key",
+              "host_key_policy": "pinned"
+            },
+            "image_hash": null,
+            "source_lock": null,
+            "debian": null,
+            "kernel": null,
+            "dtb": null,
+            "bootloader": null,
+            "firmware": null,
+            "module_revision": null,
+            "carrier_revision": null,
+            "ram_sku": null,
+            "cooling": null,
+            "orientation": null,
+            "fan_control": null,
+            "ambient_degc": null,
+            "power": null,
+            "meter_uncertainty": null,
+            "storage": null,
+            "filesystem": null,
+            "fill": null,
+            "cache_state": null,
+            "network": null,
+            "logger_overhead": null,
+            "warmup": null,
+            "exclusions": null,
+            "failures": null,
+            "cpu_policy": null,
+            "zram": null,
+            "unknown_reasons": {
+              "image_hash": "not-supplied",
+              "source_lock": "not-supplied",
+              "debian": "not-supplied",
+              "kernel": "not-supplied",
+              "dtb": "not-supplied",
+              "bootloader": "not-supplied",
+              "firmware": "not-supplied",
+              "module_revision": "not-supplied",
+              "carrier_revision": "not-supplied",
+              "ram_sku": "not-supplied",
+              "cooling": "not-supplied",
+              "orientation": "not-supplied",
+              "fan_control": "not-supplied",
+              "ambient_degc": "not-supplied",
+              "power": "not-supplied",
+              "meter_uncertainty": "not-supplied",
+              "storage": "not-supplied",
+              "filesystem": "not-supplied",
+              "fill": "not-supplied",
+              "cache_state": "not-supplied",
+              "network": "not-supplied",
+              "logger_overhead": "not-supplied",
+              "warmup": "not-supplied",
+              "exclusions": "not-supplied",
+              "failures": "not-supplied",
+              "cpu_policy": "not-supplied",
+              "zram": "not-supplied"
+            },
+            "duration_s": 10,
+            "memory_mib": 64,
+            "file_mib": 16,
+            "sustained": false,
+            "tool_versions": {
+              "python": "3.14.7",
+              "protocol": "cm3-bench/v1"
+            }
+          }
+        },
+        {
+          "run_id": "f760a2be39924306989270d0c5db4008",
+          "records": [
+            {
+              "name": "cpu.throughput",
+              "status": "ok",
+              "reason": null
+            },
+            {
+              "name": "cpu.thermal",
+              "status": "ok",
+              "reason": null
+            },
+            {
+              "name": "cpu.raw",
+              "status": "ok",
+              "reason": null
+            }
+          ],
+          "errors": [],
+          "conditions": {
+            "scope_ref": "SYNTHETIC-ONLY-NO-HARDWARE-AUTHORIZATION",
+            "protocol_id": "synthetic-short/v1",
+            "role": "candidate",
+            "repetition": 1,
+            "boot_events": {
+              "clock": "external-monotonic",
+              "start_s": 100,
+              "end_s": 108,
+              "uncertainty_s": 0.5,
+              "observer_ref": "synthetic-observer",
+              "start_event": "power-assertion",
+              "end_event": "authenticated-command-complete",
+              "authentication": "preprovisioned-key",
+              "host_key_policy": "pinned"
+            },
+            "image_hash": null,
+            "source_lock": null,
+            "debian": null,
+            "kernel": null,
+            "dtb": null,
+            "bootloader": null,
+            "firmware": null,
+            "module_revision": null,
+            "carrier_revision": null,
+            "ram_sku": null,
+            "cooling": null,
+            "orientation": null,
+            "fan_control": null,
+            "ambient_degc": null,
+            "power": null,
+            "meter_uncertainty": null,
+            "storage": null,
+            "filesystem": null,
+            "fill": null,
+            "cache_state": null,
+            "network": null,
+            "logger_overhead": null,
+            "warmup": null,
+            "exclusions": null,
+            "failures": null,
+            "cpu_policy": null,
+            "zram": null,
+            "unknown_reasons": {
+              "image_hash": "not-supplied",
+              "source_lock": "not-supplied",
+              "debian": "not-supplied",
+              "kernel": "not-supplied",
+              "dtb": "not-supplied",
+              "bootloader": "not-supplied",
+              "firmware": "not-supplied",
+              "module_revision": "not-supplied",
+              "carrier_revision": "not-supplied",
+              "ram_sku": "not-supplied",
+              "cooling": "not-supplied",
+              "orientation": "not-supplied",
+              "fan_control": "not-supplied",
+              "ambient_degc": "not-supplied",
+              "power": "not-supplied",
+              "meter_uncertainty": "not-supplied",
+              "storage": "not-supplied",
+              "filesystem": "not-supplied",
+              "fill": "not-supplied",
+              "cache_state": "not-supplied",
+              "network": "not-supplied",
+              "logger_overhead": "not-supplied",
+              "warmup": "not-supplied",
+              "exclusions": "not-supplied",
+              "failures": "not-supplied",
+              "cpu_policy": "not-supplied",
+              "zram": "not-supplied"
+            },
+            "duration_s": 10,
+            "memory_mib": 64,
+            "file_mib": 16,
+            "sustained": false,
+            "tool_versions": {
+              "python": "3.14.7",
+              "protocol": "cm3-bench/v1"
+            }
+          }
+        }
+      ],
+      "unit": null,
+      "source": null,
+      "reason": null
+    },
+    {
+      "name": "comparison.summary",
+      "status": "ok",
+      "value": "SYNTHETIC FIXTURE OUTPUT - NOT CM3 EVIDENCE\nHardware: UNTESTED. Gates G0-G7: NOT EVALUATED.\nSingle-run descriptive comparison only; no statistical benefit or G4 PASS.\nConclusion: INCONCLUSIVE\ncpu.thermal: descriptive values retained\ncpu.throughput: descriptive values retained\nControls: failures/exclusions unknown or present; image identities unknown; unknown or mismatched ambient_degc; unknown or mismatched bootloader; unknown or mismatched cache_state; unknown or mismatched carrier_revision; unknown or mismatched cooling; unknown or mismatched cpu_policy; unknown or mismatched debian; unknown or mismatched dtb; unknown or mismatched fan_control; unknown or mismatched filesystem; unknown or mismatched fill; unknown or mismatched firmware; unknown or mismatched kernel; unknown or mismatched logger_overhead; unknown or mismatched meter_uncertainty; unknown or mismatched module_revision; unknown or mismatched network; unknown or mismatched orientation; unknown or mismatched power; unknown or mismatched ram_sku; unknown or mismatched source_lock; unknown or mismatched storage; unknown or mismatched thermal_abort_degc; unknown or mismatched thermal_observer_ref; unknown or mismatched thermal_zone; unknown or mismatched warmup; unknown or mismatched zram",
+      "unit": null,
+      "source": null,
+      "reason": null
+    }
+  ],
+  "sources": [],
+  "errors": []
+}

@@ -1,0 +1,2542 @@
+{
+  "schema_version": "cm3-toolkit-mapping/v1",
+  "target": "radxa-cm3-rpi-cm4-io",
+  "source_sha256": {
+    "hardware-matrix.tsv": "24c30e0964dcec3326c723ad8f8b84c39104ff7a8688f33a7e997b2ef2098232",
+    "gates-consolidated-verbatim.txt": "8265b939c8b7877b900e8f0b43d72fbc192cbd2198d847feae90656d3fe8a094",
+    "gates-validation-verbatim.txt": "101775854cf704a09bc11277a740fce567d097c3ba74f9b0fb9cc5c8dcbb6c75"
+  },
+  "source_refs": {
+    "hardware-matrix.tsv": "t_f48601a3/hardware-matrix.tsv",
+    "gates-consolidated-verbatim.txt": "t_3a15869c/cm3-debian-cli-proposal.txt",
+    "gates-validation-verbatim.txt": "t_f48601a3/validation-plan.txt"
+  },
+  "gate_status": {
+    "G0": "NOT EVALUATED",
+    "G1": "NOT EVALUATED",
+    "G2": "NOT EVALUATED",
+    "G3": "NOT EVALUATED",
+    "G4": "NOT EVALUATED",
+    "G5": "NOT EVALUATED",
+    "G6": "NOT EVALUATED",
+    "G7": "NOT EVALUATED"
+  },
+  "evidence_policy": "Static mapping only, not a result envelope. All checks not_run. File inspection never establishes hardware PASS. Both verbatim gate snapshots apply; conflicts escalate to Phase B. Fixture output is synthetic, never hardware evidence.",
+  "rows": [
+    {
+      "id": "H01",
+      "priority": "P0",
+      "interface_or_capability": "Exact module/carrier and RAM identity",
+      "applicability": "MANDATORY",
+      "equipment_state": "Exact bench inventory unknown",
+      "evidence_basis": "S2 S4; physical markings and selected DTB must agree",
+      "proposed_test_and_gate": "Compare RK3566/exact carrier/revision/RAM inventory; account for reserved RAM; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H01-F",
+          "category": "files-manifest",
+          "procedure": "Review exact product selection, DTB compatible strings and memory reservations against source lock.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Product/DTB hash, compatible strings and reserved-memory excerpt.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H01-R",
+          "category": "running-image",
+          "procedure": "Compare observed board/device-tree identity and usable/reserved RAM with selected SKU; flag mismatch, never infer physical SKU from MemTotal alone.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Board/model strings, kernel identity, MemTotal and reservation accounting.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/collect.py"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H01-P",
+          "category": "physical-human",
+          "procedure": "Inspect module/carrier markings, revision and RAM SKU against selected DTB and inventory.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Exact bench inventory unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Redacted inventory/photo reference and revision/SKU reconciliation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Exact bench inventory unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H02",
+      "priority": "P0",
+      "interface_or_capability": "Cold boot/warm reboot/shutdown",
+      "applicability": "MANDATORY",
+      "equipment_state": "Power observer and UART availability unknown",
+      "evidence_basis": "S4 revision-dependent startup; firmware order must be revalidated",
+      "proposed_test_and_gate": "20 cold plus 20 warm successes per claimed medium; orderly shutdown and reset; G1",
+      "procedure": "V02 V03",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G1"
+      ],
+      "checks": [
+        {
+          "id": "H02-F",
+          "category": "files-manifest",
+          "procedure": "Review boot entries, shutdown/reboot units and selected-medium bootloader provenance without executing hooks.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Boot configuration and loader hash plus claimed-media list.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H02-R",
+          "category": "running-image",
+          "procedure": "Under separate approval log every cold/warm boot, orderly shutdown and reset per medium; require all 20 cold and 20 warm attempts, not one successful boot.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Per-attempt serial/outcome ledger, shutdown logs and image/medium identity.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "boot-ssh"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H02-P",
+          "category": "physical-human",
+          "procedure": "Use an external observer to distinguish power application, reset and shutdown; observe serial and authenticated SSH readiness for every cycle.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Power observer and UART availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Observer monotonic event ledger and all failures; power-cycle count per medium.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Power observer and UART availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H03",
+      "priority": "P0",
+      "interface_or_capability": "Flash layout and first-boot expansion",
+      "applicability": "MANDATORY",
+      "equipment_state": "External host and expendable OS media availability unknown",
+      "evidence_basis": "S3 layout still requires selected-image inspection; S5 GPT procedure",
+      "proposed_test_and_gate": "Verified image/readback; correct root/boot IDs; expand only selected OS disk; unrelated dummy disk unchanged; G0 G1",
+      "procedure": "V01 V02",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G1"
+      ],
+      "checks": [
+        {
+          "id": "H03-F",
+          "category": "files-manifest",
+          "procedure": "Inspect existing image layout and root/boot references read-only; compare bootloader extents and GPT boundaries with reviewed assembly inputs.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Image hash, partition/extents map, root/boot identifiers and expansion-unit review.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H03-R",
+          "category": "running-image",
+          "procedure": "On sacrificial OS media exercise first-boot expansion; compare before/after partition maps and an isolated unrelated dummy disk; check shutdown behavior.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Before/after maps, disk-target approval, readback and unchanged dummy-disk hashes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H03-P",
+          "category": "physical-human",
+          "procedure": "Confirm approved OS destination and production-disk disconnection before any separate flash/expansion run; observe unrelated test disk unchanged.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "External host and expendable OS media availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Operator target/isolation checklist and witnessed readback/hash comparison.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "External host and expendable OS media availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H04",
+      "priority": "P0",
+      "interface_or_capability": "microSD boot and recovery",
+      "applicability": "MANDATORY for claimed removable boot route",
+      "equipment_state": "Spare cards and reader availability unknown",
+      "evidence_basis": "S4 documents microSD boot; actual module routing still to check",
+      "proposed_test_and_gate": "Fresh boot; repeated boots; verified dedicated-file I/O; rescue procedure; G0 G1",
+      "procedure": "V02 V06 V09",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G1"
+      ],
+      "checks": [
+        {
+          "id": "H04-F",
+          "category": "files-manifest",
+          "procedure": "Review microSD controller DT nodes, driver configuration and selected boot/rescue artifacts.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/config excerpts and microSD/rescue image hashes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H04-R",
+          "category": "running-image",
+          "procedure": "On approved microSD perform fresh install and full boot repetitions; verify dedicated-file hash/fsync I/O and documented rescue, not raw-device benchmarking.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Boot ledger, file hashes/durability logs and rescue outcome.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H04-P",
+          "category": "physical-human",
+          "procedure": "Identify spare sacrificial card/reader and boot source; rehearse removable-media rescue with approved media.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Spare cards and reader availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Card class/capacity, boot-source observation and rescue checklist.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Spare cards and reader availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H05",
+      "priority": "P0",
+      "interface_or_capability": "eMMC boot/update/reflash",
+      "applicability": "CONFIGURATION-DEPENDENT on fitted eMMC and release claim",
+      "equipment_state": "Module eMMC capacity and USB recovery host unknown",
+      "evidence_basis": "S4 S5 exact-carrier documentation",
+      "proposed_test_and_gate": "Verify flash destination and boot source; boots/update/recovery plus integrity; G0 G1 G2",
+      "procedure": "V02 V04 V06 V09",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G1",
+        "G2"
+      ],
+      "checks": [
+        {
+          "id": "H05-F",
+          "category": "files-manifest",
+          "procedure": "Review fitted-eMMC claim, DT/controller drivers and paired boot/kernel update/reflash instructions.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "eMMC claim inventory, config and update-hook/loader hashes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H05-R",
+          "category": "running-image",
+          "procedure": "If fitted and claimed, verify actual boot source/destination; complete repetitions, signed update/reboot, dedicated-file integrity and approved rescue/readback.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Boot/update logs, readback and integrity hashes; unresolved fit remains UNTESTED.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H05-P",
+          "category": "physical-human",
+          "procedure": "Confirm eMMC population/capacity and exact recovery host/cable; approve target-specific reflash independently.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Module eMMC capacity and USB recovery host unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Physical inventory, target approval and recovery/readback observer record.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Module eMMC capacity and USB recovery host unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H06",
+      "priority": "P0",
+      "interface_or_capability": "SPI/boot-source interactions",
+      "applicability": "MANDATORY inventory; writes not authorized",
+      "equipment_state": "SPI population/content unknown",
+      "evidence_basis": "S4 historical boot-order description; selected firmware authoritative",
+      "proposed_test_and_gate": "Read-only provenance and boot-source selection; no SPI erase/replace; unresolved preemption blocks boot claims; G0",
+      "procedure": "V01 V02",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0"
+      ],
+      "checks": [
+        {
+          "id": "H06-F",
+          "category": "files-manifest",
+          "procedure": "Review selected firmware boot order and read-only SPI provenance; do not execute write hooks or erase/replace SPI.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Loader/source hashes, boot-order excerpts and known/unknown SPI provenance.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H06-R",
+          "category": "running-image",
+          "procedure": "Capture existing boot-source selection and preemption through read-only logs; unresolved precedence blocks boot claims; do not write SPI.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Serial boot-source log and explicit unresolved/preemption findings.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H06-P",
+          "category": "physical-human",
+          "procedure": "Inventory SPI population and known content provenance by approved read-only means; observe boot-source interactions without changing SPI.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "SPI population/content unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Inventory/observer notes with unknown contents retained as unknown.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "SPI population/content unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H07",
+      "priority": "P0",
+      "interface_or_capability": "Secure first-boot serial console and SSH",
+      "applicability": "MANDATORY",
+      "equipment_state": "UART adapter pinout/voltage/baud and Ethernet peer unknown",
+      "evidence_basis": "S4 UART; chosen support stack must define exact settings",
+      "proposed_test_and_gate": "Two independent fresh identities/host keys; authenticated serial and SSH availability; no universal permanent password; G1 G2",
+      "procedure": "V03 V04",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G1",
+        "G2"
+      ],
+      "checks": [
+        {
+          "id": "H07-F",
+          "category": "files-manifest",
+          "procedure": "Review provisioning/SSH/serial configuration for no permanent default password, safe key enrollment and fresh identity generation.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Redacted policy/unit excerpts and image identity; no credentials or key material.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H07-R",
+          "category": "running-image",
+          "procedure": "On two independent fresh installs verify distinct nonempty identities/host keys and authenticated serial/SSH availability, documented listeners and provisioning failure handling.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Redacted distinctness assertions, authentication outcomes and service inventory; never store private keys/machine IDs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H07-P",
+          "category": "physical-human",
+          "procedure": "Verify UART voltage/pinout/baud before attachment and physically observe serial recovery plus network login from approved peer.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "UART adapter pinout/voltage/baud and Ethernet peer unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Electrical approval and serial/SSH observer log for both installs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G1",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "UART adapter pinout/voltage/baud and Ethernet peer unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H08",
+      "priority": "P0",
+      "interface_or_capability": "CPU frequency/temperature/thermal control",
+      "applicability": "MANDATORY",
+      "equipment_state": "Cooling sensor and ambient measurement availability unknown",
+      "evidence_basis": "S8 Linux thermal semantics; exact DTB/OPP/trips pending sibling audit",
+      "proposed_test_and_gate": "Inventory supported OPPs/sensors/cooling; bounded load and correlation; retain protection; G0 G3 G6",
+      "procedure": "V01 V05 V08",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G3",
+        "G6"
+      ],
+      "checks": [
+        {
+          "id": "H08-F",
+          "category": "files-manifest",
+          "procedure": "Review supported OPPs, thermal zones/trips, cooling bindings and driver configuration without changing limits.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/config excerpts, source hashes and reviewed electrical/thermal ratings.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H08-R",
+          "category": "running-image",
+          "procedure": "Inventory actual frequencies/sensors/cooling, validate sensor interpretation then correlate bounded approved load with temperatures/throttling; retain all protections.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Timestamped clocks/sensors/control logs, abort criteria, bounded workload results and errors.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "cpu"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H08-P",
+          "category": "physical-human",
+          "procedure": "Verify cooling/fan behavior with independent observer and ambient measurement; stop on sensor/control/PSU loss, never force critical shutdown.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Cooling sensor and ambient measurement availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Cooling/ambient/rating checklist, observer and abort record.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Cooling sensor and ambient measurement availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H09",
+      "priority": "P1",
+      "interface_or_capability": "Memory throughput/correctness/pressure",
+      "applicability": "MANDATORY",
+      "equipment_state": "RAM SKU and test tooling availability unknown",
+      "evidence_basis": "S2 SoC identity does not prove usable RAM or stability",
+      "proposed_test_and_gate": "Bounded pattern verification; fixed working sets; reserve; CLI liveness and no uncorrected errors; G0 G4 G5",
+      "procedure": "V05",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G4",
+        "G5"
+      ],
+      "checks": [
+        {
+          "id": "H09-F",
+          "category": "files-manifest",
+          "procedure": "Review RAM SKU expectation, kernel memory features and planned bounded correctness/pressure protocol with reserve.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Manifest/config and approved working-set/reserve/correctness-tool protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H09-R",
+          "category": "running-image",
+          "procedure": "Run separately approved bounded pattern verification and fixed working sets; record errors, throughput and local CLI/authenticated SSH liveness without exceeding reserve.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Pattern verification and reserve logs, run-level latency tails/timeouts and tool versions.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "memory"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H09-P",
+          "category": "physical-human",
+          "procedure": "Confirm physical RAM SKU and observe recovery/console responsiveness during approved memory tests.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "RAM SKU and test tooling availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "SKU inventory and independent liveness/failure notes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "RAM SKU and test tooling availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H10",
+      "priority": "P1",
+      "interface_or_capability": "Ethernet DHCP/DNS/IPv6 and throughput",
+      "applicability": "MANDATORY",
+      "equipment_state": "Wired peer/switch/cable availability unknown",
+      "evidence_basis": "S4 exact-board Ethernet; S6 carrier RJ45 routing",
+      "proposed_test_and_gate": "Both directions and stream counts; latency/errors/reconnect; no numeric line-rate promise; G0 G2 G4 G5",
+      "procedure": "V04 V07",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G2",
+        "G4",
+        "G5"
+      ],
+      "checks": [
+        {
+          "id": "H10-F",
+          "category": "files-manifest",
+          "procedure": "Review Ethernet MAC/PHY DT, driver/firmware, NetworkManager ownership and DHCP/DNS/IPv6 policy; do not assume r8125 is needed.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/driver IDs, package/network policy and expected link configuration.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H10-R",
+          "category": "running-image",
+          "procedure": "Test DHCP, DNS, IPv6, reconnect and approved isolated-peer throughput both ways with explicit stream counts; retain latency/error/liveness results.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Address-redacted protocol results, direction/stream/link settings, errors and latency distributions.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "network"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H10-P",
+          "category": "physical-human",
+          "procedure": "Verify wired cable/switch/peer and actual link; observe reconnect only on the isolated bench.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Wired peer/switch/cable availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Cable/switch/peer class, negotiated link and reconnect observer log.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4",
+            "G5"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Wired peer/switch/cable availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H11",
+      "priority": "P1",
+      "interface_or_capability": "USB2 host ports/header and hotplug",
+      "applicability": "MANDATORY fitted sockets; header conditional",
+      "equipment_state": "USB keyboard/test storage/header cable availability unknown",
+      "evidence_basis": "S6 two USB2 sockets plus header; S4 four-port wording conflicts",
+      "proposed_test_and_gate": "Enumerate actual sockets/topology; keyboard and disposable-file integrity; clean remove/replug; no production disk hot-unplug; G0 G7",
+      "procedure": "V01 V04 V06 V09",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H11-F",
+          "category": "files-manifest",
+          "procedure": "Review USB2 topology/controller DT and driver/input/storage support; fitted sockets and header are separate claims.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/config and connector map with four-port wording conflict retained.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H11-R",
+          "category": "running-image",
+          "procedure": "Enumerate each actual socket/header topology; test keyboard, approved storage-file hash/fsync and clean remove/replug; never unplug a production disk.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Port-to-device map, input events, file hashes and hotplug/error logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H11-P",
+          "category": "physical-human",
+          "procedure": "Inventory fitted sockets versus header; review header cable/electrical mapping before attachment and witness each port's input/hotplug behavior.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "USB keyboard/test storage/header cable availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Connector inventory, header approval and per-port observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "USB keyboard/test storage/header cable availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H12",
+      "priority": "P0",
+      "interface_or_capability": "microUSB OTG/Maskrom recovery",
+      "applicability": "MANDATORY recovery route",
+      "equipment_state": "Data cable/host/approved loader availability unknown",
+      "evidence_basis": "S5 exact-carrier Rockchip recovery; not rpiboot",
+      "proposed_test_and_gate": "Identify ROM USB mode and approved loader; sacrificial-target recovery/readback; G0 G1",
+      "procedure": "V02 V09",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G1"
+      ],
+      "checks": [
+        {
+          "id": "H12-F",
+          "category": "files-manifest",
+          "procedure": "Review exact-carrier Rockchip Maskrom/OTG procedure and approved loader provenance; reject rpiboot substitution.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Recovery instructions, loader/source hashes and target-specific approvals required.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H12-R",
+          "category": "running-image",
+          "procedure": "On sacrificial target use separately approved ROM-mode recovery and reflash/readback procedure; no toolkit flash capability is implied.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Host USB mode log, loader hash, target/readback verification and recovery boot log.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H12-P",
+          "category": "physical-human",
+          "procedure": "Confirm data-capable microUSB cable, host and exact revision-specific entry method before recovery.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Data cable/host/approved loader availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Physical setup/ROM-mode observation and operator target confirmation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Data cable/host/approved loader availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H13",
+      "priority": "P1",
+      "interface_or_capability": "PCIe link and NVMe",
+      "applicability": "MANDATORY qualification target; endpoint/adapter configuration-dependent",
+      "equipment_state": "PCIe adapter and expendable NVMe availability unknown",
+      "evidence_basis": "S6 carrier PCIe socket; actual CM3 DTB/link/power limits pending",
+      "proposed_test_and_gate": "Enumerate negotiated link; repeated boots/resets; dedicated-file I/O/hash/fsync; no production NVMe writes; G0 G4 G7",
+      "procedure": "V01 V02 V06",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G4",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H13-F",
+          "category": "files-manifest",
+          "procedure": "Review PCIe DT/reset/power routing and NVMe driver configuration for the claimed adapter/endpoint.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/config excerpts and reviewed endpoint/adapter/power requirements.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H13-R",
+          "category": "running-image",
+          "procedure": "Enumerate actual negotiated link; complete approved repeated boot/reset trials and bounded dedicated-file hash/fsync I/O on expendable NVMe.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Link/error/reset logs, file hashes/durability and bounded throughput/latency results.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "storage"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H13-P",
+          "category": "physical-human",
+          "procedure": "Inventory adapter and expendable endpoint; disconnect production NVMe and verify power/thermal setup; no endpoint means UNTESTED, not waived.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "PCIe adapter and expendable NVMe availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Endpoint/adapter class and electrical/thermal approval, isolation and reset observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G4",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "PCIe adapter and expendable NVMe availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H14",
+      "priority": "P2",
+      "interface_or_capability": "Wi-Fi",
+      "applicability": "CONFIGURATION-DEPENDENT on module/radio/antenna",
+      "equipment_state": "Radio population AP and antenna unknown",
+      "evidence_basis": "No physical radio confirmed; selected DTB/firmware/package audit required",
+      "proposed_test_and_gate": "Inventory first; regulatory settings; association/DHCP/reconnect/range-controlled throughput; G0 G2 G4",
+      "procedure": "V01 V04 V07",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G2",
+        "G4"
+      ],
+      "checks": [
+        {
+          "id": "H14-F",
+          "category": "files-manifest",
+          "procedure": "Review radio/antenna claim, transport/DT, firmware/license packages and regulatory policy; no physical radio inferred from packages.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Conditional support inventory and firmware/config hashes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H14-R",
+          "category": "running-image",
+          "procedure": "If fitted, verify firmware load and regulatory settings; associate, obtain DHCP, reconnect and measure approved range-controlled throughput.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Redacted association/regulatory/firmware logs, reconnect results and controlled network metrics.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H14-P",
+          "category": "physical-human",
+          "procedure": "Inventory radio/antenna/AP and controlled distance/obstructions; absence requires physical evidence, missing AP remains UNTESTED.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Radio population AP and antenna unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Radio/antenna inventory, AP/control conditions and range/reconnect observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2",
+            "G4"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Radio population AP and antenna unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H15",
+      "priority": "P2",
+      "interface_or_capability": "Bluetooth",
+      "applicability": "CONFIGURATION-DEPENDENT on fitted radio/transport",
+      "equipment_state": "Radio and BT peer availability unknown",
+      "evidence_basis": "No physical radio confirmed; chosen transport/firmware must be verified",
+      "proposed_test_and_gate": "Pair/trust according to policy; reconnect transfer and Wi-Fi coexistence if claimed; G0 G7",
+      "procedure": "V01 V07",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H15-F",
+          "category": "files-manifest",
+          "procedure": "Review claimed Bluetooth transport, driver/firmware and pairing/trust policy independently of Wi-Fi.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Transport/config, firmware hashes and policy excerpts.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H15-R",
+          "category": "running-image",
+          "procedure": "If fitted, pair/trust approved peer, reconnect and verify bounded transfer; test Wi-Fi coexistence only if claimed.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Redacted pairing/reconnect/transfer integrity and coexistence logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H15-P",
+          "category": "physical-human",
+          "procedure": "Inventory fitted Bluetooth radio/transport and compatible peer; observe peer transfer/reconnect without assuming Wi-Fi implies BT.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Radio and BT peer availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Radio/peer inventory and transfer/reconnect observer record.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Radio and BT peer availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H16",
+      "priority": "P2",
+      "interface_or_capability": "HDMI text console",
+      "applicability": "CONFIGURATION-DEPENDENT on CM3 routing DTB and monitor",
+      "equipment_state": "Monitor/cable availability unknown",
+      "evidence_basis": "S4 monitor use; S6 dual carrier connectors not proof of dual CM3 output",
+      "proposed_test_and_gate": "Test each actually mapped connector EDID and text console/reboot/hotplug; disclose unmapped channels; G0 G7",
+      "procedure": "V01 V03",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H16-F",
+          "category": "files-manifest",
+          "procedure": "Review HDMI routing, connector mapping and console/DRM configuration; do not infer dual independent output from carrier sockets.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "DT/connector map, console config and stated unmapped channels.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H16-R",
+          "category": "running-image",
+          "procedure": "For each mapped output collect EDID and text-console behavior through approved reboot/hotplug trials.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "EDID capability summary, per-connector console/reboot/hotplug logs without display serials.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H16-P",
+          "category": "physical-human",
+          "procedure": "Attach reviewed monitor/cable and visually verify legible text on each actually mapped connector.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Monitor/cable availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Monitor class and per-connector visual observation; unmapped outputs disclosed.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Monitor/cable availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H17",
+      "priority": "P2",
+      "interface_or_capability": "GPIO header",
+      "applicability": "CONFIGURATION-DEPENDENT on verified pinmux/voltage",
+      "equipment_state": "Safe loopback fixture and electrical mapping unknown",
+      "evidence_basis": "S6 carrier header; selected CM3 pin mapping must be reviewed",
+      "proposed_test_and_gate": "Nonreserved lines only; libgpiod read/write loopback; no connected load without review; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H17-F",
+          "category": "files-manifest",
+          "procedure": "Review revision-specific GPIO pinmux/voltage/reservations, especially shared console/power functions, before any line request.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed pin table, DT/pinctrl excerpts and nonreserved-line allowlist.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H17-R",
+          "category": "running-image",
+          "procedure": "After electrical approval use libgpiod to test only allowed nonreserved lines with bounded safe loopback; preserve reserved functions.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Line-request configuration and expected/observed loopback states plus errors.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H17-P",
+          "category": "physical-human",
+          "procedure": "Wire voltage-compatible safe loopback only after native schematic/revision review; no unreviewed connected loads.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Safe loopback fixture and electrical mapping unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Signed-off pin/voltage/wiring checklist and measured loopback observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Safe loopback fixture and electrical mapping unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H18",
+      "priority": "P2",
+      "interface_or_capability": "I2C",
+      "applicability": "CONFIGURATION-DEPENDENT on pinmux voltage and peripherals",
+      "equipment_state": "Known-safe I2C peripheral availability unknown",
+      "evidence_basis": "Exact CM3 bus routing/overlay not yet verified",
+      "proposed_test_and_gate": "Read known device/register on isolated bus; avoid blind i2cdetect on sensitive buses; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H18-F",
+          "category": "files-manifest",
+          "procedure": "Review exact I2C bus routing/pinmux/voltage, driver and known peripheral register protocol.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed bus/device/register allowlist and DT/config excerpts.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H18-R",
+          "category": "running-image",
+          "procedure": "On isolated approved bus read only known-safe device/register and compare expected response; never blind i2cdetect on sensitive buses.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Bus/device protocol and expected/observed register values/errors.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H18-P",
+          "category": "physical-human",
+          "procedure": "Attach approved voltage-compatible peripheral with reviewed pull-ups/wiring and verify expected device identity.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Known-safe I2C peripheral availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Wiring/electrical review and known-device inventory/response observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Known-safe I2C peripheral availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H19",
+      "priority": "P2",
+      "interface_or_capability": "SPI peripheral bus",
+      "applicability": "CONFIGURATION-DEPENDENT on pinmux voltage and peripherals",
+      "equipment_state": "Loopback/test device availability unknown",
+      "evidence_basis": "Peripheral SPI distinct from boot SPI; CM3 mapping pending",
+      "proposed_test_and_gate": "Approved peripheral transfer/checksum at supported clock; never target boot flash; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H19-F",
+          "category": "files-manifest",
+          "procedure": "Review peripheral SPI controller/pinmux/chip-select/voltage and test clock; explicitly exclude boot SPI.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed peripheral bus/CS allowlist, DT and protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H19-R",
+          "category": "running-image",
+          "procedure": "Transfer bounded known payload to approved peripheral/loopback at supported clock and verify checksum; never address boot flash.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Payload/checksum, clock/mode/CS settings and transfer error log.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H19-P",
+          "category": "physical-human",
+          "procedure": "Verify peripheral-only wiring and voltage-safe loopback/device, with boot SPI physically/logically excluded.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Loopback/test device availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Reviewed wiring/CS map and independent transfer observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Loopback/test device availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H20",
+      "priority": "P2",
+      "interface_or_capability": "Additional UARTs",
+      "applicability": "CONFIGURATION-DEPENDENT on mapping and reserved console pins",
+      "equipment_state": "Voltage-compatible loopback/peer availability unknown",
+      "evidence_basis": "S4 supports console need; extra channels not established",
+      "proposed_test_and_gate": "Known-safe mapped UART data loopback/baud; preserve recovery console; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H20-F",
+          "category": "files-manifest",
+          "procedure": "Review additional UART mapping, pin voltage and reserved console pins; do not repurpose recovery console.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed UART/pin allowlist, DT and supported baud/framing.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H20-R",
+          "category": "running-image",
+          "procedure": "Perform bounded known-payload peer/loopback on approved extra UARTs; compare bytes/checksums and confirm recovery console retained.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Baud/framing, expected/received payload hashes and console retention record.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H20-P",
+          "category": "physical-human",
+          "procedure": "Verify voltage-compatible peer/adapter and safe wiring independent of console before attachment.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Voltage-compatible loopback/peer availability unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Pin/voltage review and peer/console observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Voltage-compatible loopback/peer availability unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H21",
+      "priority": "P2",
+      "interface_or_capability": "RTC battery/time retention",
+      "applicability": "CONFIGURATION-DEPENDENT on carrier RTC bus driver and battery",
+      "equipment_state": "Battery and RTC access unknown",
+      "evidence_basis": "S6 RTC/battery hardware for carrier; CM3 support unverified",
+      "proposed_test_and_gate": "Validate RTC driver and elapsed power-off time against external reference; no unsupported wake promise; G0 G7",
+      "procedure": "V01 V04",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H21-F",
+          "category": "files-manifest",
+          "procedure": "Review RTC DT/bus/driver, clock ownership and retention procedure; no unsupported wake behavior claim.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "RTC config and reviewed battery/retention protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H21-R",
+          "category": "running-image",
+          "procedure": "Verify bound RTC/numbering; compare time before/after approved power-off interval against external reference, separating network time correction.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "RTC/system/reference timestamps, elapsed interval and driver/error logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H21-P",
+          "category": "physical-human",
+          "procedure": "Inventory battery/RTC and observe actual unpowered interval with external reference; do not promise Pi wake behavior.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Battery and RTC access unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Battery inventory and monotonic/external elapsed-time observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Battery and RTC access unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H22",
+      "priority": "P2",
+      "interface_or_capability": "Audio",
+      "applicability": "CONFIGURATION-DEPENDENT on routed HDMI/I2S/USB codec path",
+      "equipment_state": "Known audio endpoint/capture path unknown",
+      "evidence_basis": "No onboard analog codec or CM3 audio path assumed",
+      "proposed_test_and_gate": "Enumerate actual supported path; bounded playback/capture and checksum/known signal without desktop; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H22-F",
+          "category": "files-manifest",
+          "procedure": "Review actual HDMI/I2S/USB codec route and ALSA/headless package/API support; no onboard analog path assumed.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Route/codec/driver config and known-signal protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H22-R",
+          "category": "running-image",
+          "procedure": "Enumerate supported path and perform bounded approved playback/capture of known signal without desktop installation.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Endpoint/settings, captured signal hash/analysis and error logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H22-P",
+          "category": "physical-human",
+          "procedure": "Confirm correct safe-level endpoint/capture wiring and observe known signal without excessive volume.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Known audio endpoint/capture path unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Endpoint class, level/wiring approval and signal observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Known audio endpoint/capture path unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H23",
+      "priority": "P2",
+      "interface_or_capability": "CSI camera",
+      "applicability": "CONFIGURATION-DEPENDENT on CM3 lane/pin routing sensor driver and overlay",
+      "equipment_state": "Compatible sensor cable and electrical approval unknown",
+      "evidence_basis": "S6 carrier CSI connectors do not prove CM3 sensor support",
+      "proposed_test_and_gate": "Review schematic/pinout first; headless capture known frames and errors only if compatible; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H23-F",
+          "category": "files-manifest",
+          "procedure": "Review native schematic/lane/pin routing, sensor driver, cable and overlay graph for exact revisions before attachment.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed electrical/lane map, sensor/DT/overlay hashes and compatibility decision.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H23-R",
+          "category": "running-image",
+          "procedure": "Only after approval capture known frames headlessly; verify frame dimensions/content and error counts using selected existing API.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Sensor/API settings, frame hashes/content checks and capture/error logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H23-P",
+          "category": "physical-human",
+          "procedure": "Verify compatible sensor/cable orientation and electrical approval; never blindly attach CM4 camera accessories.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Compatible sensor cable and electrical approval unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Sensor/cable inventory and reviewed wiring plus known-scene observation.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Compatible sensor cable and electrical approval unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H24",
+      "priority": "P2",
+      "interface_or_capability": "DSI display",
+      "applicability": "CONFIGURATION-DEPENDENT on CM3 routing panel driver and overlay",
+      "equipment_state": "Compatible panel/cable and electrical approval unknown",
+      "evidence_basis": "S6 carrier DSI connectors do not prove CM3 panel support",
+      "proposed_test_and_gate": "No blind CM4 panel attachment; reviewed panel init and text/test output only; G0 G7",
+      "procedure": "V01",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H24-F",
+          "category": "files-manifest",
+          "procedure": "Review exact DSI lane/pin routing, panel/bridge driver, power sequencing and overlay graph before attachment.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Panel/cable/electrical review and DT/driver hashes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H24-R",
+          "category": "running-image",
+          "procedure": "After approval initialize reviewed panel and produce bounded text/test output with existing API; record initialization/hotplug limits.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Initialization/output settings and driver/error logs; no assumed hotplug support.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H24-P",
+          "category": "physical-human",
+          "procedure": "Inspect compatible panel/cable and visually verify expected output only after electrical/power review.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Compatible panel/cable and electrical approval unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Panel inventory, approved wiring/power sequence and visual result.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Compatible panel/cable and electrical approval unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H25",
+      "priority": "P2",
+      "interface_or_capability": "Headless GPU/video acceleration",
+      "applicability": "CONFIGURATION-DEPENDENT on selected kernel/firmware/userspace APIs",
+      "equipment_state": "Compatible driver/API stack not selected",
+      "evidence_basis": "SoC naming and CLI edition do not prove working acceleration",
+      "proposed_test_and_gate": "Render-node permissions and headless known-workload correctness; compare decoded frames as appropriate; no GUI/runtime installation; G0 G7",
+      "procedure": "V01 V04",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G7"
+      ],
+      "checks": [
+        {
+          "id": "H25-F",
+          "category": "files-manifest",
+          "procedure": "Review selected kernel/firmware/userspace render/video APIs and permissions; SoC labels are not acceleration proof.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "API/driver/package/config hashes and known-workload protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H25-R",
+          "category": "running-image",
+          "procedure": "Use existing headless API to verify render-node permissions and known-workload correctness; compare decoded frames where claimed, no GUI/runtime installation.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Permissions summary, API/tool versions, output/frame hashes and correctness/error logs.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H25-P",
+          "category": "physical-human",
+          "procedure": "Confirm claimed stack on exact inventoried hardware; observe known output against independent reference where API correctness needs it.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Compatible driver/API stack not selected",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Board/stack linkage and reference-workload/visual comparison record.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G7"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Compatible driver/API stack not selected; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H26",
+      "priority": "P1",
+      "interface_or_capability": "Fan/PSU and sustained power",
+      "applicability": "MANDATORY thermal qualification; fan hardware and meter conditional",
+      "equipment_state": "Fan cooling PSU model and DC meter unknown",
+      "evidence_basis": "S6 carrier power/fan routing; exact electrical review pending",
+      "proposed_test_and_gate": "Check cooling behavior ratings/sensors; 3 thermal runs plus soak; watts/joules only with meter; G0 G3 G6",
+      "procedure": "V08",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G3",
+        "G6"
+      ],
+      "checks": [
+        {
+          "id": "H26-F",
+          "category": "files-manifest",
+          "procedure": "Review fan/cooling DT bindings, PSU ratings and sustained protocol with thermal abort/observer; never change trips.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Reviewed fan/PSU/thermal config, limits and sustained/soak protocol.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H26-R",
+          "category": "running-image",
+          "procedure": "Inventory sensors/cooling then perform separately approved three thermal runs and combined 8-hour soak with errors/liveness tracked; short plan is not G6 evidence.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Full-duration raw telemetry/window comparisons and all errors/aborts; power only from external meter.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": [
+            "python3",
+            "tools/cm3-toolkit/bench.py",
+            "cpu"
+          ],
+          "toolkit_scope": "Contract interface only; implementation must be verified at integration. Collector supplies partial identity/config observations; bench without --execute supplies a plan, not measurements. Does not automate this whole check, repetitions, correctness, liveness, sustained qualification or gate review.",
+          "implementation": "planned",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H26-P",
+          "category": "physical-human",
+          "procedure": "Verify physical PSU/cooling/orientation/ambient and independent observer; measure watts/joules only with stated meter bandwidth/uncertainty.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Fan cooling PSU model and DC meter unknown",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "PSU/fan inventory, ambient/observer logs and meter raw samples/calibration uncertainty.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G3",
+            "G6"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Fan cooling PSU model and DC meter unknown; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H27",
+      "priority": "P0",
+      "interface_or_capability": "Debian services/kernel capability compatibility",
+      "applicability": "MANDATORY",
+      "equipment_state": "Disposable image and isolated fixture unavailable until implementation",
+      "evidence_basis": "S7 S8 and selected kernel config/package audit",
+      "proposed_test_and_gate": "APT/dpkg secure updates; systemd/udev/network/time; isolated cgroup namespace overlay bridge netfilter TUN IPv6/LSM probes; G0 G2",
+      "procedure": "V04",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G2"
+      ],
+      "checks": [
+        {
+          "id": "H27-F",
+          "category": "files-manifest",
+          "procedure": "Review package/origin/ABI/update ownership, service policy and kernel config for cgroups/namespaces/OverlayFS/bridge/netfilter/TUN/IPv6/seccomp/LSM.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Package/config/source-lock excerpts, update-owner and service policy records.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H27-R",
+          "category": "running-image",
+          "procedure": "On disposable image verify authenticated APT/update/package cycle/dpkg audit, isolated invalid-signature rejection, matching ABI/reboot, active LSM and bounded isolated kernel-facility probes; no container/runtime installation.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Redacted update/audit/reboot/service/LSM logs and per-facility positive/negative outcomes.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H27-P",
+          "category": "physical-human",
+          "procedure": "Confirm isolated bench and secure access after update/reboot; externally verify intended reachable services and recovery availability.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Disposable image and isolated fixture unavailable until implementation",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Approved peer/listener observation and update/recovery access checklist.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G2"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Disposable image and isolated fixture unavailable until implementation; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    },
+    {
+      "id": "H28",
+      "priority": "P0",
+      "interface_or_capability": "Recovery and controlled failure/data integrity",
+      "applicability": "MANDATORY rescue/reflash; optional destructive failure suite",
+      "equipment_state": "Sacrificial media/rescue host unknown; relay unavailable/unconfirmed",
+      "evidence_basis": "S5 exact recovery route; experimental failure protocol in proposal",
+      "proposed_test_and_gate": "Recover approved removable OS fault and reflash verified target; failure injections need separate approval and finite budget; G0 G1",
+      "procedure": "V09",
+      "hardware_status": "UNTESTED",
+      "gates": [
+        "G0",
+        "G1"
+      ],
+      "checks": [
+        {
+          "id": "H28-F",
+          "category": "files-manifest",
+          "procedure": "Review exact recovery/rescue artifacts, target checks, backup/isolation plan and separate optional fault-injection budget; no destructive script execution.",
+          "prerequisites": [
+            "Existing offline artifact/extracted files and package/source manifest; no image build or hook execution",
+            "Known image/source hashes; unknown identifiers remain null"
+          ],
+          "evidence_required": [
+            "Rescue/loader hashes, target-validation plan and explicit authorization boundary.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No artifact/manifest inspected by this mapping task; missing, inaccessible or malformed inputs are unavailable, not proof of absence or support."
+        },
+        {
+          "id": "H28-R",
+          "category": "running-image",
+          "procedure": "On approved sacrificial media demonstrate normal removable-OS fault rescue and verified reflash/readback; destructive injections require distinct approval, finite cycles and fsync acknowledgment log.",
+          "prerequisites": [
+            "Separately approved disposable exact-board running image and named operator; never production host",
+            "Recorded image/build/source/kernel/DTB/firmware IDs, scope_ref and applicable bounded protocol; missing approvals block execution",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Rescue/reflash/readback hashes and boot/integrity outcomes; omitted failure injection explicitly UNTESTED.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "No approved running-image test performed; missing image, permission, tool, sensor or endpoint is unavailable and leaves hardware UNTESTED."
+        },
+        {
+          "id": "H28-P",
+          "category": "physical-human",
+          "procedure": "Disconnect production media, verify sacrificial target and witness rescue; power-cut relay/electrical supervision only with separate approval.",
+          "prerequisites": [
+            "Separate physical/electrical/target-specific approval and named observer; no physical actions authorized by this mapping",
+            "Sacrificial media/rescue host unknown; relay unavailable/unconfirmed",
+            "Production data disks disconnected for storage/recovery; reviewed cooling/PSU, thermal abort observer, RAM/free-space reserves and finite duration/write/network bounds for dependent tests"
+          ],
+          "evidence_required": [
+            "Target/isolation observer checklist and rescue record; separate relay/cycle approval if ever used.",
+            "Dated operator/protocol and image/source references, relative raw-artifact references with SHA256; retain failures/exclusions and redact credentials, private keys, serials/MAC/IP/machine IDs"
+          ],
+          "gates": [
+            "G0",
+            "G1"
+          ],
+          "status": "not_run",
+          "establishes_hardware_pass": false,
+          "toolkit_command": null,
+          "toolkit_scope": null,
+          "implementation": "manual",
+          "unavailable_reason": "Sacrificial media/rescue host unknown; relay unavailable/unconfirmed; no physical inventory or observation performed. Missing equipment leaves UNTESTED; NOT PRESENT requires inventory evidence."
+        }
+      ]
+    }
+  ]
+}

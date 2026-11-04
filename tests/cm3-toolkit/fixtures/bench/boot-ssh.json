@@ -1,0 +1,1 @@
+{"seconds":8,"uncertainty_s":0.5,"events":{"clock":"external-monotonic","start_s":100,"end_s":108,"uncertainty_s":0.5,"observer_ref":"synthetic-observer","start_event":"power-assertion","end_event":"authenticated-command-complete","authentication":"preprovisioned-key","host_key_policy":"pinned"}}

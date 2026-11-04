@@ -1,0 +1,444 @@
+{
+  "schema_version": "cm3-toolkit/v1",
+  "kind": "inspection",
+  "run_id": "2c9977955d1b475382a4c913c83188c0",
+  "target": "radxa-cm3-rpi-cm4-io",
+  "provenance": {
+    "synthetic": true,
+    "fixture_id": "collector-fixture-v1",
+    "origin": "fixture",
+    "input_run_ids": [],
+    "tool_revision": null
+  },
+  "time": {
+    "start_utc": "2026-10-25T17:39:57.851324+00:00",
+    "end_utc": "2026-10-25T17:39:57.894628+00:00",
+    "duration_s": 0.043505530993570574,
+    "clock": "monotonic"
+  },
+  "authorization": {
+    "execute": false,
+    "load": false,
+    "write": false,
+    "network": false,
+    "scope_ref": null
+  },
+  "conditions": {},
+  "records": [
+    {
+      "name": "image.os_release",
+      "status": "ok",
+      "value": {
+        "ID": "debian",
+        "VERSION_ID": "13",
+        "VERSION_CODENAME": "trixie",
+        "BUILD_ID": "synthetic-unit-test"
+      },
+      "unit": null,
+      "source": "/etc/os-release",
+      "reason": null
+    },
+    {
+      "name": "image.build_id",
+      "status": "ok",
+      "value": "synthetic-unit-test",
+      "unit": null,
+      "source": "/etc/os-release",
+      "reason": null
+    },
+    {
+      "name": "image.image_id",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": "/etc/os-release",
+      "reason": "missing"
+    },
+    {
+      "name": "image.image_version",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": "/etc/os-release",
+      "reason": "missing"
+    },
+    {
+      "name": "image.sha256",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": null,
+      "reason": "unsupported"
+    },
+    {
+      "name": "kernel.release",
+      "status": "ok",
+      "value": "6.12.0-fixture",
+      "unit": null,
+      "source": "/proc/sys/kernel/osrelease",
+      "reason": null
+    },
+    {
+      "name": "kernel.type",
+      "status": "ok",
+      "value": "Linux",
+      "unit": null,
+      "source": "/proc/sys/kernel/ostype",
+      "reason": null
+    },
+    {
+      "name": "board.model",
+      "status": "ok",
+      "value": "SYNTHETIC Radxa CM3 fixture",
+      "unit": null,
+      "source": "/proc/device-tree/model",
+      "reason": null
+    },
+    {
+      "name": "board.compatible",
+      "status": "ok",
+      "value": [
+        "radxa,cm3",
+        "rockchip,rk3566"
+      ],
+      "unit": null,
+      "source": "/proc/device-tree/compatible",
+      "reason": null
+    },
+    {
+      "name": "board.target_match",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": "/proc/device-tree/compatible",
+      "reason": "unsupported"
+    },
+    {
+      "name": "board.carrier_revision",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": null,
+      "reason": "unsupported"
+    },
+    {
+      "name": "board.ram_sku",
+      "status": "unavailable",
+      "value": null,
+      "unit": null,
+      "source": null,
+      "reason": "unsupported"
+    },
+    {
+      "name": "memory.summary",
+      "status": "ok",
+      "value": {
+        "MemTotal": 2048000,
+        "MemAvailable": 1024000,
+        "SwapTotal": 524288,
+        "SwapFree": 524288
+      },
+      "unit": "KiB",
+      "source": "/proc/meminfo",
+      "reason": null
+    },
+    {
+      "name": "memory.MemTotal",
+      "status": "ok",
+      "value": 2048000,
+      "unit": "KiB",
+      "source": "/proc/meminfo",
+      "reason": null
+    },
+    {
+      "name": "memory.MemAvailable",
+      "status": "ok",
+      "value": 1024000,
+      "unit": "KiB",
+      "source": "/proc/meminfo",
+      "reason": null
+    },
+    {
+      "name": "memory.SwapTotal",
+      "status": "ok",
+      "value": 524288,
+      "unit": "KiB",
+      "source": "/proc/meminfo",
+      "reason": null
+    },
+    {
+      "name": "memory.SwapFree",
+      "status": "ok",
+      "value": 524288,
+      "unit": "KiB",
+      "source": "/proc/meminfo",
+      "reason": null
+    },
+    {
+      "name": "cpu.policy0.scaling_governor",
+      "status": "ok",
+      "value": "schedutil",
+      "unit": null,
+      "source": "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor",
+      "reason": null
+    },
+    {
+      "name": "cpu.policy0.scaling_available_governors",
+      "status": "ok",
+      "value": "performance schedutil",
+      "unit": null,
+      "source": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors",
+      "reason": null
+    },
+    {
+      "name": "cpu.policy0.scaling_available_frequencies",
+      "status": "ok",
+      "value": [
+        408000,
+        1800000
+      ],
+      "unit": "kHz",
+      "source": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies",
+      "reason": null
+    },
+    {
+      "name": "cpu.policy0.cpuinfo_min_freq",
+      "status": "ok",
+      "value": 408000,
+      "unit": "kHz",
+      "source": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq",
+      "reason": null
+    },
+    {
+      "name": "cpu.policy0.cpuinfo_max_freq",
+      "status": "ok",
+      "value": 1800000,
+      "unit": "kHz",
+      "source": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq",
+      "reason": null
+    },
+    {
+      "name": "thermal.thermal_zone0.type",
+      "status": "ok",
+      "value": "soc-thermal",
+      "unit": null,
+      "source": "/sys/class/thermal/thermal_zone0/type",
+      "reason": null
+    },
+    {
+      "name": "thermal.thermal_zone0.temperature",
+      "status": "ok",
+      "value": 42.125,
+      "unit": "degC",
+      "source": "/sys/class/thermal/thermal_zone0/temp",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.capacity",
+      "status": "ok",
+      "value": 1048576,
+      "unit": "bytes",
+      "source": "/sys/block/mmcblk0/size",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.ro",
+      "status": "ok",
+      "value": 0,
+      "unit": null,
+      "source": "/sys/block/mmcblk0/ro",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.removable",
+      "status": "ok",
+      "value": 0,
+      "unit": null,
+      "source": "/sys/block/mmcblk0/removable",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.queue.rotational",
+      "status": "ok",
+      "value": 0,
+      "unit": null,
+      "source": "/sys/block/mmcblk0/queue/rotational",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.logical_block_size",
+      "status": "ok",
+      "value": 512,
+      "unit": "bytes",
+      "source": "/sys/block/mmcblk0/queue/logical_block_size",
+      "reason": null
+    },
+    {
+      "name": "storage.mmcblk0.scheduler",
+      "status": "ok",
+      "value": "[mq-deadline] none",
+      "unit": null,
+      "source": "/sys/block/mmcblk0/queue/scheduler",
+      "reason": null
+    },
+    {
+      "name": "config.swappiness",
+      "status": "ok",
+      "value": 100,
+      "unit": null,
+      "source": "/proc/sys/vm/swappiness",
+      "reason": null
+    },
+    {
+      "name": "config.overcommit_memory",
+      "status": "ok",
+      "value": 0,
+      "unit": null,
+      "source": "/proc/sys/vm/overcommit_memory",
+      "reason": null
+    },
+    {
+      "name": "config.lsm",
+      "status": "ok",
+      "value": "capability,landlock,apparmor",
+      "unit": null,
+      "source": "/sys/kernel/security/lsm",
+      "reason": null
+    }
+  ],
+  "sources": [
+    {
+      "id": "/etc/os-release",
+      "kind": "system-file",
+      "path_or_ref": "/etc/os-release",
+      "sha256": null
+    },
+    {
+      "id": "/proc/sys/kernel/osrelease",
+      "kind": "system-file",
+      "path_or_ref": "/proc/sys/kernel/osrelease",
+      "sha256": null
+    },
+    {
+      "id": "/proc/sys/kernel/ostype",
+      "kind": "system-file",
+      "path_or_ref": "/proc/sys/kernel/ostype",
+      "sha256": null
+    },
+    {
+      "id": "/proc/device-tree/model",
+      "kind": "system-file",
+      "path_or_ref": "/proc/device-tree/model",
+      "sha256": null
+    },
+    {
+      "id": "/proc/device-tree/compatible",
+      "kind": "system-file",
+      "path_or_ref": "/proc/device-tree/compatible",
+      "sha256": null
+    },
+    {
+      "id": "/proc/meminfo",
+      "kind": "system-file",
+      "path_or_ref": "/proc/meminfo",
+      "sha256": null
+    },
+    {
+      "id": "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor",
+      "kind": "system-file",
+      "path_or_ref": "/sys/devices/system/cpu/cpufreq/policy0/scaling_governor",
+      "sha256": null
+    },
+    {
+      "id": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors",
+      "kind": "system-file",
+      "path_or_ref": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_governors",
+      "sha256": null
+    },
+    {
+      "id": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies",
+      "kind": "system-file",
+      "path_or_ref": "/sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies",
+      "sha256": null
+    },
+    {
+      "id": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq",
+      "kind": "system-file",
+      "path_or_ref": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_min_freq",
+      "sha256": null
+    },
+    {
+      "id": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq",
+      "kind": "system-file",
+      "path_or_ref": "/sys/devices/system/cpu/cpufreq/policy0/cpuinfo_max_freq",
+      "sha256": null
+    },
+    {
+      "id": "/sys/class/thermal/thermal_zone0/type",
+      "kind": "system-file",
+      "path_or_ref": "/sys/class/thermal/thermal_zone0/type",
+      "sha256": null
+    },
+    {
+      "id": "/sys/class/thermal/thermal_zone0/temp",
+      "kind": "system-file",
+      "path_or_ref": "/sys/class/thermal/thermal_zone0/temp",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/size",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/size",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/ro",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/ro",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/removable",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/removable",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/queue/rotational",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/queue/rotational",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/queue/logical_block_size",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/queue/logical_block_size",
+      "sha256": null
+    },
+    {
+      "id": "/sys/block/mmcblk0/queue/scheduler",
+      "kind": "system-file",
+      "path_or_ref": "/sys/block/mmcblk0/queue/scheduler",
+      "sha256": null
+    },
+    {
+      "id": "/proc/sys/vm/swappiness",
+      "kind": "system-file",
+      "path_or_ref": "/proc/sys/vm/swappiness",
+      "sha256": null
+    },
+    {
+      "id": "/proc/sys/vm/overcommit_memory",
+      "kind": "system-file",
+      "path_or_ref": "/proc/sys/vm/overcommit_memory",
+      "sha256": null
+    },
+    {
+      "id": "/sys/kernel/security/lsm",
+      "kind": "system-file",
+      "path_or_ref": "/sys/kernel/security/lsm",
+      "sha256": null
+    }
+  ],
+  "errors": []
+}
