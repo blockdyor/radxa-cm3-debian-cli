@@ -1,0 +1,30 @@
+{
+  "packet": "/opt/data/kanban/workspaces/t_52443539/cm3-negative-test-evidence.zip",
+  "sha256": "6975e3169b8eb61d5c707d68f85c293c5af6a9bcab68af1e8ffb239976ff95bf",
+  "bytes": 1052509,
+  "indexed_files": 481,
+  "CRC_and_member_hashes": "PASS",
+  "originals_unchanged": true,
+  "sentinel_unchanged": true,
+  "summary": {
+    "requested_areas": 11,
+    "areas_accounted_for": 11,
+    "area_status_counts": {
+      "STATIC PASS": 6,
+      "PASS": 4,
+      "NOT APPLICABLE": 1
+    },
+    "offline_rejections": 6,
+    "native_injected_failures": 5,
+    "guest_probe_commands": 5,
+    "parent_lifecycle_tests": 36,
+    "executed_test_cases": 52,
+    "unexpected_assertion_failures": 0,
+    "lifecycle_skips": 0,
+    "unsupported_expansion_cases": 1,
+    "originals_unchanged": true,
+    "hardware_status": "UNTESTED",
+    "defects_corrected": 0,
+    "rebuilds": 0
+  }
+}

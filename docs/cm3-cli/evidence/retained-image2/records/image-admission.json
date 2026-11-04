@@ -1,0 +1,17 @@
+{
+  "status": "ADMITTED",
+  "commit": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+  "run_id": 41199013085,
+  "run_attempt": 1,
+  "cumulative_attempts": 2,
+  "maximum_attempts": 3,
+  "hypothesis": "Retain image2 with official overlay copyright-only backport, exact installed firmware notice checks, complete corresponding sources, and hash-bound reviewed experimental delivery after fresh same-run Stage A",
+  "history": [
+    {
+      "run_id": 41066891788,
+      "run_attempt": 1,
+      "commit": "6fac462f2eb7a350077a2b17d6b49439741518d1",
+      "status": "completed"
+    }
+  ]
+}

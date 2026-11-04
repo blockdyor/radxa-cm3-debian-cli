@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-only
+set -eu
+# Initial rootfs configuration precedes OS fstab creation; defer until then.
+# Never consult host DT, invoke a loader or scan/expand discovered disks.
+if [ -s /etc/fstab ] && grep -Eq '^[[:space:]]*[^#[:space:]]+[[:space:]]+/[[:space:]]' /etc/fstab; then
+    exec /usr/sbin/u-boot-update
+fi

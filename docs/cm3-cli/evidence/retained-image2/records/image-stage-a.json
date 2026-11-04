@@ -1,0 +1,60 @@
+{
+  "source_revision": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+  "run_id": "41199013085",
+  "source_lock_sha256": "320cea35c319e260971ea0d40b98027a3c9b507b15bcb965d3edf3022f2bfbd8",
+  "checks": {
+    "authenticated_inputs": "PASS",
+    "package_configuration": "PASS",
+    "exact_target_rootfs": "PASS",
+    "offline_security": "PASS",
+    "exact_head_sonar": "PASS"
+  },
+  "receipt": {
+    "status": "PASS",
+    "source_revision": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+    "run_id": "41199013085",
+    "source_lock_sha256": "320cea35c319e260971ea0d40b98027a3c9b507b15bcb965d3edf3022f2bfbd8",
+    "signing_fingerprint": "AD9F5088E3C91770C2C9F18DF34890722EC41D32",
+    "packages": [
+      "cm3-cli-board-support=0.1.0",
+      "linux-headers-6.1.84-18+cm3cli1-rk2410-nocsf=6.1.84-18+cm3cli1",
+      "linux-headers-radxa-cm3-rpi-cm4-io=6.1.84-18+cm3cli1",
+      "linux-image-6.1.84-18+cm3cli1-rk2410-nocsf=6.1.84-18+cm3cli1",
+      "linux-image-radxa-cm3-rpi-cm4-io=6.1.84-18+cm3cli1",
+      "radxa-bootutils=0.2.6+cm3cli1",
+      "radxa-overlays-dkms=0.2.25+cm3cli1",
+      "radxa-udev=0.1.4+cm3cli1",
+      "u-boot-radxa-cm3-rpi-cm4-io=2017.09-71+cm3cli1",
+      "u-boot-rk2601=2017.09-71+cm3cli1"
+    ],
+    "headers": [
+      "linux-headers-6.1.84-18+cm3cli1-rk2410-nocsf=6.1.84-18+cm3cli1",
+      "linux-headers-radxa-cm3-rpi-cm4-io=6.1.84-18+cm3cli1"
+    ],
+    "board_sha256": "625c75856021f22e3719456f8aa5e430d6a98a41f7b01887a78e7d7ad074e3bf",
+    "scope": "same-job configuration input only; no enduring trust or image authorization"
+  },
+  "sonar": {
+    "source_revision": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+    "gate": "OK",
+    "unresolved_issues": 0,
+    "hotspots": 0,
+    "analysis_date": "2026-10-31T11:34:47+0000"
+  },
+  "decision": {
+    "experimental_assembly": "ALLOWED",
+    "stable_release": "BLOCKED",
+    "hardware": "UNTESTED"
+  },
+  "evidence_sha256": {
+    "result.json": "b3fa8a0fe0697b7de8ff557306a30d6d1b19522aa96b9cc92823dd587fca66d0",
+    "arm64-result.json": "c84acea6aa92b3c6ade1cf1eb2caa606ac7fec3ff1f69f8833728ccbc86cfca1",
+    "board-lifecycle.json": "d854ceb266853a25e1121b072ebede286292f398abbd2266436b337c08636864",
+    "board-manifest.json": "10ac802dfa0e5ad9d89dc6aa618e9363d4f16904e6d68dfe5f7055837e7ca383",
+    "local-repository.json": "6f8e4b9ea670186a42cd2546431e932d0dce7631829fc780674fa633e42f5266",
+    "rsdk-profile.json": "8954488a6f99aad76f65d1f726f71a421119d78b6bd8c9e3a860e55ee6a8c2f5",
+    "rsdk-profile-result.json": "0ae4493b5a02009b5cdecadde08b7b36cf46e76c536b3ed06a5b574a4e0729ea",
+    "rsdk-profile-packages.tsv": "ee9487cc96a33eb5ddbd318df23f8305ab21d1d27fffd3e4e4fccc0678f96b2b",
+    "image-offline-tests.json": "fc33434eb3ad4356b8a095d4b29e0854d2bc377893ea1851468e86fb846745d7"
+  }
+}

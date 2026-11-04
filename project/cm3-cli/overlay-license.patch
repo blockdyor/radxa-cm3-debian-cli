@@ -1,0 +1,31 @@
+From 0ee073720de7652a6b77ea4be8ae029c4a3e7e4e Mon Sep 17 00:00:00 2001
+From: ZHANG Yuntian <yt@radxa.com>
+Date: Fri, 30 Oct 2026 11:18:06 +0800
+Subject: [PATCH] fix: clearify source license
+
+Closes #606
+
+Signed-off-by: ZHANG Yuntian <yt@radxa.com>
+---
+ debian/copyright | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/debian/copyright b/debian/copyright
+index 0563b4fd..ea70ccaf 100644
+--- a/debian/copyright
++++ b/debian/copyright
+@@ -2,6 +2,14 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+ Upstream-Name: radxa-overlays
+ Source: https://github.com/radxa-pkg/radxa-overlays
+ 
++Files: debian/radxa-overlays.c
++Copyright: © 2025 Radxa Computer Co., Ltd
++License: GPL-2
++
++Files: arch/**
++Copyright: © 2025 Radxa Computer Co., Ltd
++License: GPL-2, unless otherwise noted in the source (ex. qcom overlays)
++
+ Files: *
+ Copyright: © 2025 Radxa Computer Co., Ltd
+ License: GPL-3+

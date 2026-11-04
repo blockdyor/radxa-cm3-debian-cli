@@ -1,0 +1,40 @@
+G0 Safety/correctness: zero wrong-target/SPI writes, verified-data corruption,
+uncorrected memory errors, panics/oops, filesystem faults, unexplained resets
+or lost mandatory interfaces. Any occurrence is NO-GO.
+G1 Install/boot/recovery: two independent identities and SSH host keys, no
+universal permanent credential; all 20 cold + 20 warm attempts succeed per
+claimed medium; authenticated SSH/serial, OS-only expansion and sacrificial
+OS-fault rescue/readback demonstrated. Missing mandatory evidence is NO-GO.
+G2 Debian/security/update: authenticated fresh archives and normal package
+install/configure/remove/upgrade, dpkg audit clean, no mixed suites/trust
+bypasses, active intended LSM and documented listening services; matched
+kernel/DTB/headers/hooks update and reboot/recovery tested. Isolated invalid
+signature fixture must reject tampered metadata. Unowned vendor updates block
+stable release; mere package dependency solving does not pass this gate.
+G3 Thermal/electrical/power: sensor/cooling loop verified within rated limits,
+protection enabled. Proposed abort margin 5 C below lowest applicable critical
+trip or stricter vendor bound, with sensor interpretation/observer first.
+Abort on sensor/control loss, PSU/undervoltage faults or expanding errors;
+never heat deliberately to critical shutdown. Record safe throttling, not
+silently disable it. Power claims need a meter and stated bandwidth/uncertainty.
+G4 Performance: proposed non-regression tolerance max(5%, 2*baseline CV),
+capped at 10%; CV >5% makes that workload inconclusive pending better controls.
+Apply to throughput lower bounds and latency/energy upper bounds. Confidence
+interval crossing a forbidden regression is inconclusive, not PASS. Benefit
+claim requires paired 95% interval excluding zero and median gain >max(3%,
+baseline CV), named primary metric and all safety/secondary gates retained.
+G5 Responsiveness: provisional authenticated SSH probe <=5 seconds and local
+CLI probe <=1 second under bounded standard loads, zero timeouts/starvation;
+G4 still applies to run-level p95, report p99/worst probe. Owner freezes these
+provisional limits before testing, never relaxes them after adverse results.
+G6 Sustained: three thermal runs plus 8-hour combined soak; proposed <=5%
+additional throughput decline from initial to final 15-minute measured window
+after warm-up, compared with matching B0 windows. Larger decline is unresolved
+pending diagnosis/extension, not a peak-speed success. No growing leaks/errors,
+unbounded stalls or failed probes. Thermal/energy trade-offs need explicit
+review within ratings; no safety trade-off is acceptable.
+G7 Coverage/release: every mandatory applicable core matrix row PASS on the
+claimed configuration; conditional features need PASS before support claims.
+Missing equipment means UNTESTED; absent hardware needs inventory evidence.
+Optional limitations can be disclosed, but no untested core row is silently
+waived. No candidate currently meets G0-G7 hardware acceptance.

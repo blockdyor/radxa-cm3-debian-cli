@@ -1,0 +1,16 @@
+{
+  "zip_crc": "PASS",
+  "manifest_hashes": "PASS",
+  "indexed_files": 57,
+  "portable_replay": "PASS",
+  "replay_tests": {
+    "tests_run": 36,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "python": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]",
+    "evidence": "native userspace / mocked side effects, not ARM64 virtual boot"
+  },
+  "hardware_rows_preserved_untested": 28,
+  "packet_sha256": "f7c2a5f5c3592f230fac05e8140dcdea5ee738b84f6f5e68438f9d5c71fdb1ff"
+}

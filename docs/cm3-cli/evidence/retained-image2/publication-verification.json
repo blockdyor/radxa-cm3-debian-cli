@@ -1,0 +1,36 @@
+{
+  "physical_rows": 28,
+  "physical_status": "UNTESTED",
+  "original_fields_preserved": 9,
+  "locked_hashes": 3,
+  "hardware_promotion_negative_selfcheck": "PASS",
+  "relative_links_checked": 37,
+  "packets": [
+    {
+      "path": "offline/cm3-offline-validation-evidence.zip",
+      "indexed_members": 354,
+      "crc_and_member_hashes": "PASS"
+    },
+    {
+      "path": "virtual/cm3-virtual-execution-evidence.zip",
+      "indexed_members": 41,
+      "crc_and_member_hashes": "PASS"
+    },
+    {
+      "path": "lifecycle/cm3-lifecycle-safety-evidence.zip",
+      "indexed_members": 57,
+      "crc_and_member_hashes": "PASS"
+    },
+    {
+      "path": "security/cm3-security-audit-evidence.zip",
+      "indexed_members": 28,
+      "crc_and_member_hashes": "PASS"
+    },
+    {
+      "path": "negative/cm3-negative-test-evidence.zip",
+      "indexed_members": 481,
+      "crc_and_member_hashes": "PASS"
+    }
+  ],
+  "scope": "documentation/packet preservation only"
+}

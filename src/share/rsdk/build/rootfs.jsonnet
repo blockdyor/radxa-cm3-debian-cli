@@ -2,6 +2,7 @@ local distro = import "mod/distro.libjsonnet";
 local additional_repos = import "mod/additional_repos.libjsonnet";
 local packages = import "mod/packages.libjsonnet";
 local cleanup = import "mod/cleanup.libjsonnet";
+local cm3_cli = import "mod/packages/cm3-cli.libjsonnet";
 
 function(
     architecture = "arm64",
@@ -29,7 +30,14 @@ function(
     firmware_override = "",
     install_vscodium = false,
     use_pkgs_json = true,
-) distro(suite, distro_mirror, architecture, snapshot_timestamp)
+    cm3_preflight = null,
+) if product == "radxa-cm3-rpi-cm4-io" && suite == "trixie" && edition == "cli"
+then
+    assert architecture == "arm64" && mode == "root" : "CM3 requires ARM64 root-mode bootstrap";
+    assert distro_mirror == "" && snapshot_timestamp == "" && radxa_mirror == "" && radxa_repo_suffix == "" : "CM3 archive overrides are not validated";
+    assert linux_override == "" && firmware_override == "" && !install_vscodium : "CM3 package overrides are not validated";
+    cm3_cli(temp_dir, rootfs, rsdk_rev, cm3_preflight) + cleanup()
+else distro(suite, distro_mirror, architecture, snapshot_timestamp)
 + additional_repos(suite, radxa_mirror, radxa_repo_suffix, product, temp_dir, install_vscodium, use_pkgs_json)
 + packages(suite, edition, product, temp_dir, vendor_packages, linux_override, firmware_override)
 + cleanup()
