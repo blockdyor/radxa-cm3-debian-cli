@@ -10,6 +10,7 @@ import platform
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import tempfile
 
@@ -135,6 +136,15 @@ def remove_empty_root_ssh(root):
         raise ValueError('profile root SSH path is not an empty directory: ' + str(directory)) from exc
 
 
+def verify_uninitialized_machine_id(root):
+    path = root / 'etc/machine-id'
+    if path.is_symlink() or not path.exists():
+        raise ValueError('profile missing empty regular etc/machine-id required for ro first boot')
+    info = path.lstat()
+    if not stat.S_ISREG(info.st_mode) or info.st_size != 0 or stat.S_IMODE(info.st_mode) != 0o444:
+        raise ValueError('profile etc/machine-id must be an empty 0444 regular file')
+
+
 def bootstrap(stage, output, receipt, evidence):
     root = stage / 'root'
     if root.exists() or root.is_symlink():
@@ -156,7 +166,8 @@ def bootstrap(stage, output, receipt, evidence):
         raise ValueError('profile package audit failed')
     # Remove only an empty staging directory, never credentials or redirected data.
     remove_empty_root_ssh(root)
-    for name in ['etc/machine-id', 'var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
+    verify_uninitialized_machine_id(root)
+    for name in ['var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
                  'etc/apt/sources.list.d/cm3-build.list', 'usr/share/keyrings/cm3-build.gpg',
                  'opt/cm3-repo', 'root/.ssh']:
         path = root / name

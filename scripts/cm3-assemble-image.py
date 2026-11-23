@@ -179,7 +179,8 @@ def authenticate(work, revision, run_id):
     for service in contract.SERVICE_LINKS:
         if not (root / 'etc/systemd/system' / service).is_symlink():
             raise ValueError('profile service not enabled: ' + service)
-    for name in ['etc/machine-id', 'var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
+    profile.verify_uninitialized_machine_id(root)
+    for name in ['var/lib/dbus/machine-id', 'etc/cm3-cli/owner.json',
                  'etc/apt/sources.list.d/cm3-build.list', 'usr/share/keyrings/cm3-build.gpg',
                  'opt/cm3-repo', 'root/.ssh', 'usr/sbin/policy-rc.d']:
         path = root / name

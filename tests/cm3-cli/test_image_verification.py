@@ -85,6 +85,27 @@ class ImageContract(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify.board_file(metadata, 'changed', 'expected', 0o644)
 
+    def test_guest_machine_id_requires_empty_root_owned_0444_regular_file(self):
+        class StubGuest:
+            def __init__(self, exists, info):
+                self._exists = exists
+                self._info = info
+
+            def exists(self, path):
+                return self._exists and path == '/etc/machine-id'
+
+            def lstatns(self, path):
+                return self._info
+
+        valid = dict(st_mode=stat.S_IFREG | 0o444, st_uid=0, st_gid=0, st_size=0)
+        verify.verify_guest_machine_id(StubGuest(True, valid))
+        with self.assertRaisesRegex(ValueError, 'missing empty /etc/machine-id'):
+            verify.verify_guest_machine_id(StubGuest(False, valid))
+        for field, value in [('st_size', 33), ('st_uid', 1000), ('st_gid', 1000),
+                             ('st_mode', stat.S_IFREG | 0o644), ('st_mode', stat.S_IFLNK | 0o444)]:
+            with self.subTest(field=field, value=value), self.assertRaisesRegex(ValueError, 'empty root:root 0444'):
+                verify.verify_guest_machine_id(StubGuest(True, valid | {field: value}))
+
     def partitions(self):
         return [dict(part_num=n, part_start=start * 512, part_end=end * 512 - 1,
                      part_size=(end - start) * 512)

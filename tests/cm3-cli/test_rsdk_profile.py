@@ -65,7 +65,9 @@ class ProfileRendering(unittest.TestCase):
         self.assertIn('rm -f "$1"/etc/ssh/ssh_host_*', config['mmdebstrap']['customize-hooks'][1])
         self.assertIn('rm -f "$1/etc/apt/sources.list.d/cm3-build.list"',
                       config['mmdebstrap']['customize-hooks'][1])
-        self.assertTrue(any('machine-id' in s for s in config['mmdebstrap']['cleanup-hooks']))
+        cleanup_hooks = config['mmdebstrap']['cleanup-hooks']
+        self.assertTrue(any('rm -rf "$1/etc/machine-id"' in s for s in cleanup_hooks))
+        self.assertEqual(cleanup_hooks[-1], 'install -m 0444 /dev/null "$1/etc/machine-id"')
 
     def evaluate(self, **changes):
         args = dict(product='radxa-cm3-rpi-cm4-io', suite='trixie', edition='cli',
@@ -141,6 +143,29 @@ class ProfileRendering(unittest.TestCase):
 
 
 class ReceiptBoundary(unittest.TestCase):
+    def test_uninitialized_machine_id_must_be_empty_0444_regular_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            etc = root / 'etc'
+            etc.mkdir()
+            mid = etc / 'machine-id'
+            with self.assertRaisesRegex(ValueError, 'missing empty regular etc/machine-id'):
+                profile.verify_uninitialized_machine_id(root)
+            mid.write_bytes(b'')
+            mid.chmod(0o444)
+            profile.verify_uninitialized_machine_id(root)
+            mid.chmod(0o644)
+            with self.assertRaisesRegex(ValueError, 'empty 0444 regular file'):
+                profile.verify_uninitialized_machine_id(root)
+            mid.write_text('1234567890abcdef1234567890abcdef\n')
+            mid.chmod(0o444)
+            with self.assertRaisesRegex(ValueError, 'empty 0444 regular file'):
+                profile.verify_uninitialized_machine_id(root)
+            mid.unlink()
+            mid.symlink_to('/dev/null')
+            with self.assertRaisesRegex(ValueError, 'missing empty regular etc/machine-id'):
+                profile.verify_uninitialized_machine_id(root)
+
     def test_only_empty_root_ssh_directory_is_removed(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
