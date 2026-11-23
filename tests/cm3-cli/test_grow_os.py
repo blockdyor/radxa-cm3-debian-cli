@@ -106,3 +106,42 @@ class GrowOsTests(unittest.TestCase):
         self.assertIn('DeviceAllow=block-mmc rw', unit)
         self.assertIn('cm3-cli-grow-os.service', (base / 'root/usr/lib/systemd/system/cm3-cli-enroll.service').read_text())
         self.assertIn('cloud-guest-utils', (base / 'control/control').read_text())
+
+    def test_extract_os_mounts_filters_autofs_and_transient_mounts_and_normalizes_options(self):
+        rows = [
+            {'target': '/', 'source': '/dev/mmcblk0p3', 'fstype': 'ext4', 'maj:min': '179:3', 'fsroot': '/', 'options': 'rw,relatime'},
+            {'target': '/config', 'source': 'systemd-1', 'fstype': 'autofs', 'maj:min': '0:25', 'fsroot': '/', 'options': 'rw,relatime'},
+            {'target': '/config', 'source': '/dev/mmcblk0p1', 'fstype': 'vfat', 'maj:min': '179:1', 'fsroot': '/', 'options': 'rw,relatime,fmask=0022'},
+            {'target': '/boot/efi', 'source': 'systemd-1', 'fstype': 'autofs', 'maj:min': '0:26', 'fsroot': '/', 'options': 'rw,relatime'},
+            {'target': '/boot/efi', 'source': '/dev/mmcblk0p2', 'fstype': 'vfat', 'maj:min': '179:2', 'fsroot': '/', 'options': 'rw,relatime,fmask=0022'},
+            {'target': '/run/credentials/serial-getty@ttyFIQ0.service', 'source': 'ramfs', 'fstype': 'ramfs', 'maj:min': '0:33', 'fsroot': '/', 'options': 'ro,nosuid,nodev'},
+            {'target': '/mnt/nvme', 'source': '/dev/nvme0n1p1', 'fstype': 'ext4', 'maj:min': '259:1', 'fsroot': '/', 'options': 'rw,relatime'},
+        ]
+        before_mounts = module.extract_os_mounts(rows, '/dev/mmcblk0')
+        self.assertEqual([m['target'] for m in before_mounts], ['/', '/config', '/boot/efi'])
+        self.assertEqual([m['options'] for m in before_mounts], ['rw', 'rw', 'rw'])
+
+        # Simulate Linux 6.1 resize2fs appending mb_optimize_scan=0 and a transient mount disappearing.
+        after_rows = [dict(r) for r in rows if r['target'] != '/run/credentials/serial-getty@ttyFIQ0.service']
+        after_rows[0]['options'] = 'rw,relatime,mb_optimize_scan=0'
+        after_rows.append({'target': '/run/credentials/getty@tty1.service', 'source': 'ramfs', 'fstype': 'ramfs', 'maj:min': '0:34', 'fsroot': '/', 'options': 'ro'})
+        after_mounts = module.extract_os_mounts(after_rows, '/dev/mmcblk0')
+        self.assertEqual(before_mounts, after_mounts)
+
+        # Bind-mount aliases sharing OS backing device must still be captured and rejected by plan().
+        alias_rows = rows + [
+            {'target': '/data', 'source': '/dev/mmcblk0p3', 'fstype': 'ext4', 'maj:min': '179:3', 'fsroot': '/', 'options': 'rw,relatime'},
+        ]
+        state = fixture()
+        state['mounts'] = module.extract_os_mounts(alias_rows, '/dev/mmcblk0')
+        with self.assertRaises(ValueError):
+            module.plan(state)
+
+        # Read-only root must normalize to 'ro' and be rejected by plan().
+        ro_rows = [dict(r) for r in rows]
+        ro_rows[0]['options'] = 'ro,relatime'
+        state_ro = fixture()
+        state_ro['mounts'] = module.extract_os_mounts(ro_rows, '/dev/mmcblk0')
+        self.assertEqual(state_ro['mounts'][0]['options'], 'ro')
+        with self.assertRaises(ValueError):
+            module.plan(state_ro)

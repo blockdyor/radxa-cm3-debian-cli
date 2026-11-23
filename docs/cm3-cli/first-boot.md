@@ -46,9 +46,12 @@ Run21 installed and independently inspected the board package in an actual image
 but that payload was discarded; no physical target execution is established. Local tests use
 isolated account fixtures. The ARM64 package probe denies service starts and
 does not test owner creation, first boot, SSH readiness, identity uniqueness or
-an active target LSM. Image integration must remove builder machine IDs and host
-keys; the exact-product profile now specifies this cleanup and a new external
-directory-bootstrap check enforces it. Run21 passed that stage and actual-image
+an active target LSM. Image integration must strip any builder machine ID and SSH host keys before
+shipping while leaving `/etc/machine-id` as an empty 0-byte `root:root` mode
+`0444` regular file (required by `systemd 257` when booting with a read-only
+`ro` root so it can initialize and commit a fresh unique machine ID once `/` is
+remounted `rw`). The exact-product profile specifies this cleanup and image
+verification enforces it. Run21 passed that stage and actual-image
 identity cleanup; neither result nor rendering proves first boot. The owner-group
 check rejects other accounts' primary-GID membership as well as supplementary
 members. No prior unauthorized SSH authentication was demonstrated.

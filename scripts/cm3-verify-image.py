@@ -92,6 +92,15 @@ def loader_payload(raw, root):
                 raise ValueError('loader placement differs from exact pinned payload')
 
 
+def verify_guest_machine_id(guest):
+    if not guest.exists('/etc/machine-id'):
+        raise ValueError('image missing empty /etc/machine-id required for ro first boot')
+    info = guest.lstatns('/etc/machine-id')
+    if (not stat.S_ISREG(info['st_mode']) or stat.S_IMODE(info['st_mode']) != 0o444 or
+            info['st_uid'] != 0 or info['st_gid'] != 0 or info['st_size'] != 0):
+        raise ValueError('image /etc/machine-id must be an empty root:root 0444 regular file')
+
+
 def inspect(work):
     revision = assembly.boundary(work)
     assembly.experimental_admission(work, revision, os.environ['GITHUB_RUN_ID'])
@@ -141,7 +150,8 @@ def inspect(work):
                 hashes[path] = digest
         if 'ID=debian' not in text('/etc/os-release').splitlines() or 'VERSION_CODENAME=trixie' not in text('/etc/os-release').splitlines():
             raise ValueError('image is not Debian Trixie')
-        for path in ['/etc/machine-id', '/var/lib/dbus/machine-id', '/etc/cm3-cli/owner.json',
+        verify_guest_machine_id(guest)
+        for path in ['/var/lib/dbus/machine-id', '/etc/cm3-cli/owner.json',
                      '/etc/apt/sources.list.d/cm3-build.list', '/usr/share/keyrings/cm3-build.gpg',
                      '/opt/cm3-repo', '/root/.ssh', '/usr/sbin/policy-rc.d']:
             if guest.exists(path):

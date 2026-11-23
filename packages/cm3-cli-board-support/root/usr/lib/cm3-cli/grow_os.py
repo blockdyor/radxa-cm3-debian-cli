@@ -84,17 +84,35 @@ def query(*args):
     return json.loads(data)
 
 
+def mount_rw_mode(options):
+    return 'rw' if 'rw' in options.split(',') else 'ro'
+
+
+def extract_os_mounts(rows, disk):
+    non_autofs = [row for row in rows if row.get('fstype') != 'autofs']
+    os_targets = {'/', '/config', '/boot/efi'}
+    os_devices = {row['maj:min'] for row in non_autofs
+                  if row['target'] in os_targets or row['source'].startswith(disk)}
+    return [
+        dict(target=row['target'], source=row['source'], fstype=row['fstype'],
+             device=row['maj:min'], fsroot=row['fsroot'],
+             options=mount_rw_mode(row['options']))
+        for row in non_autofs
+        if (row['target'] in os_targets or row['source'].startswith(disk) or
+            row['maj:min'] in os_devices)
+    ]
+
+
 def inspect_os():
     from enroll import target
     target(Path('/'))
     rows = query('/usr/bin/findmnt', '--json', '--list', '--output', 'TARGET,SOURCE,FSTYPE,MAJ:MIN,UUID,FSROOT,OPTIONS')['filesystems']
-    mounts = [dict(target=row['target'], source=row['source'], fstype=row['fstype'],
-                   device=row['maj:min'], fsroot=row['fsroot'], options=row['options']) for row in rows]
-    roots = [row for row in rows if row['target'] == '/']
+    roots = [row for row in rows if row['target'] == '/' and row.get('fstype') != 'autofs']
     if len(roots) != 1 or re.fullmatch(r'/dev/mmcblk\d+p3', roots[0]['source']) is None:
         raise ValueError('running root is not the supported MMC OS partition')
     root = roots[0]['source']
     disk = root.removesuffix('p3')
+    mounts = extract_os_mounts(rows, disk)
     root_info, disk_info = os.lstat(root), os.lstat(disk)
     if (not stat.S_ISBLK(root_info.st_mode) or not stat.S_ISBLK(disk_info.st_mode) or
             root_info.st_rdev != os.stat('/').st_dev):
@@ -104,7 +122,7 @@ def inspect_os():
     if len(fstab) != 3:
         raise ValueError('unexpected configured filesystem')
     for mount in ('/', '/config', '/boot/efi'):
-        actual = [row for row in rows if row['target'] == mount]
+        actual = [row for row in rows if row['target'] == mount and row.get('fstype') != 'autofs']
         configured = [row for row in fstab if len(row) >= 6 and row[1] == mount]
         if (len(actual) != 1 or len(configured) != 1 or not actual[0]['uuid'] or
                 configured[0][0] != 'UUID=' + actual[0]['uuid']):

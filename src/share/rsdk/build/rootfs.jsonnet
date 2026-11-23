@@ -36,7 +36,16 @@ then
     assert architecture == "arm64" && mode == "root" : "CM3 requires ARM64 root-mode bootstrap";
     assert distro_mirror == "" && snapshot_timestamp == "" && radxa_mirror == "" && radxa_repo_suffix == "" : "CM3 archive overrides are not validated";
     assert linux_override == "" && firmware_override == "" && !install_vscodium : "CM3 package overrides are not validated";
-    cm3_cli(temp_dir, rootfs, rsdk_rev, cm3_preflight) + cleanup()
+    cm3_cli(temp_dir, rootfs, rsdk_rev, cm3_preflight) + cleanup() + {
+        mmdebstrap+: {
+            'cleanup-hooks'+: [
+                // systemd 257 on a read-only (ro) root requires an empty 0-byte
+                // /etc/machine-id mountpoint so first boot can initialize and commit
+                // a fresh machine ID once / is remounted rw.
+                'install -m 0444 /dev/null "$1/etc/machine-id"',
+            ],
+        },
+    }
 else distro(suite, distro_mirror, architecture, snapshot_timestamp)
 + additional_repos(suite, radxa_mirror, radxa_repo_suffix, product, temp_dir, install_vscodium, use_pkgs_json)
 + packages(suite, edition, product, temp_dir, vendor_packages, linux_override, firmware_override)
