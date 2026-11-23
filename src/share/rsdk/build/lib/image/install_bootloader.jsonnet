@@ -5,12 +5,13 @@ then
     echo "Installing bootloader..."
     shutdown
     !chmod +x "%(temp_dir)s/u-boot/%(product)s/setup.sh"
-    !"%(temp_dir)s/u-boot/%(product)s/setup.sh" update_bootloader "%(output)s" %(sector_size)d 2> /dev/null
+    !"%(temp_dir)s/u-boot/%(product)s/setup.sh" %(loader_action)s "%(output)s" %(sector_size)d 2> /dev/null
 
 ||| % {
     output: output,
     temp_dir: temp_dir,
     product: product,
+    loader_action: if product == 'radxa-cm3-rpi-cm4-io' then 'update_image' else 'update_bootloader',
     sector_size: sector_size,
 }
 else

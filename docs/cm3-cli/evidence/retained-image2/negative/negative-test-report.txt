@@ -1,0 +1,64 @@
+CM3 controlled negative validation — t_52443539
+
+Scope and identity
+Retained image2, producing commit 2b41b830cae9efc313f3d39d85be265b6e3eae25
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085
+Raw SHA-256 b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8
+XZ SHA-256 6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037
+Source ZIP SHA-256 cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad
+No rebuild, product correction, repository edits, physical disk operation or hardware status changes.
+This does NOT emulate or replace RK3566/Radxa CM3/CmRat qualification. All 28 physical rows remain UNTESTED.
+
+Expected behavior was recorded in expectations.json before executing tests.
+PASS below means an executed scoped test met its stated expectation; it is not blanket safety qualification. Identity-preservation tests deliberately reproduce limitations, not successful clone-identity detection. Native injected-script results are separately labeled; only actual guest probes count as QEMU/userspace evidence. STATIC PASS is offline validator evidence only. NOT APPLICABLE means there is no meaningful handler to execute, not that a product requirement is satisfied.
+
+Coverage of all 11 requested failure areas
+
+1. Corrupt manifest — STATIC PASS, harness parser only.
+Retained source-lock.json truncated to first 40 bytes. json.loads raises JSONDecodeError: Expecting property name enclosed in double quotes: line 4 column 2 (char 40). Original JSON parses. No staging/boot is attempted; not an end-to-end admission invocation or image self-detection.
+
+2. Wrong checksum — STATIC PASS, pinned delivery tooling only.
+Copy actual retained source-lock.json into minimal delivery fixture; supply 64 zeroes as its digest. Pinned cm3-publish-image.checked_materials raises ValueError: source/notice material hash mismatch. Correct digest reaches the separate expected incomplete-source-set error, establishing the hash branch is sensitive to the mutation. This tests a source-material checksum, not another full raw-image admission workflow. No staged output is created by this helper.
+
+3. Missing partition — STATIC PASS, pinned offline layout contract only.
+Remove root from actual retained layout metadata (partitions[:2]). Pinned contract.layout raises ValueError: exact three-partition RSDK layout required. Intact metadata first passes. This is an isolated metadata fixture, not mutated GPT sectors or observed bootloader rejection. Runtime recovery/boot failure is UNTESTED.
+
+4. Missing DTB — STATIC PASS, harness only.
+In a verified disposable root-partition copy, debugfs removes the exact DTB referenced by retained extlinux.conf. Baseline stat was regular; post-mutation stat has no regular file. Required-file checker raises useful path-specific ValueError. debugfs itself can exit0 on missing paths, so its exit alone is NOT accepted as evidence. Bootloader behavior and physical failure handling UNTESTED.
+
+5. Missing kernel module — STATIC PASS, harness only.
+Remove /usr/lib/modules/6.1.84-18+cm3cli1-rk2410-nocsf/kernel/arch/arm64/crypto/chacha-neon.ko.xz in the same disposable copy. Verify its reference exists in actual modules.dep and baseline file exists; post-removal required-file check rejects with exact missing path. No retained module load attempted and no claim this module alone prevents boot.
+
+6. Incorrect fstab UUID — STATIC PASS, pinned offline contract only.
+Replace retained root UUID 517983f5-e8fa-4876-803a-ddff8cef58bf in /etc/fstab with 00000000-0000-0000-0000-000000000000 using debugfs rm/write. Read changed fstab back from copy. Pinned contract.boot raises ValueError: fstab and filesystem UUIDs disagree; original boot contract first passes. Actual PID1 emergency/recovery behavior UNTESTED.
+
+7. Broken APT source — PASS, actual retained APT under QEMU.
+Write 'deb [ deliberately-broken' into /run/negative/broken.list and use explicit isolated APT source/list/cache paths. apt-get update exits100: Malformed entry 1 ... ([option] not assignment); source list could not be read. Chained UNSAFE_APT_CONTINUATION marker is absent. Network disabled (-nic none); no DNS, signature or remote404 success/failure handling claim.
+
+8. Duplicate machine-id — PASS reproduction, uniqueness detection NOT provided.
+Create two guest roots with same valid 1234567890abcdef1234567890abcdef. Retained systemd-machine-id-setup --root preserves both (exit0); byte equality asserted. Deliberately preserving valid identity is appropriate for repeat boot, but does not detect a clone. Existing lifecycle replay also demonstrates enrollment readiness accepts valid duplicate identity. Parent audits found actual retained image identity absent; injected duplicate does not contradict clean-image evidence. Cross-machine uniqueness on hardware remains UNTESTED.
+
+9. Pre-existing SSH host keys — PASS reproduction and explicit regeneration.
+Retained ssh-keygen -A -f generates fixture-root keys; copy these to a second root; rerun -A and verify every copied key digest unchanged. Clone remains identical. Explicitly delete second root keys, rerun generation and assert ED25519 public key differs. Normal repeat boot must preserve keys; cleanup/explicit removal is required for fresh identity. No automatic clone-key detection is provided. Parent lifecycle replay also demonstrates nonempty invalid private-key text passes enrollment readiness; not an SSH handshake success. No generated private key is included in packet.
+
+10. Insufficient free space — PASS within two separate execution scopes.
+Native retained enrollment Python (hash matched to actual installed script) is exercised with account-command doubles and errno28 injected at each of five atomic writes. All five propagate OSError and leave readiness absent. First write fails before accounts; writes2/3 follow five account-command intents, writes4/5 follow nine intents. Fail-closed SSH readiness is NOT transactional rollback of earlier account/policy changes. No real account command executed on host.
+Actual retained guest dd into isolated64KiB tmpfs fails exit1: No space left on device. Chained UNSAFE_SPACE_CONTINUATION absent. Remove payload, write small recovery file and assert it exists: exit0. This is real kernel ENOSPC handling, not a fully filled root disk or execution of enrollment on a real full root. Generic guest write failure does not by itself validate a nonexistent image expansion handler.
+
+11. Filesystem expansion failure — NOT APPLICABLE to executable simulation; requirement UNTESTED.
+Parents' retained lifecycle inventory and pinned-source review establish no project root-expansion implementation. There is no authentic expansion entrypoint to fault-inject. No substitute grower, resize command or fabricated successful handler is tested. Missing functionality remains an unmet requirement; physical expansion and failure/recovery behavior remain UNTESTED.
+
+Execution and safety
+QEMU10.0.13 virt/Cortex-A53 TCG, 512MiB, one vCPU; alternate Debian6.12.107+deb13-cloud-arm64 kernel, inherited minimal direct-init archive, retained Bash as PID1. Not retained kernel, U-Boot/DTB boot chain, systemd ordering or board emulation. Final QEMU process exit0 and completion marker present. Only runtime-negative.ext4 is attached; -nic none, no host filesystem sharing, block passthrough, monitor, port forwarding or host mount. Host preparation/debugfs trusted code is NOT a security sandbox. No namespace isolation claimed.
+Static root mutations use a different verified partition copy. Original raw/XZ/source ZIP are opened only for hashing; all three hashes match before/after final execution. Parent input partition and kernel/initrd/tool hashes are recorded. Unrelated local storage sentinel is unchanged; this plus explicit command/disk inventory verifies the bounded harness, not a global audit of every host write. Generated VM keys/disks are deliberately not distributed.
+
+Counts (machine-reconciled in negative-summary.json)
+Six offline rejection tests, five injected enrollment write failures and five actual guest probes, including one supplemental free-space recovery test. All met their expected assertions. Expansion is one documented unsupported case, not an executed pass. Existing36-test lifecycle suite replayed successfully, no skips/errors. Green reproduction tests include demonstrated limitations and are not evidence all safety requirements pass.
+
+Evidence and reproduction
+See REPRODUCE.txt. Exact host commands: python3 negative-static.py; python3 run-negative-runtime.py; (cd lifecycle && python3 test_lifecycle.py); bash -n guest-negative.sh. Earlier harness development rejected a relative-path checksum fixture before reaching its intended hash branch (ValueError: non-regular or redirected file: delivery-fixture/source-lock.json); corrected to absolute path with no product change. That initial traceback was inspected during this session but its overwritten log is not in the packet. Final logs record the corrected successful run; no failed development invocation is counted as a product defect.
+static-commands.json records every debugfs argv/exit/stdout/stderr; static-results.json records exceptions and mutations. runtime-command.json, runtime-mutations.txt, runtime-modification.log and runtime-console.log record exact VM command, injection and actual guest outputs. Guest shell records named begin/end/status markers and assertions are in run-negative-runtime.py. lifecycle/negative-parent-replay.log and observations.json retain original safety repros. originals-before.json/originals-after.json and execution-dependencies.json document identity preservation.
+
+Defects/limits for downstream consolidation
+No fixes made. Clone identity and invalid-key readiness limits reproduced; preserve valid identity on normal reboot, require sanitation rather than inventing automatic deletion. Late ENOSPC leaves partial account/policy effects but readiness closed. Prior low-level loader hazards remain reproduced in lifecycle suite (explicit data/partition targets accepted; missing payload after partial write intent; maskrom error ignored). Missing root expansion still unmet. No new claim of physical detection/recovery, storage durability, authenticated SSH, Internet APT, full-disk rollback or overall storage-safety qualification.
+Canonical context: context_store resolve and reliability lookup returned completed CM3 corrections plus entities/blockdyor.md/SCHEMA.md, explicitly delegating engineering state to existing Kanban/GitHub. This task's structured handoff updates that existing engineering record; no duplicate Obsidian task or unsupported vault-sync claim.

@@ -1,0 +1,16 @@
+[Unit]
+Description=CM3 CLI baseline IPv4/IPv6 host firewall
+DefaultDependencies=no
+After=local-fs.target
+Before=network-pre.target shutdown.target
+Wants=network-pre.target
+Conflicts=nftables.service shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/nft -f /usr/share/cm3-cli/firewall.nft
+RemainAfterExit=yes
+# Deliberately retain the firewall on service stop or package removal.
+
+[Install]
+WantedBy=multi-user.target

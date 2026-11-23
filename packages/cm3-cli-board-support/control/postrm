@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if [ "$1" = purge ]; then
+    # Do not delete owner accounts, identities or other administrator configuration.
+    rm -f /etc/sudoers.d/cm3-cli-owner
+fi

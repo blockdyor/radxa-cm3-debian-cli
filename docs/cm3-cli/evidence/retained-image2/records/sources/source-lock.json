@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "target": {
+    "product": "radxa-cm3-rpi-cm4-io",
+    "soc": "rk3566",
+    "suite": "trixie",
+    "edition": "cli",
+    "architecture": "arm64",
+    "sector_size": 512
+  },
+  "rsdk_base": "dba5cba3eafb948a22787560bea56da2b9f8f163",
+  "builder_image": "debian@sha256:62bd423aeee912639ca8ee681c2b762cb3e25137e0a92b20be455898a9f034ad",
+  "binfmt_image": "tonistiigi/binfmt@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0",
+  "packaging_suffix": "+cm3cli1",
+  "recipes": [
+    {
+      "name": "radxa-udev",
+      "repository": "radxa-pkg/radxa-udev",
+      "commit": "f729fd128fcabd84b5f301335016e5e2b3347423",
+      "version": "0.1.4",
+      "gitlinks": {}
+    },
+    {
+      "name": "radxa-bootutils",
+      "repository": "radxa-pkg/radxa-bootutils",
+      "commit": "d822e09153486083b2ee491ac70d384746dd65c3",
+      "version": "0.2.6",
+      "gitlinks": {}
+    },
+    {
+      "name": "radxa-overlays",
+      "repository": "radxa-pkg/radxa-overlays",
+      "commit": "a0ffd564a2fdb836e2f3fe60b2c607a58d1d69b6",
+      "version": "0.2.25",
+      "gitlinks": {}
+    },
+    {
+      "name": "u-boot-rk2601",
+      "repository": "radxa-pkg/u-boot-rk2601",
+      "commit": "28cee0b81ceff7986220665c4567222c5aaec790",
+      "version": "2017.09-71",
+      "gitlinks": {
+        "src": {
+          "repository": "radxa/u-boot",
+          "commit": "d9ab7ec6029573ac538b6707a0dffd0a5d049e77"
+        },
+        "rkbin": {
+          "repository": "radxa/rkbin",
+          "commit": "f3e6dd6372377faee13b29d0ce35eb08049356ef"
+        }
+      }
+    },
+    {
+      "name": "linux-rk2410-nocsf",
+      "repository": "radxa-pkg/linux-rk2410-nocsf",
+      "commit": "aa0ba4b96cd6ebb7aea36a488f2cbfdf702fea8b",
+      "version": "6.1.84-18",
+      "gitlinks": {
+        "src": {
+          "repository": "radxa/kernel",
+          "commit": "fd366906451692033f1ba273e77e7e2f936c78db"
+        }
+      }
+    }
+  ],
+  "configuration_reference": {
+    "repository": "radxa-pkg/radxa-system-config",
+    "commit": "263af2c8c241430e994ffd18bbb8ddfbebf36434",
+    "policy": "derive reviewed boot configuration only; do not install wholesale"
+  }
+}

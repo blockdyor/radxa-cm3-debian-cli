@@ -1,0 +1,17 @@
+{
+  "packet_path": "/opt/data/kanban/workspaces/t_d8a85f3e/cm3-security-audit-evidence.zip",
+  "packet_sha256": "1c964ac54403130a9f75f234443af8489cf5f992b7baed3c26612f924e2acb8b",
+  "packet_bytes": 423454,
+  "indexed_files": 28,
+  "zip_crc_and_member_sha256": "PASS",
+  "originals_final_hashes_unchanged": true,
+  "requirement_verdict_counts": {
+    "SCOPED EXCEPTION": 1,
+    "STATIC PASS": 10,
+    "UNTESTED": 2
+  },
+  "complete_private_test_vector_blocks": 8,
+  "runtime_executed": false,
+  "hardware_status": "UNTESTED",
+  "sanitization_checks": "No password database contents, complete PEM blocks, raw rootfs, key hashes or credential snippets included."
+}

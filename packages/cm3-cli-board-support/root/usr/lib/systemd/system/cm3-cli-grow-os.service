@@ -1,0 +1,18 @@
+[Unit]
+Description=Grow only the selected CM3 MMC OS root partition
+After=local-fs.target
+Before=cm3-cli-enroll.service
+RequiresMountsFor=/config /boot/efi
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /usr/lib/cm3-cli/grow_os.py --execute
+RemainAfterExit=yes
+TimeoutStartSec=240
+UMask=0077
+# Inspect the real mount layout, not systemd-created bind-mount aliases.
+DevicePolicy=closed
+DeviceAllow=block-mmc rw
+
+[Install]
+WantedBy=multi-user.target

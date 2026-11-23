@@ -1,0 +1,14 @@
+{
+  "packet_sha256": "8f6aca1f7af73c7a9abe9f120f9eabd60820e044173cfbb3265325f4254acdf6",
+  "indexed_files": 41,
+  "zip_crc_and_all_member_hashes": "PASS",
+  "originals_unchanged": true,
+  "direct_actual_commands": 24,
+  "verdict_counts": {
+    "NOT APPLICABLE": 4,
+    "PASS": 12,
+    "FAIL": 6,
+    "STATIC PASS": 1,
+    "UNTESTED": 1
+  }
+}

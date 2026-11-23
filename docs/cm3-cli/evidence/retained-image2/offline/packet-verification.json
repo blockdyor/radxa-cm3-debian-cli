@@ -1,0 +1,38 @@
+{
+  "handoff": {
+    "created_utc": "2026-10-31T17:23:13.929075+00:00",
+    "artifact": {
+      "id": 13044838581,
+      "digest": "sha256:cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad",
+      "expiry": "2026-11-14T14:03:12Z",
+      "expired": false
+    },
+    "built_commit": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+    "run_url": "https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085",
+    "run_conclusion": "success",
+    "pr": {
+      "url": "https://github.com/blockdyor/radxa-cm3-debian-cli/pull/1",
+      "state": "open",
+      "draft": true,
+      "current_head": "dfafa5e85586b8cbf330888077e6ecefb659b585"
+    },
+    "post_inspection_retained_hashes_unchanged": true,
+    "summary": {
+      "status": "STATIC PASS for focused offline checks; no hardware/release approval",
+      "packages": 270,
+      "firmware_paths": 276,
+      "module_dependency_paths": 1258,
+      "initramfs_members": 364,
+      "systemd_symlinks_including_masks_and_aliases": 30,
+      "lifecycle_entries": 83,
+      "hardware_rows_untested": 28,
+      "no_target_code_executed": true
+    },
+    "security_limit": "No private-key/secret exhaustive scan or fresh signature validation; assigned to downstream security task."
+  },
+  "packet_path": "/opt/data/kanban/workspaces/t_6c2ac45f/cm3-offline-validation-evidence.zip",
+  "packet_bytes": 769553,
+  "packet_sha256": "3ac9b24db47ab8aa6409c0bb104609960e324b322a97a715498a180fb99b83b5",
+  "indexed_files": 354,
+  "zip_crc_and_indexed_hashes": "PASS"
+}

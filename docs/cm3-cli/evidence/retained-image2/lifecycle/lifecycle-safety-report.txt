@@ -1,0 +1,64 @@
+CM3 FIRST-BOOT AND STORAGE-SELECTION FIXTURE REPORT
+Task: t_23036e0d
+Date: 2026-10-31 UTC
+
+Scope and result
+36 automated test methods passed; 0 failed, 0 errors, 0 skipped. These are assertions about observed behavior, including assertions reproducing unsafe or unsupported behavior. This is NOT an overall storage-safety acceptance or first-boot qualification PASS.
+
+PASS here means installed Python/Bash logic actually executed on a native ARM64 Linux host with filesystem fixtures and command doubles. OpenSSH key generation used the host OpenSSH binary with an explicit disposable fixture prefix. This did not boot the retained Debian userspace, systemd, RK3566, CM3 or CmRat; no QEMU was used in this task. All physical hardware results remain UNTESTED. Levels 1–3 do not establish physical qualification.
+
+Exact subject
+Repository: blockdyor/radxa-cm3-debian-cli
+Producing commit: 2b41b830cae9efc313f3d39d85be265b6e3eae25
+Workflow: https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085
+Raw SHA-256: b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8
+XZ SHA-256: 6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037
+Source ZIP SHA-256: cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad
+All three retained-file hashes rechecked after execution: unchanged, recorded in retained-identities-after.txt. No rebuild or repository change.
+Installed text came from task t_6c2ac45f's offline extraction, not today's PR head. subject-hashes.json lists every extracted script; prepare_harness.py asserts enrollment and setup.sh hashes against the upstream handoff. The copied owner validator and boot wrapper are installed text, not rewritten behavior.
+
+Safety controls
+No real block devices were passed to any tested operation. Device names are regular sentinel files inside disposable directories. Every Bash dd, sync, rkdeveloptool, flash_erase, flashcp, truncate, rm and sleep operation is a recording function; PATH=/nonexistent prevents external command lookup. The exact setup.sh is sourced, then its actual functions run under set -euo pipefail with a fixed action whitelist. No branch that directly redirects to a host path is invoked. Setup payloads are deliberately synthetic; binary correctness was not tested. Setup source SHA-256 is asserted before every invocation.
+Enrollment receives its existing injectable command callback, never the default host executor. Account mutations are existing source-test doubles writing fixture passwd/group/shadow files. OpenSSH alone executes with -A -f DISPOSABLE_ROOT, never against host /etc/ssh. Fixture keys are removed by TemporaryDirectory cleanup and are not evidence artifacts. There are no mounts, loop devices, partition writes, privileged operations, host account changes or physical recovery commands.
+User/mount/network namespace creation was attempted with unshare --user --map-root-user --mount --net true and failed: Operation not permitted. Accordingly this is a controlled mock harness, not an OS security sandbox for arbitrary/untrusted code. It is safe for the inspected, pinned functions and branches only; do not point it at arbitrary replacement scripts.
+
+Environment and reproduction
+Observed Linux aarch64; Python 3.13.5; GNU Bash 5.2.37 aarch64. OpenSSH version is in environment.txt. Standard-library Python only; bash, sh, grep and ssh-keygen are required by these tests. chmod-based policy tests use the executing fixture owner's UID (10000 here), not true UID-0 ownership behavior.
+Unpack cm3-lifecycle-safety-evidence.zip into a writable directory and run:
+    python3 test_lifecycle.py > execution.log 2>&1
+The self-contained packet already contains pinned-source and subject. prepare_harness.py is an acquisition record, not required for replay; it requires the original upstream task workspace and offline extraction. The test runner creates .tmp beneath itself and sets TMPDIR there. No root privileges are required. Run twice for the same assertion outcomes; fresh disposable key material should differ. Both local execution rounds completed successfully; execution.log and observations.json contain the final round.
+
+Script-to-test mapping
+1. /usr/lib/cm3-cli/enroll.py and /usr/lib/cm3-cli/owner_config.py
+   Installed source: subject/usr/lib/cm3-cli/ and corresponding copied import locations in pinned-source.
+   Tests: IdentityTests in test_lifecycle.py; EnrollmentTests in pinned-source/tests/cm3-cli/test_board_support.py; FirstbootBoundaryTests in test_firstboot_boundaries.py.
+   Actual functions: enroll, check, atomic, read_private, document, account, locked, target.
+   Covered: pristine missing owner; invalid owner/board; absent, empty, zero, malformed and existing machine-id; absent and stale SSH keys; distinct fresh SSH public keys; account and key-generation interruptions; stable retries; changed owner; corrupt/incomplete state; account/group/password/key/sudo tampering; symlink/hardlink/writable-parent rejection; injected EROFS; missing LSM fixture. Missing machine-id is rejected at final check and readiness removed, not generated by enroll.py. Account/state mutations may precede this final rejection.
+   Mock boundaries: passwd/adduser/groupadd/usermod/visudo/AppArmor tools are simulated. Fixture LSM text is not evidence that an LSM is active. Systemd/PID1 machine-id generation, actual SSH access gating, real account tools and boot ordering are outside this task.
+
+2. /usr/lib/cm3-cli/boot-update (also installed kernel zz-cm3-cli hooks)
+   Tests: BootUpdateTests in test_boot_update_recovery.py.
+   Actual wrapper predicates execute; only absolute fstab and updater path literals are rebound to fixtures. Missing/empty/comment-only/non-root fstab defers; root entries including indentation invoke the updater; updater success and failure propagate. The external updater is a double; extlinux generation itself is not exercised by these tests. Existing menu preservation under the failing double is not proof of real updater rollback.
+
+3. /usr/lib/u-boot/radxa-cm3-rpi-cm4-io/setup.sh
+   Tests: StorageTests in test_lifecycle.py; structured command traces in observations.json.
+   Actual functions: update_bootloader/update_idblock, erase_bootloader, maskrom_autoupdate_bootloader/maskrom/maskrom_update_bootloader/maskrom_reset.
+   SD/eMMC/NVMe/USB names, an unrelated data NVMe, and an explicit root partition are represented in storage-fixtures.json. Actual code takes the supplied target; it does not consume transport, mount or root metadata. The fixture metadata is a test oracle, NOT an implemented selector. Writes are captured, never performed.
+   Expected recorded offsets for the u-boot.itb branch: idblock bs=4096 seek=136, idblock bs=512 seek=64, U-Boot bs=512 seek=16384. These match implementation, not physical offset qualification. Repeated installs emit identical intents; filesystem/bootability idempotency is unproven. Read-only write failure (dd status30) stops subsequent writes under strict mode.
+   Direct CLI argument-dispatch startup and non-strict caller behavior are not tested. setup.ps1, SPI operations, legacy uboot.img/trust.img branch and actual USB/maskrom transfers are NOT EXECUTED.
+
+Concrete findings / unmet safety expectations
+A. NO ROOT EXPANSION IMPLEMENTATION. Pinned docs/cm3-cli/first-boot.md:41 explicitly states no disk expansion; the installed project wrapper explicitly avoids scanning/expanding discovered disks. Upstream retained-image admission also identifies mandatory expansion as unmet. Fixtures label already-expanded and expansion-required filesystems, but no actual implementation consumes those states. Correct root-only expansion, already-expanded no-op, expansion failure, GPT repair and preservation of /data during resizing remain NOT IMPLEMENTED / UNTESTED. No substitute grower was invented and counted as a test.
+B. EXPLICIT DATA/PARTITION TARGETS ARE NOT REJECTED by the low-level U-Boot helper. An eMMC-root request does not discover or touch NVMe implicitly, but explicitly passing the unrelated data NVMe or mmcblk1p3 emits bootloader write intents and succeeds. There is no transport/root/partition/mounted-data guard. This is an unsafe interface for unattended selection, not evidence of an accidental automatic NVMe choice in normal boot. Caller responsibility cannot be mistaken for storage-selection protection.
+C. PARTIAL WRITE INTENT BEFORE MISSING PAYLOAD FAILURE. With idblock.img present but u-boot.itb absent, update_bootloader records two idblock writes before returning nonzero with Missing U-Boot binary. Payload preflight is incomplete. The harness reproduced intent only; no disk was partially written.
+D. MASKROM LOADER ERROR IS IGNORED. Injecting status19 for rkdeveloptool db, while later wl/rd succeed, still records write and reset and exits0. This corresponds to maskrom || true in the installed script. It may be intentional for an already-loaded device, but does not prove the device is ready or safe to write. Hardware recovery remains UNTESTED.
+E. READINESS DOES NOT ESTABLISH IDENTITY FRESHNESS OR KEY VALIDITY. OpenSSH -A preserves existing host keys; a nonempty mode0600 stale/invalid Ed25519 private-key fixture survives and enroll/check accepts it. The machine-id check validates nonzero lowercase hex syntax, not cross-device uniqueness. Source tests already use a fixed valid ID. These are demonstrated limits, not a claim that the actual clean retained image contains stale keys or duplicate IDs. Upstream offline extraction found no build-time machine-id or SSH host keys. Actual systemd generation of a fresh machine-id was not run here; fresh SSH identity generation from absent files was exercised with host OpenSSH.
+
+Verdicts and remaining work
+PASS: scoped enrollment/wrapper/loader-function assertions actually executed, with doubled side effects and limitations above.
+STATIC PASS: installed-script provenance and retained-file identities; prior offline cleanup evidence preserved; unchanged hardware-matrix.tsv retained in packet.
+NOT APPLICABLE as an executable test: nonexistent project expansion or automatic rollback implementation. The corresponding product requirements remain unmet, not waived.
+UNTESTED: systemd first boot and identity setup, real UID0 ownership/account behavior, real LSM, SSH service ordering/authentication, full retained-userspace boot, real extlinux rollback, kernel reboot/shutdown, data-preserving filesystem growth, Windows helper, SPI/maskrom recovery and every physical CM3/CmRat behavior. Physical matrix remains the original 28 UNTESTED rows. This harness cannot authorize production, unattended disk operations or physical qualification.
+
+Canonical context
+Resolved Obsidian entities/blockdyor.md and completed correction correction:20261028:0074748c82a59953 (version a509e9c7a1f1bab0b3c712a92443ec80b23da55ae997559648518ec26e5e96fd; sources include kanban:t_bacce4a4 and https://github.com/blockdyor/radxa-cm3-debian-cli). The identity/index delegates engineering state to existing Kanban/GitHub, so the current task handoff is updated rather than creating a duplicate Obsidian backlog. No vault sync or hardware success is claimed.

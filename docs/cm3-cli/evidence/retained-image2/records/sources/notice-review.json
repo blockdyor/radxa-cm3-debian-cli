@@ -1,0 +1,15 @@
+{
+  "overlay_clarification": "radxa-pkg/radxa-overlays@0ee073720de7652a6b77ea4be8ae029c4a3e7e4e",
+  "overlay_copyright_sha256": "c60764d90e405cfa0a0d38d3d0fb5892d8d6a724324342ea987a968a38f629d5",
+  "firmware": {
+    "firmware-brcm80211": {
+      "version": "20250410-2",
+      "copyright_sha256": "f5d62266d99e91aeae9223a5b4f830ed5e917256672f50470ef868e0378ad6d8"
+    },
+    "firmware-realtek": {
+      "version": "20250410-2",
+      "copyright_sha256": "f5d62266d99e91aeae9223a5b4f830ed5e917256672f50470ef868e0378ad6d8"
+    }
+  },
+  "scope": "Experimental aggregate only; original component terms apply; no stable/hardware approval"
+}

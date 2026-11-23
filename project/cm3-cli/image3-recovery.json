@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "repository": "blockdyor/radxa-cm3-debian-cli",
+  "verificationMode": "independently-reviewed-local-evidence",
+  "hostedPayloadRehash": false,
+  "originalBuildAttestationIssued": false,
+  "hardware": "UNTESTED",
+  "originalProducer": {
+    "run": 41331537371,
+    "attempt": 1,
+    "source": "b71152296933808f99d7dc169fc6811861a9001b",
+    "conclusion": "failure",
+    "assembly": "success",
+    "provenance": "skipped"
+  },
+  "payloadVerifierSource": "33f8500455faf1fbfac20f989f62fee359b8724a",
+  "retention": {
+    "artifactId": 13098325406,
+    "apiCiphertextZipSha256": "ce21e4b76f2d6de82dd8780486a21d121c8e857159d242702d37d4d9d08719f8",
+    "apiCiphertextZipBytes": 1771517207,
+    "cmsMemberSha256": "f4278cc0473fd67ced3ec059f1dd99cf36795fcff644b413786d716b045114d2",
+    "retentionManifestSha256": "3801816d71da7f89682049b6557f2d2ee741cf0e8e3cd2114cea4927415a09eb",
+    "cmsAuthentication": "PASS; recorded authenticated local recovery",
+    "manifestFiles": 563
+  },
+  "independentReview": {
+    "verdict": "SCOPED PASS; F1 source packaging corrected separately",
+    "report": "independent-payload-review.txt",
+    "sha256": "52f56213befb4cf1521f71f953fa3bb6185074c8ad827d33ac6657db356139cf",
+    "reviewer": "isolated read-only payload/security review; delegation deleg_1f31d1b2",
+    "limitations": [
+      "Actual GCM production decryption not independently repeated; recorded authentication inspected",
+      "Physical CM3, retained BSP boot, target systemd and active LSM UNTESTED",
+      "Five alternate-kernel VM probes inspected, not independently rerun"
+    ]
+  },
+  "sourceRepack": {
+    "original_nested_sha256": "3ba99ab5155dc85e4a5ee5dd42dc45b78f4f69ac6a36f3846bb0dda42cce5b3f",
+    "public_nested_sha256": "fd497a9758159bf0a52fbbd8a66d039295c3969482dc5f3a90e026634f04ac92",
+    "omitted_member": "radxa-overlays/.pre-commit-config.yaml",
+    "original_link_target": "/nix/store/vjxiib6j9lpsirgd7n6m4kd8ipj7z79j-pre-commit-config.json",
+    "reason": "Nonessential developer-only dangling absolute Nix pre-commit configuration link; not a build input or license. All other regular source-file bytes preserved.",
+    "preserved_regular_source_files": 99266,
+    "image_bytes_changed": false,
+    "original_archive_retained": true
+  },
+  "subjects": [
+    {
+      "name": "radxa-cm3_debian-13-trixie_arm64_cli_v0.1.0-beta.1.img.xz",
+      "sha256": "e189249e76a527b1680b4c1667ca58c923ab59d7567e1792b8019cc537c72e57",
+      "bytes": 207029824
+    },
+    {
+      "name": "source-notices.tar.gz",
+      "sha256": "2088afb25921bc54a8df60e26d2453e8f6f58617ed55727188f61717c1d4c7fd",
+      "bytes": 1487105147
+    },
+    {
+      "name": "package-manifest.txt",
+      "sha256": "c40b35568ee101f67b680d4283e7fe8f666949d6b40e1697363fe7397116ac4c",
+      "bytes": 10875
+    },
+    {
+      "name": "independent-payload-review.txt",
+      "sha256": "52f56213befb4cf1521f71f953fa3bb6185074c8ad827d33ac6657db356139cf",
+      "bytes": 15519
+    },
+    {
+      "name": "source-repack.json",
+      "sha256": "4a86bb3058ea6a3837e2225c5aee8eb8e792ecc7f524ba9619d63a6022509100",
+      "bytes": 636
+    },
+    {
+      "name": "radxa-cm3_debian-13-trixie_arm64_cli_v0.1.0-beta.1.img",
+      "sha256": "d514bf7be20e45771eb043e2e620b22e5d584df0f10afe343d6ae47b28b2beca",
+      "bytes": 1866085376
+    }
+  ]
+}

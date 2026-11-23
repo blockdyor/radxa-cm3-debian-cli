@@ -1,0 +1,41 @@
+Public GnuTLS test-vector disposition — retained image2 only
+
+Retained image2 remains NO-PUBLISH for other safety/distribution findings. This
+record classifies public self-test material; it is not a corrected-payload gate,
+blanket private-key waiver, package signature proof or secret-free certification.
+
+Inspected allocated library:
+  /usr/lib/aarch64-linux-gnu/libgnutls.so.30.40.3
+  SHA256 560c04722d04d0331b0eeda8a249491139ba46bf0e294897ebceb04993380596
+
+Fresh public distribution source retrieved over HTTPS:
+  https://deb.debian.org/debian/pool/main/g/gnutls28/gnutls28_3.8.9.orig.tar.xz
+  SHA256 69e113d802d1670c4d5ac1b99040b1f2d5c7c05daec5003813c049b5184820ed
+  Member gnutls-3.8.9/lib/crypto-selftests-pk.c
+  Member SHA256 fce9355507865b53ba0b5c5587932b9d8519be2cd195650b0d9ff69ac2c335c7
+
+scripts/cm3-public-test-vectors.py executed against the original security
+workspace's retained allocated-file extraction and this freshly downloaded
+public archive. It verifies exactly eight complete PEM blocks against decoded
+public upstream C literals. The exact library also has four additional parser/
+template headers: header-marker counts are not counts of complete private keys.
+Other files with parser markers and no complete PEM body remain explicitly
+listed as header-only candidates, not silently exempted by directory/package.
+
+Only the exact path + library digest + source/archive/member digests and eight
+matching complete blocks may receive this public-fixture classification. Changed
+library/block bytes, a ninth block, copied complete blocks elsewhere, or changed
+source material fail. Synthetic positive/negative tests exercise these boundaries;
+actual retained/public-source readback is separate from the synthetic tests.
+No deployed/build/developer credential was identified by this bounded PEM scan.
+Literal zero private-key bytes is false. No ELF stripping is performed. A future
+library/package change requires renewed provenance review, not a wildcard allow.
+
+The command's allocated-file scan excludes symlinks and does not establish raw
+free-space/deleted/journal clearance, arbitrary-token detection, compressed or
+opaque-payload safety, CVE absence, or complete binary/package provenance. The
+old security audit and its limits remain historical evidence, not rewritten PASS.
+Integration into corrected-producer/source/image evidence remains outstanding;
+the script alone does not clear an image or substitute for full signature-chain
+retention and independent corrected-payload review. No physical hardware test
+has been performed.

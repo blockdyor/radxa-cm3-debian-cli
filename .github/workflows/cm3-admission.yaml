@@ -1,0 +1,44 @@
+name: CM3 offline admission
+on:
+  push:
+    branches: [dev/cm3-debian-cli]
+permissions:
+  contents: read
+concurrency:
+  group: cm3-offline-admission
+  cancel-in-progress: false
+jobs:
+  admission:
+    if: github.repository == 'blockdyor/radxa-cm3-debian-cli'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install only offline fixture tools on this disposable runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y jsonnet kmod gnupg gcc-14 gcc-aarch64-linux-gnu make libc6-dev openssh-client
+          sudo --preserve-env=GITHUB_ACTIONS,GITHUB_REPOSITORY python3 scripts/cm3-bootstrap-tools.py --jsonnet-only
+          mkdir "$RUNNER_TEMP/cm3-tools"
+          ln -s "$(command -v gcc-14)" "$RUNNER_TEMP/cm3-tools/gcc"
+          printf '%s\n' "$RUNNER_TEMP/cm3-tools" >> "$GITHUB_PATH"
+      - name: Require complete offline suite without skips (no source or image builds)
+        run: |
+          set -euo pipefail
+          git diff --exit-code
+          python3 scripts/cm3-source-preflight.py --check-lock
+          python3 -m unittest discover -s tests/cm3-cli -v 2>&1 | tee admission-tests.log
+          if grep -Eq '^OK \(skipped=' admission-tests.log; then
+            printf 'Skipped fixture tests block admission\n' >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: cm3-offline-admission-${{ github.sha }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: error
+          path: admission-tests.log

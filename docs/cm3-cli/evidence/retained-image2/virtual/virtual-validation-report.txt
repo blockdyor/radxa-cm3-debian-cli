@@ -1,0 +1,101 @@
+CM3 VIRTUAL VALIDATION — SCOPED EVIDENCE, NOT HARDWARE QUALIFICATION
+2026-10-31T18:25:31.066569+00:00
+
+Input commit 2b41b830cae9efc313f3d39d85be265b6e3eae25
+https://github.com/blockdyor/radxa-cm3-debian-cli/actions/runs/41199013085
+cm3-trixie-arm64-cli.img SHA256 b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8
+cm3-trixie-arm64-cli.img.xz SHA256 6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037
+retained-image-sources.zip SHA256 cac0f8575b91529e4809d86a99fb460b2279acc19fd8eea56469dca51d959fad
+
+All three retained originals rehashed unchanged after execution. Tested VM disks are deliberately modified disposable partition copies, NOT byte-identical original images. Copy hashes and injected commands are recorded in JSON/text. No repository change, product rebuild, remedial fix or physical storage operation.
+
+Execution: QEMU10.0.13 virt/Cortex-A53 TCG. Alternate Debian6.12.107 cloud kernel, custom initramfs/preloaded matching modules. Separate full retained-systemd path and successful two-boot retained-Bash/direct-tool path. No KVM; namespace creation denied. See REPRODUCE.txt/tool-manifest.json for exact commands, versions, network restrictions and replay.
+
+Checks: {"FAIL": 6, "NOT APPLICABLE": 4, "PASS": 12, "STATIC PASS": 1, "UNTESTED": 1}
+Direct actual probe commands: 24; raw exit histogram {"0": 16, "1": 6, "124": 1, "2": 1}. Nonzero exits include deliberate offboard/missing-identity rejection; these are not all product defects. Verdict counts refer to scoped evidence checks, not a conventional green test suite.
+
+NOT APPLICABLE — retained kernel boot
+Attempted virt boot exited0 with empty console; no successful retained-kernel execution established. Retained config disables PL011 and virtio blk/net/MMIO. Real CM3 boot UNTESTED.
+
+PASS — retained userspace execution
+Actual retained Bash/tools executed as PID1 on alternate6.12.107 cloud kernel; direct QEMU exits0 after two boots.
+
+FAIL — full systemd runtime
+Retained systemd257 PID1 actually started on alternate kernel; SSH generator exit1, journald/time-sync/device timeouts occurred. Full run interrupted after repeated timeout evidence. No multi-user/healthy-services claim; TCG limitation, not established CM3 defect.
+
+STATIC PASS — systemd enabled configuration
+Retained systemctl --root=/ is-enabled returns0 and three enabled entries. Offline configuration only, not service startup.
+
+FAIL — systemd unit verify
+Retained systemd-analyze verify exits1 solely with two reported man sshd/sshd_config documentation-command failures in direct log; not a clean verify PASS.
+
+PASS — package manager operation
+Retained dpkg --audit, apt-get check and apt-get -s install bash all exit0. No package upgrade/install or fresh repository signature verification demonstrated.
+
+PASS — virtual interface/address/routes
+Preloaded virtio-net and harness static10.0.2.15/24/default route observed by retained ip; not DHCP/NetworkManager or hardware Ethernet qualification.
+
+FAIL — DNS resolution
+Actual getent ahostsv4 deb.debian.org exits2 under restrict=on slirp. Successful DNS not established.
+
+FAIL — APT repository refresh
+Actual timeout25 apt-get update reports temporary DNS failures and returns124. Restricted-network outcome, not an established APT-source defect.
+
+PASS — first-boot enrollment offboard rejection
+Actual retained enroll.py and --check each exit1 with SSH-gated diagnostic. No owner config/CM3 DTB supplied; no enrollment success or account creation claimed.
+
+NOT APPLICABLE — successful target enrollment
+QEMU virt is not the required CM3 target. Installed guard not patched or bypassed.
+
+PASS — SSH preidentity rejection
+sshd -t exits1 with no hostkeys available before explicit generation.
+
+PASS — SSH identities and configuration
+Actual timeout120 ssh-keygen -A exits0 generating RSA/ECDSA/ED25519; subsequent retained sshd -t exits0.
+
+PASS — SSH daemon startup
+Direct loopback-only sshd writes Server listening on127.0.0.1 port2222; signal15 terminates cleanly. Not the gated systemd SSH service.
+
+FAIL — SSH handshake/authenticated login
+ssh-keyscan exits1; no handshake or owner authentication established. A startup race is possible, not proven; listening evidence is separate.
+
+PASS — machine identity creation
+Actual systemd-machine-id-setup exits0 and detects nonempty machine-id. Alternate-kernel direct-init path only.
+
+PASS — identity persistence across reboot
+Second direct boot verifies machine-id and all three host public-key checksums unchanged, exit0. Does not establish cross-device uniqueness.
+
+PASS — log creation
+Actual sshd writes nonempty /var/log/cm3-direct-sshd.log, printed by retained cat. Host serial capture retains all probe results.
+
+FAIL — probe file tee/journal completeness
+Direct Bash tee redirection fails /dev/fd/63 absent; combined probe-log assertion exits1. Serial capture is authoritative. Full-system journald timed out; no durable journal PASS.
+
+PASS — forced kernel reboot/poweroff
+Direct PID1 calls reboot -ff, boots again, verifies identities, then poweroff -ff; console shows Restarting system and Power down, QEMU exits0.
+
+NOT APPLICABLE — systemd reboot/shutdown ordering
+Full-system probe service did not reach its reboot markers. Direct forced kernel calls explicitly do not validate systemd ordering.
+
+NOT APPLICABLE — root expansion entry point
+Retained project has no implemented root-expansion script; parent lifecycle evidence confirms gap. No generic grower substituted; hardware expansion remains unmet/UNTESTED.
+
+PASS — alternate-kernel AppArmor activation
+Actual /sys/kernel/security/lsm includes apparmor and aa-status --enabled exits0 on cloud kernel. Not retained-kernel activation or profile/service-confinement proof.
+
+UNTESTED — physical CM3/CmRat qualification
+All original28physical matrix statuses remain UNTESTED; no real storage/device passthrough, RK3566 DTB/U-Boot/DRAM/peripheral/power-loss qualification.
+
+Harness limitations and attempt history:
+Retained-kernel probe: QEMU exits0 but zero serial bytes; not a successful boot.
+Attempt1: alternate cloud initramfs initially selected a FAT copy as root; mount invalid-argument then wall timeout. Corrected harness root ordering, not product.
+Attempt2: reached actual systemd PID1 but timed out124 before probes, with matching cloud modules not yet staged.
+Attempt3/4: interrupted preparation experiments; console files preserve partial output, no success verdict.
+Final full-system run: cloud modules staged via native debugfs and depmod, retained systemd started but repeated journald/udev/device/time-sync timeouts prevented probe execution; explicitly stopped with process_manage, final child numeric status unavailable.
+Final direct run: QEMU exit0 after actual commands, forced reboot, identity-persistence checks and poweroff. Direct probe tee redirection fails due missing /dev/fd symlink; serial log preserves outputs, daemon file log exists. Missing man pages make systemd-analyze verify nonzero. DNS and handshake are not established. These are disclosed findings, not silently replaced with fabricated PASS results.
+
+No retained product defect was corrected. Root expansion remains absent; service runtime failures under alternate-kernel TCG and harness limits are not sufficient to call the physical image defective. Experimental prerelease/hardware admission belongs to downstream consolidation, not this userspace report.
+
+Physical checklist: Rockchip boot chain/retained kernel, DRAM/DTB/UART, SD/eMMC/NVMe/USB selection and real expansion, network PHY/Wi-Fi, thermal/load/power behaviour, recovery and physical reboot/power-loss remain UNTESTED. All original28hardware rows stay unchanged.
+
+Canonical context: Obsidian entities/blockdyor.md and SCHEMA.md retain identity/index, original source Kanban/GitHub. Current engineering evidence is this existing task handoff; no duplicate note or sync completion claimed.

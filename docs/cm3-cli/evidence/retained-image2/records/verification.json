@@ -1,0 +1,73 @@
+{
+  "label": "EXPERIMENTAL \u2014 NOT HARDWARE VALIDATED \u2014 NOT FOR PRODUCTION",
+  "status": "PASS",
+  "source_revision": "2b41b830cae9efc313f3d39d85be265b6e3eae25",
+  "run_id": "41199013085",
+  "image_sha256": "b0d1f56240fafc49cc32ceab0f041d4bb6f529604635684135ccc6ad26ebbff8",
+  "compressed_sha256": "6b72f1005c517309e9647e7c65d2344ee31e013da0e2f4ae5a07c4f2afcd8037",
+  "image_bytes": 1730675712,
+  "compressed_bytes": 207281440,
+  "layout": {
+    "layout": "PASS",
+    "sector_size": 512,
+    "partitions": [
+      {
+        "part_num": 1,
+        "part_start": 16777216,
+        "part_end": 33554431,
+        "part_size": 16777216
+      },
+      {
+        "part_num": 2,
+        "part_start": 33554432,
+        "part_end": 348127231,
+        "part_size": 314572800
+      },
+      {
+        "part_num": 3,
+        "part_start": 348127232,
+        "part_end": 1730658815,
+        "part_size": 1382531584
+      }
+    ]
+  },
+  "boot": {
+    "boot_contract": "PASS",
+    "paths": {
+      "linux": [
+        "/boot/vmlinuz-6.1.84-18+cm3cli1-rk2410-nocsf"
+      ],
+      "initrd": [
+        "/boot/initrd.img-6.1.84-18+cm3cli1-rk2410-nocsf"
+      ],
+      "fdt": [
+        "/usr/lib/linux-image-6.1.84-18+cm3cli1-rk2410-nocsf/rockchip/rk3566-radxa-cm3-rpi-cm4-io.dtb"
+      ]
+    },
+    "hardware_boot": "UNTESTED"
+  },
+  "boot_file_sha256": {
+    "/boot/vmlinuz-6.1.84-18+cm3cli1-rk2410-nocsf": "6b92ff4a174934932f9ceef8c1334edde8b848635d06fc04b93a487f43e478e9",
+    "/boot/initrd.img-6.1.84-18+cm3cli1-rk2410-nocsf": "b3ba5c8c71566aed427c524736de860bf3dc9a57a48b6f96f089ed666bbd119e",
+    "/usr/lib/linux-image-6.1.84-18+cm3cli1-rk2410-nocsf/rockchip/rk3566-radxa-cm3-rpi-cm4-io.dtb": "4d14ed960533048e2f94c2b7ccae5038d59b5ec66041ed195095d350feba16c0"
+  },
+  "board_policy_sha256": {
+    "/etc/u-boot-menu/conf.d/99-cm3-cli.conf": "478ee5796631ba52d52395e380da1b9239d38aa47d07299782ae733e288c5bd6",
+    "/etc/initramfs-tools/conf.d/cm3-cli": "4084efc6919b7722273adc46a0e0ab88c2ae8ebb72c78dd16714c751fe3463dc",
+    "/etc/ssh/sshd_config.d/00-cm3-cli.conf": "4d0dc310a90e26317d180e8190cddb9847b2b2369933cfc1efe2b34b77465b7a",
+    "/etc/systemd/system/ssh.service.d/cm3-cli.conf": "d0b6b6cba44ae3774e5617369b251b6ae6ffabec8e654258db90843d0810ef71",
+    "/usr/lib/systemd/system/NetworkManager.service.d/cm3-cli.conf": "f489b8e5d7e4f9aae1cd4298f662a71f0222968fe39b76f5990fef3ba530d072",
+    "/usr/lib/systemd/system/cm3-cli-enroll.service": "61c252dcefe63234de3f49314527e6adc21e542b1333c7cd1098231fb9abc8aa",
+    "/usr/lib/systemd/system/cm3-cli-firewall.service": "d602d36c67b4d354c6fa49b1c8c833c9c705e325a25b5b0e19f82ecb953a169b",
+    "/usr/lib/cm3-cli/enroll.py": "27851a6ba0ca772249e88797df6656ee507ec657dfd33c4f915a266e61381462",
+    "/usr/lib/cm3-cli/boot-update": "b5450322b6f44def09b1106b9f46a327fff858a4687df8d0c5ac901adceb4376",
+    "/usr/share/cm3-cli/firewall.nft": "bd679771f83b8f9c73ba2933d92e22eb613130d0d4a9c8e3b46e09005ce4ddb6",
+    "/usr/lib/cm3-cli/owner_config.py": "d75210be69c5ad485d7f8b55cde7e1c6818cee48a3164063a815f9f265405007",
+    "/usr/share/doc/cm3-cli-board-support/README": "49ac94f36823c08309c113e630f77dbe245d563f9002716d16c81eda5c64baac",
+    "/usr/share/doc/cm3-cli-board-support/copyright": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986"
+  },
+  "hardware": "UNTESTED",
+  "services": "UNTESTED",
+  "active_lsm": "UNTESTED",
+  "stable_release": "BLOCKED"
+}
