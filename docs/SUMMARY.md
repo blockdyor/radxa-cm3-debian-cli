@@ -3,6 +3,11 @@
 - [Introduction](intro.md)
 - [Why rsdk?](why.md)
 
+# Radxa CM3 Debian CLI
+
+- [CmRat & Raspberry Pi Imager Guide](cmrat-install-guide.md)
+- [Beta 1 Release Notes & Verification](cm3-beta1.md)
+
 # Installation
 
 - [With Visual Studio Code & devcontainer](install/vscode.md)
