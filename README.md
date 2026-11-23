@@ -18,7 +18,8 @@
 
 <p align="center">
   <a href="https://github.com/blockdyor/radxa-cm3-debian-cli/releases/tag/v0.1.0-beta.1"><strong>Download Beta 1</strong></a> &nbsp;·&nbsp;
-  <a href="docs/cm3-beta1.md">Installation guide</a> &nbsp;·&nbsp;
+  <a href="docs/cmrat-install-guide.md">CmRat &amp; Pi Imager guide</a> &nbsp;·&nbsp;
+  <a href="docs/cm3-beta1.md">Beta 1 release notes</a> &nbsp;·&nbsp;
   <a href="#compute-module-and-carrier-boards">Hardware target</a> &nbsp;·&nbsp;
   <a href="#verification-and-build-evidence">Verification</a> &nbsp;·&nbsp;
   <a href="https://github.com/blockdyor/radxa-cm3-debian-cli/pkgs/container/radxa-cm3-debian-cli">GHCR package</a>
@@ -28,7 +29,8 @@
 
 A fresh-install, command-line Debian image for the **Radxa CM3 / Rockchip RK3566**. The project targets the **Raspberry Pi CM4 IO Board carrier configuration**, identified by `radxa-cm3-rpi-cm4-io`, and documents its intended use with **DTV Electronics' CmRat** carrier. There is no desktop environment.
 
-> **Experimental beta. Software and scoped virtual validation passed; physical hardware validation has not been performed.** This release is for development and evaluation, not production or unattended deployment. It does not establish real board boot, peripheral compatibility, target systemd or active LSM behavior.
+> **Experimental beta — physical hardware validation has not been performed yet.**
+> Full live-boot testing on a custom virtual Radxa CM3 (`radxa-cm3-cm4-io` with the unmodified 6.1.84 BSP kernel, DTB, initramfs, `systemd`, `AppArmor`, and `nftables`) **uncovered 4 first-boot bugs in `v0.1.0-beta.1`** (missing empty `/etc/machine-id` on read-only root, plus `grow_os.py` compatibility issues with `x-systemd.automount`, transient systemd mounts, and Linux 6.1 `resize2fs` mount options) that block first-boot enrollment on the unmodified release image. Fixes and regression tests are prepared for the next beta (`fix/cm3-first-boot-bugs`); see the [CmRat installation guide](docs/cmrat-install-guide.md#v010-beta1-offline-workaround) and [Beta 1 notes](docs/cm3-beta1.md#post-release-virtual-radxa-cm3-live-boot-findings) for details.
 
 ## Compute module and carrier boards
 
@@ -36,7 +38,7 @@ A fresh-install, command-line Debian image for the **Radxa CM3 / Rockchip RK3566
 
 - **Radxa Compute Module 3 (CM3):** the RK3566-based module that runs the ARM64 operating system.
 - **Raspberry Pi CM4 IO Board:** the carrier configuration named by the exact build target, `radxa-cm3-rpi-cm4-io`.
-- **CmRat by DTV Electronics:** a particular focus of this project. The [CmRat hardware repository](https://github.com/DTVElectronics/cmrat) documents a carrier designed for modules including Radxa CM3. See our [CmRat installation notes](docs/cm3-beta1.md#cmrat-carrier-verified-scope-versus-expected-behavior) for the distinction between software validation and untested board behavior.
+- **CmRat by DTV Electronics:** a particular focus of this project. The [CmRat hardware repository](https://github.com/DTVElectronics/cmrat) documents a carrier designed for modules including Radxa CM3. Follow the dedicated [CmRat + Raspberry Pi Imager installation guide](docs/cmrat-install-guide.md) (covering eMMC vs. microSD vs. the CmRat M.2 NVMe slot) and see [CmRat verified scope versus expected behavior](docs/cm3-beta1.md#cmrat-carrier-verified-scope-versus-expected-behavior).
 
 These names describe the intended hardware setup, **not a claim that every CM4-compatible carrier is electrically interchangeable**. Check the exact module and carrier revisions. CmRat switch positions, USB recovery routing, SD/eMMC boot precedence and peripherals remain physically untested.
 
@@ -60,8 +62,8 @@ radxa-cm3_debian-13-trixie_arm64_cli_v0.1.0-beta.1.img.xz
 
 1. Download the image **and its verification/source material** from the release page.
 2. Follow the [signature and checksum verification instructions](docs/cm3-beta1.md#download-verification) before writing any media.
-3. Choose the documented [microSD](docs/cm3-beta1.md#flash-to-microsd-on-macos-windows-or-linux) or [eMMC](docs/cm3-beta1.md#emmc-installation--separate-destructive-recovery-workflow) installation path. Writing an image erases the selected target; preserve data disks and stop if device identity is ambiguous.
-4. Provision the required owner configuration **offline before first boot**, as explained in the [installation guide](docs/cm3-beta1.md). There is no universal login or password.
+3. Follow the **[Radxa CM3 + DTV Electronics CmRat installation guide](docs/cmrat-install-guide.md)** to decide between **eMMC**, **microSD**, and using the **CmRat M.2 NVMe slot** as a data drive, and to flash with **Raspberry Pi Imager** (without OS customisation). Writing an image erases the selected target; preserve data disks and stop if device identity is ambiguous.
+4. Provision the required owner configuration **offline before first boot**, as explained in the [CmRat guide](docs/cmrat-install-guide.md#5-mandatory-offline-owner-provisioning). There is no universal login or password.
 
 Do not substitute Raspberry Pi `rpiboot` instructions for Rockchip recovery. The [guide](docs/cm3-beta1.md) explains the limits of the documented RK3566 recovery procedure, first boot, root expansion and rescue paths. This is a fresh installation, not a supported upgrade from another distribution.
 
@@ -97,7 +99,8 @@ sha256:c73e39347a86a6def34eec67eb637c6712bbfab4e2da0aa266551b377eb0b344
 
 ## Documentation and upstream projects
 
-- [Beta installation, verification and recovery guide](docs/cm3-beta1.md)
+- [Radxa CM3 + DTV Electronics CmRat installation guide (Raspberry Pi Imager, eMMC / microSD / NVMe)](docs/cmrat-install-guide.md)
+- [Beta 1 verification, findings and recovery reference](docs/cm3-beta1.md)
 - [DTV Electronics CmRat hardware](https://github.com/DTVElectronics/cmrat)
 - [RadxaOS RSDK](https://RadxaOS-SDK.github.io/rsdk/), the upstream build framework this repository is based on
 

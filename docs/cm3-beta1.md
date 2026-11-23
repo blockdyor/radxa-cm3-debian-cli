@@ -22,6 +22,53 @@ the actual module/carrier revisions and schematics before attaching peripherals.
 There is one canonical image for the SD and eMMC installation paths, not separate
 recompressed copies. NVMe boot/root is not supported by this beta contract.
 
+For a practical step-by-step walkthrough on the **DTV Electronics CmRat**
+carrier board using **Raspberry Pi Imager** (including choosing between eMMC,
+microSD, and using the CmRat M.2 NVMe slot as a dedicated data drive), see
+[`docs/cmrat-install-guide.md`](cmrat-install-guide.md).
+
+## Post-release virtual Radxa CM3 live-boot findings
+
+After `v0.1.0-beta.1` was published, the released image was booted end-to-end on
+a custom virtual Radxa CM3 (`radxa-cm3-cm4-io` in QEMU: quad-core Cortex-A55,
+GICv3/ITS, RK3566 CRU/PMU/UART2/DWCMSHC eMMC `mmcblk0`, USB-net, and dummy USB
+storage) running the **unmodified** retained `6.1.84-18+cm3cli1-rk2410-nocsf`
+kernel, initramfs, and `rk3566-radxa-cm3-rpi-cm4-io.dtb`.
+
+The kernel, `systemd 257`, `apparmor.service` (`capability,apparmor`, 123
+profiles loaded), `cm3-cli-firewall.service` (`inet cm3_cli`), and
+`NetworkManager` booted cleanly, **but live execution uncovered four first-boot
+bugs in unmodified `v0.1.0-beta.1` that block enrollment and SSH on first boot**:
+
+1. **Missing `/etc/machine-id` on read-only (`ro`) root:** `/etc/machine-id` was
+   deleted instead of shipped as an empty 0-byte `0444` regular file. Under
+   Debian 13 (`systemd 257`) with `ro` on the kernel command line, `systemd`
+   skips machine-id commit, causing `enroll.py` to fail with `FileNotFoundError`.
+2. **`grow_os.py` incompatible with `x-systemd.automount`:** `/config` and
+   `/boot/efi` appear as both `autofs` (`systemd-1`) and `vfat` rows in
+   `findmnt --json --list`, causing `inspect_os()` to reject the OS UUID check.
+3. **`grow_os.py` races with concurrent transient mounts:** Transient
+   `/run/credentials/*.service` `ramfs` mounts created/removed by concurrent
+   boot units mutate full `findmnt` snapshots between pre- and post-resize checks.
+4. **Linux 6.1 ext4 online resize appends `mb_optimize_scan=0`:** Running
+   `resize2fs` on `/dev/mmcblk0p3` appends `mb_optimize_scan=0` to `/proc/mounts`,
+   tripping `grow_os.py`'s verbatim mount-option comparison.
+
+All four bugs are fixed with regression unit tests on branch
+`fix/cm3-first-boot-bugs` (for the next beta build). A patched verification copy
+with those four fixes applied passed full virtual-CM3 validation across five
+scenarios: (A) provisioned first boot with online `mmcblk0p3` expansion (`1.4G`
+→ `3.7G`), active AppArmor, active `nftables`, live Ed25519 SSH, password/root
+SSH rejection, passwordless `sudo`, clean `dpkg --audit`, and untouched dummy USB
+storage; (B) clean reboot persistence of `machine-id` and SSH host keys plus live
+`nftables` external port-8080 drop verification; (C) unprovisioned fail-closed
+gating; (D) tampered `owner.json` fail-closed gating; and (E) distinct
+`machine-id` generation across independent first boots.
+
+Physical Radxa CM3 + CmRat hardware validation (RK3566 Maskrom/SPL/U-Boot/DDR
+init, physical Ethernet PHY `end1`, CmRat switch routing, Wi-Fi/BT, HDMI, PCIe
+NVMe, and power-cut recovery) remains **UNTESTED**.
+
 ## Publication locations
 
 GitHub prerelease: https://github.com/blockdyor/radxa-cm3-debian-cli/releases/tag/v0.1.0-beta.1
